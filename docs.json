@@ -9,22 +9,22 @@
     "dark": "#6B8500"
   },
   "logo": {
-    "light": "/assets/logo-light.svg",
-    "dark": "/assets/logo-dark.svg",
+    "light": "/assets/logo-light.png",
+    "dark": "/assets/logo-dark.png",
     "href": "https://flova.ir"
   },
-  "favicon": "/assets/favicon.svg",
+  "favicon": "/assets/favicon.png",
   "appearance": {
     "default": "system",
     "strict": false
   },
   "fonts": {
-    "family": "Dana",
-    "source": "/assets/fonts/Dana-Regular.woff2",
+    "family": "Estedad",
+    "source": "/assets/fonts/Estedad-Regular.woff2",
     "format": "woff2",
     "heading": {
-      "family": "Dana",
-      "source": "/assets/fonts/Dana-DemiBold.woff2",
+      "family": "Estedad",
+      "source": "/assets/fonts/Estedad-SemiBold.woff2",
       "format": "woff2"
     }
   },

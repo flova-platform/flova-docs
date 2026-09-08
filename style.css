@@ -10,6 +10,21 @@ mdx-content {
   direction: rtl;
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+#body-content,
+#content-area,
+#content,
+#sidebar,
+#table-of-contents,
+mdx-content {
+  min-width: 0;
+}
+
 mdx-content,
 #sidebar,
 #table-of-contents {
