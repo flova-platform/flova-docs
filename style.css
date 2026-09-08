@@ -117,8 +117,14 @@ mdx-content,
   content: none !important;
 }
 
-#content :where(h1, h2, h3, h4, h5, h6) {
+:where(h1, h2, h3, h4, h5, h6) {
   font-family: "Estedad", sans-serif !important;
+}
+
+/* Mintlify's scroll viewport uses physical `pr-8`, which is wrong for RTL. */
+:where(.base-ui-disable-scrollbar.pr-8) {
+  padding-right: 0 !important;
+  padding-left: 2rem !important;
 }
 
 pre,
