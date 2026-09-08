@@ -84,6 +84,26 @@ mdx-content,
   text-align: right;
 }
 
+#content ul {
+  list-style: none;
+}
+
+#content ul > li {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+#content ul > li::before {
+  content: none;
+}
+
+#content ul > li::after {
+  content: "•";
+  flex: none;
+}
+
 #content :where(h1, h2, h3, h4, h5, h6) {
   font-family: "Estedad", sans-serif !important;
 }
