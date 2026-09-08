@@ -18,16 +18,6 @@
     "default": "system",
     "strict": false
   },
-  "fonts": {
-    "family": "Estedad",
-    "source": "/assets/fonts/Estedad-Regular.woff2",
-    "format": "woff2",
-    "heading": {
-      "family": "Estedad",
-      "source": "/assets/fonts/Estedad-SemiBold.woff2",
-      "format": "woff2"
-    }
-  },
   "icons": {
     "library": "lucide"
   },

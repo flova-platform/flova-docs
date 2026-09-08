@@ -1,3 +1,35 @@
+@font-face {
+  font-family: "Estedad";
+  src: url("/assets/fonts/Estedad-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Estedad";
+  src: url("/assets/fonts/Estedad-Medium.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Estedad";
+  src: url("/assets/fonts/Estedad-SemiBold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Estedad";
+  src: url("/assets/fonts/Estedad-Bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
 /* Farsi is the sole site language. Keep prose RTL while isolating technical text. */
 html,
 body,
@@ -8,6 +40,15 @@ body,
 #table-of-contents,
 mdx-content {
   direction: rtl;
+}
+
+body,
+#body-content,
+#content-area,
+#content,
+#sidebar,
+#table-of-contents {
+  font-family: "Estedad", sans-serif;
 }
 
 html,
@@ -28,6 +69,18 @@ mdx-content {
 mdx-content,
 #sidebar,
 #table-of-contents {
+  text-align: right;
+}
+
+#content ul,
+#content ol {
+  direction: rtl;
+  text-align: right;
+  padding-inline-start: 1.625rem;
+  padding-inline-end: 0;
+}
+
+#content li {
   text-align: right;
 }
 
