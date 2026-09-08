@@ -95,12 +95,6 @@ mdx-content,
   padding-inline-end: 0 !important;
 }
 
-#content ul > li::before {
-  content: "•" !important;
-  position: absolute !important;
-  inset-inline-start: 0 !important;
-}
-
 #content ul > li::after {
   content: none !important;
 }
