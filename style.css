@@ -89,19 +89,20 @@ mdx-content,
 }
 
 #content ul > li {
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  gap: 0.5rem;
+  display: list-item !important;
+  position: relative !important;
+  padding-inline-start: 1.5rem !important;
+  padding-inline-end: 0 !important;
 }
 
 #content ul > li::before {
-  content: none;
+  content: "•" !important;
+  position: absolute !important;
+  inset-inline-start: 0 !important;
 }
 
 #content ul > li::after {
-  content: "•";
-  flex: none;
+  content: none !important;
 }
 
 #content :where(h1, h2, h3, h4, h5, h6) {
