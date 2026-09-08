@@ -42,7 +42,9 @@
           {
             "group": "شروع کار",
             "icon": "rocket",
-            "pages": ["index", "start/quickstart", "start/mental-model"]
+            "pages": [
+              "index"
+            ]
           },
           {
             "group": "مفاهیم پلتفرم",
@@ -51,72 +53,48 @@
               "concepts/overview",
               "concepts/product-device",
               "concepts/datastreams",
-              "concepts/lifecycle",
-              "reference/glossary"
+              "concepts/lifecycle"
             ]
           },
           {
             "group": "کنسول",
             "icon": "layout-dashboard",
-            "pages": [
-              "console/overview",
-              "console/templates",
-              "console/devices",
-              "console/automation",
-              "console/ota"
-            ]
+            "pages": []
           },
           {
             "group": "استودیو",
             "icon": "panels-top-left",
-            "pages": ["studio/overview", "studio/dashboards", "studio/bindings"]
+            "pages": []
           },
           {
             "group": "FlovaAI",
             "icon": "sparkles",
-            "pages": ["flova-ai/overview", "flova-ai/workflow", "flova-ai/examples"]
+            "pages": []
           },
           {
             "group": "FlovaQL",
             "icon": "braces",
-            "pages": ["flovaql/overview", "flovaql/queries", "flovaql/limits"]
+            "pages": []
           },
           {
             "group": "اتصال برنامه‌ها",
             "icon": "square-terminal",
-            "pages": [
-              "integrations/overview",
-              "integrations/authentication",
-              "integrations/errors",
-              "integrations/organization-api",
-              "integrations/user-api",
-              "integrations/realtime"
-            ]
+            "pages": []
           },
           {
             "group": "SDK و فریم‌ور",
             "icon": "cpu",
-            "pages": [
-              "sdk/overview",
-              "sdk/install",
-              "sdk/quickstart",
-              "sdk/datastreams",
-              "sdk/provisioning",
-              "sdk/offline",
-              "sdk/custom-boards",
-              "sdk/security",
-              "sdk/troubleshooting"
-            ]
+            "pages": []
           },
           {
             "group": "راهنماهای عملی",
             "icon": "book-open-check",
-            "pages": ["recipes/sensor-and-relay", "recipes/first-query", "recipes/first-dashboard"]
+            "pages": []
           },
           {
             "group": "پشتیبانی",
             "icon": "circle-help",
-            "pages": ["reference/faq"]
+            "pages": []
           }
         ]
   }
