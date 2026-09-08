@@ -1,0 +1,34 @@
+/* Farsi is the sole site language. Keep prose RTL while isolating technical text. */
+html,
+body,
+#body-content,
+#content-area,
+#content,
+#sidebar,
+#table-of-contents,
+mdx-content {
+  direction: rtl;
+}
+
+mdx-content,
+#sidebar,
+#table-of-contents {
+  text-align: right;
+}
+
+pre,
+pre code,
+code-block,
+code-block pre,
+code-block code,
+#request-example,
+#response-example,
+#api-playground-input {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate;
+}
+
+table {
+  direction: rtl;
+}

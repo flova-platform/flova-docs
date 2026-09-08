@@ -1,0 +1,30 @@
+---
+title: خطاها و idempotency
+description: پاسخ خطا، request ID و جلوگیری از اجرای تکراری mutationها.
+icon: circle-alert
+---
+
+# خطاها و idempotency
+
+خطای API به‌جای متن خام backend یک شیء قابل‌پردازش دارد:
+
+```json
+{
+  "error": {
+    "code": "datastream.write_rejected",
+    "message": "The datastream write was rejected.",
+    "details": {}
+  }
+}
+```
+
+برای پشتیبانی، `x-request-id` را همراه با code نگه دارید؛ مقدار secret یا payload
+حساس را ارسال نکنید.
+
+برای mutationهایی که ممکن است retry شوند، `Idempotency-Key` یکتا بفرستید:
+
+```http
+Idempotency-Key: 6f9b4d9e-9a62-4f53-9f5a-REPLACE_ME
+```
+
+کلید را برای یک عملیات دوباره ثابت نگه دارید و برای عملیات جدید تغییر دهید.

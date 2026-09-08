@@ -1,0 +1,23 @@
+---
+title: به‌روزرسانی فریم‌ور
+description: انتشار کنترل‌شدهٔ firmware و مشاهدهٔ وضعیت rollout.
+icon: upload-cloud
+---
+
+# به‌روزرسانی فریم‌ور
+
+OTA را مثل یک migration عملیاتی ببینید، نه فقط آپلود یک فایل:
+
+1. artifact را با target و نسخهٔ روشن بسازید.
+2. checksum و metadata را ثبت کنید.
+3. eligibility دستگاه‌ها را پیش از rollout بررسی کنید.
+4. rollout را محدود و قابل توقف آغاز کنید.
+5. ACK، نسخهٔ اجراشده و خطا را دنبال کنید.
+
+<Warning>
+فقط از HTTPS معتبر و artifactی استفاده کنید که checksum آن را می‌شناسید. فایل
+OTA یا credential را در مستندات، log و issue عمومی قرار ندهید.
+</Warning>
+
+برای دستگاه‌های کم‌منبع، حواستان به فضای flash، watchdog، rollback و آزادسازی
+منابع شبکه پیش از دریافت firmware باشد.

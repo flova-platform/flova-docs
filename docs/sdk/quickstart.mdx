@@ -1,0 +1,45 @@
+---
+title: اولین برنامهٔ فریم‌ور
+description: گزارش یک سنسور و کنترل ایمن یک خروجی با FlovaSDK.
+icon: play
+---
+
+# اولین برنامهٔ فریم‌ور
+
+این نمونه برای یک Arduino ESP32 موجود است:
+
+```cpp
+#include <Arduino.h>
+#include <WiFi.h>
+#include <FlovaEsp32.h>
+
+FlovaEsp32 flovaDevice;
+auto relay = flovaDevice.datastream<bool>("relay");
+auto temperature = flovaDevice.datastream<double>("temperature");
+
+void setup() {
+  WiFi.begin("your-wifi", "your-password");
+  pinMode(2, OUTPUT);
+
+  relay.onWrite([](bool enabled) {
+    digitalWrite(2, enabled ? HIGH : LOW);
+  });
+
+  temperature.onRead([]() {
+    return FlovaReadResult<double>::success(24.8);
+  });
+
+  flovaDevice.begin();
+}
+
+void loop() {
+  flovaDevice.run();
+}
+```
+
+در برنامهٔ واقعی، Wi‑Fi و provisioning را با مسیر امن محصول کامل کنید. مقدار
+نمونهٔ بالا فقط برای روشن‌کردن API است و نباید به‌عنوان سنسور واقعی منتشر شود.
+
+<Warning>
+رمز Wi‑Fi را hardcode نکنید. `run()` باید مرتب و بدون loop blocking فراخوانی شود.
+</Warning>

@@ -1,0 +1,30 @@
+---
+title: Provisioning و activation
+description: تحویل امن handoff به دستگاه و آماده‌سازی runtime.
+icon: qr-code
+---
+
+# Provisioning و activation
+
+یک firmware مشترک باید بتواند روی چند دستگاه نصب شود؛ device UUID و secret را
+در source قرار ندهید. مسیر امن این است:
+
+```text
+activation handoff
+  → device generates its secret
+  → staged configuration
+  → verified commit
+  → clean runtime reboot
+  → config_reported
+```
+
+QR فعال‌سازی یک payload کامل است، نه URL:
+
+```text
+FLOVA:ACTIVATE:1:<22-character-base64url-token>
+```
+
+توکن را در log چاپ نکنید و پس از مصرف یا revoke، دوباره استفاده نکنید.
+
+در ترکیب universal، Flova مالک provisioning و lifecycle تعریف‌شده است. در
+ترکیب Arduino موجود، network و server همچنان با application شماست.

@@ -1,0 +1,35 @@
+---
+title: احراز هویت API
+description: API key، OAuth و مرزهای دسترسی فلووا.
+icon: key-round
+---
+
+# احراز هویت API
+
+## Organization API
+
+برای script ساده از API key سازمانی و برای backendهای قابل‌مدیریت از OAuth
+`client_credentials` استفاده کنید. هر درخواست به organization و scope مؤثر
+همان credential محدود می‌شود.
+
+```bash
+curl https://engine.example.com/api/v1/devices \
+  -H 'Authorization: Bearer flv_live_REPLACE_ME'
+```
+
+شناسهٔ سازمان را با header دستی جعل نکنید؛ Engine آن را از actor احراز‌شده
+استخراج می‌کند.
+
+## User API
+
+اپلیکیشن‌های public باید Authorization Code با PKCE استفاده کنند. redirect URI
+باید دقیقاً ثبت شده باشد و token کاربر فقط به دستگاه‌های claim‌شده و scopeهای
+اعطاشده دسترسی دارد.
+
+برای جزئیات endpointها از [مرجع Organization API](/reference/organization-api) و
+[مرجع User API](/reference/user-api) استفاده کنید.
+
+<Warning>
+هیچ token، client secret یا رمز Wi‑Fi را در repository، issue، log یا مثال واقعی
+قرار ندهید.
+</Warning>

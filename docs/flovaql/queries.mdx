@@ -1,0 +1,49 @@
+---
+title: Queryهای کاربردی
+description: فیلتر، aggregation، bucket و timezone در FlovaQL.
+icon: search-code
+---
+
+# Queryهای کاربردی
+
+## دمای یک دستگاه
+
+```sql
+SELECT time, value
+FROM telemetry
+WHERE device.id = 'DEVICE_ID'
+  AND datastream.key = 'temperature'
+  AND time > now() - 7d
+ORDER BY time DESC
+LIMIT 100
+```
+
+## میانگین ساعتی
+
+```sql
+TIMEZONE 'Asia/Tehran'
+SELECT
+  bucket(time, 1h) AS hour,
+  avg(value) AS average_temperature
+FROM telemetry
+WHERE datastream.key = 'temperature'
+  AND time > now() - 7d
+GROUP BY hour
+ORDER BY hour
+```
+
+## بازهٔ روزانهٔ UTC
+
+```sql
+TIMEZONE 'UTC'
+SELECT
+  bucket(time, 1d) AS day,
+  count(value) AS samples
+FROM telemetry
+WHERE datastream.key = 'temperature'
+  AND time > now() - 30d
+GROUP BY day
+```
+
+کلید دیتاستریم و نوع آن باید در catalog قابل‌حل باشد. `avg`، `sum`، `min` و
+`max` فقط برای مقدارهای عددی معتبرند.

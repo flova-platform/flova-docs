@@ -1,0 +1,36 @@
+---
+title: راهنمای Organization API
+description: الگوی استفاده از API سازمانی برای backendها و ابزارها.
+icon: building-2
+---
+
+# راهنمای Organization API
+
+Organization API برای کنترل و خواندن منابع یک organization است. مسیر پایهٔ
+عمومی `/api/v1` است و scope باید با عملیات هماهنگ باشد.
+
+## خواندن دیتاستریم
+
+```bash
+curl 'https://engine.example.com/api/v1/devices/DEVICE_ID/datastreams/temperature' \
+  -H 'Authorization: Bearer flv_live_REPLACE_ME'
+```
+
+## نوشتن مقدار
+
+```bash
+curl -X POST \
+  'https://engine.example.com/api/v1/devices/DEVICE_ID/datastreams/relay/value' \
+  -H 'Authorization: Bearer flv_live_REPLACE_ME' \
+  -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: 0f5e9f8d-REPLACE_ME' \
+  --data '{"value":true}'
+```
+
+پاسخ موفق write به معنی پذیرفته‌شدن درخواست توسط مسیر runtime است؛ برای
+confirmation سخت‌افزار، وضعیت و timeline دستگاه را نیز بررسی کنید.
+
+<Note>
+لیست کامل endpointها، پارامترها و playground در [مرجع API سازمانی](/reference/organization-api)
+از OpenAPI عمومی تولید می‌شود.
+</Note>

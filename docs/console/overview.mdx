@@ -1,0 +1,25 @@
+---
+title: کنسول فلووا
+description: مرکز ساخت مدل محصول، مدیریت دستگاه و عملیات روزمره.
+icon: layout-dashboard
+---
+
+# کنسول فلووا
+
+کنسول جایی است که قرارداد محصول را تعریف و دستگاه‌های واقعی را اداره می‌کنید.
+کارهای اصلی آن عبارت‌اند از:
+
+- ساخت و انتشار Template
+- تعریف و mapping دیتاستریم‌ها
+- افزودن دستگاه و تولید activation code
+- مشاهدهٔ presence، مقدارها، timeline و خطاها
+- تنظیم automation، schedule و rolloutهای OTA
+
+## ترتیب پیشنهادی کار
+
+```text
+Template → Datastream → Hardware mapping → Publish → Device → Monitor
+```
+
+دستگاه را قبل از انتشار قرارداد معتبر به production نسپارید. تغییرات draft را
+validate کنید و بعد نسخهٔ مشخصی را منتشر کنید.

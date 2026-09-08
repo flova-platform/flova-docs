@@ -1,0 +1,100 @@
+openapi: 3.1.0
+info:
+  title: Flova User API
+  version: 1.0.0
+  description: OAuth API for applications acting for a signed-in end user on devices they have claimed.
+servers:
+  - url: /api/user-app
+security:
+  - userOAuth: []
+paths:
+  /devices:
+    get: {operationId: listClaimedDevices, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /deployment:
+    get: {operationId: getUserDeployment, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /device-groups:
+    get: {operationId: listDeviceGroups, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+    post: {operationId: createDeviceGroup, x-flova-scope: "user:devices:manage", requestBody: {$ref: "#/components/requestBodies/JsonBody"}, responses: {"201": {$ref: "#/components/responses/Success"}}}
+  /device-groups/{groupId}:
+    parameters: [{$ref: "#/components/parameters/GroupId"}]
+    patch: {operationId: updateDeviceGroup, x-flova-scope: "user:devices:manage", requestBody: {$ref: "#/components/requestBodies/JsonBody"}, responses: {"200": {$ref: "#/components/responses/Success"}}}
+    delete: {operationId: deleteDeviceGroup, x-flova-scope: "user:devices:manage", responses: {"204": {description: Deleted}}}
+  /device-groups/{groupId}/devices/{deviceId}:
+    parameters: [{$ref: "#/components/parameters/GroupId"}, {$ref: "#/components/parameters/DeviceId"}]
+    put: {operationId: addDeviceToGroup, x-flova-scope: "user:devices:manage", responses: {"204": {description: Added}}}
+    delete: {operationId: removeDeviceFromGroup, x-flova-scope: "user:devices:manage", responses: {"204": {description: Removed}}}
+  /devices/{deviceId}:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}]
+    get: {operationId: getClaimedDevice, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+    patch: {operationId: updateClaimedDevice, x-flova-scope: "user:devices:manage", requestBody: {$ref: "#/components/requestBodies/JsonBody"}, responses: {"200": {$ref: "#/components/responses/Success"}}}
+    delete: {operationId: removeClaimedDevice, x-flova-scope: "user:devices:manage", responses: {"204": {description: Removed}}}
+  /devices/{deviceId}/dashboard:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}]
+    get: {operationId: getDeviceDashboard, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/runtime:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}]
+    get: {operationId: getDeviceRuntime, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/setup:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}]
+    get: {operationId: getDeviceSetup, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/latest-values:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}]
+    get: {operationId: getDeviceLatestValues, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/history:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}]
+    get: {operationId: getDeviceHistory, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/presence:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}]
+    get: {operationId: getDevicePresence, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/provisioning-status:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}]
+    get: {operationId: getDeviceProvisioningStatus, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/provisioning-sessions:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}, {$ref: "#/components/parameters/IdempotencyKey"}]
+    post: {operationId: createDeviceProvisioningSession, x-flova-scope: "user:devices:manage", responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/dashboard-queries/{nodeId}:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}, {name: nodeId, in: path, required: true, schema: {type: string}}]
+    post: {operationId: queryDeviceDashboard, x-flova-scope: "user:devices:read", requestBody: {$ref: "#/components/requestBodies/JsonBody"}, responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/commands:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}, {$ref: "#/components/parameters/IdempotencyKey"}]
+    post: {operationId: commandClaimedDevice, x-flova-scope: "user:devices:control", requestBody: {$ref: "#/components/requestBodies/JsonBody"}, responses: {"202": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/factory-reset:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}, {$ref: "#/components/parameters/IdempotencyKey"}]
+    post: {operationId: factoryResetDevice, x-flova-scope: "user:devices:manage", responses: {"202": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/factory-reset/{operationId}:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}, {name: operationId, in: path, required: true, schema: {type: string, format: uuid}}]
+    get: {operationId: getFactoryResetStatus, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/schedules:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}]
+    get: {operationId: listDeviceSchedules, x-flova-scope: "user:devices:read", responses: {"200": {$ref: "#/components/responses/Success"}}}
+    post: {operationId: createDeviceSchedule, x-flova-scope: "user:devices:manage", requestBody: {$ref: "#/components/requestBodies/JsonBody"}, responses: {"201": {$ref: "#/components/responses/Success"}}}
+  /devices/{deviceId}/schedules/{scheduleId}:
+    parameters: [{$ref: "#/components/parameters/DeviceId"}, {name: scheduleId, in: path, required: true, schema: {type: string, format: uuid}}]
+    patch: {operationId: updateDeviceSchedule, x-flova-scope: "user:devices:manage", requestBody: {$ref: "#/components/requestBodies/JsonBody"}, responses: {"200": {$ref: "#/components/responses/Success"}}}
+    delete: {operationId: deleteDeviceSchedule, x-flova-scope: "user:devices:manage", responses: {"204": {description: Deleted}}}
+  /activations/claim:
+    post: {operationId: claimDevice, x-flova-scope: "user:devices:manage", parameters: [{$ref: "#/components/parameters/IdempotencyKey"}], requestBody: {$ref: "#/components/requestBodies/JsonBody"}, responses: {"200": {$ref: "#/components/responses/Success"}}}
+  /realtime/tickets:
+    post: {operationId: createUserRealtimeTicket, x-flova-scope: "user:realtime", responses: {"200": {$ref: "#/components/responses/Success"}}}
+components:
+  securitySchemes:
+    userOAuth:
+      type: oauth2
+      x-pkce-required: true
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.flova.ir/api/auth/oauth2/authorize
+          tokenUrl: https://auth.flova.ir/api/auth/oauth2/token
+          scopes:
+            user:devices:read: Read claimed devices
+            user:devices:control: Send commands to claimed devices
+            user:devices:manage: Claim and manage devices
+            user:realtime: Subscribe to claimed-device realtime events
+  parameters:
+    DeviceId: {name: deviceId, in: path, required: true, schema: {type: string, format: uuid}}
+    GroupId: {name: groupId, in: path, required: true, schema: {type: string, format: uuid}}
+    IdempotencyKey: {name: Idempotency-Key, in: header, required: true, schema: {type: string, maxLength: 200}}
+  requestBodies:
+    JsonBody: {required: true, content: {application/json: {schema: {type: object, additionalProperties: true}}}}
+  responses:
+    Success: {description: Successful response, content: {application/json: {schema: {type: object, additionalProperties: true}}}}

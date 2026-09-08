@@ -1,0 +1,27 @@
+---
+title: FlovaSDK
+description: SDK رسمی C++ برای اتصال ESP32، ESP8266 و بردهای سفارشی.
+icon: microchip
+---
+
+# FlovaSDK
+
+FlovaSDK یک runtime local-first و bounded برای اتصال دستگاه به فلوواست. برای
+ESP32 و ESP8266 facade آماده دارد و هستهٔ قابل‌حمل C++11 آن به Arduino یا Wi‑Fi
+وابسته نیست.
+
+## دو مسیر توسعه
+
+<Tabs>
+  <Tab title="Arduino موجود">
+    از `FlovaEsp32` یا `FlovaEsp8266` استفاده کنید؛ Wi‑Fi، application و GPIO با
+    برنامهٔ شما می‌ماند.
+  </Tab>
+  <Tab title="Firmware تحت مدیریت Flova">
+    از ترکیب universal استفاده کنید تا provisioning، mapping، OTA و restart policy
+    نیز در ترکیب firmware مدیریت شوند.
+  </Tab>
+</Tabs>
+
+از [نصب SDK](/sdk/install) شروع کنید و سپس [مدل دیتاستریم](/sdk/datastreams) را
+بخوانید.

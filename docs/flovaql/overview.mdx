@@ -1,0 +1,40 @@
+---
+title: FlovaQL
+description: زبان معنایی و read-only برای خواندن دادهٔ فلووا.
+icon: braces
+---
+
+# FlovaQL
+
+FlovaQL برای خواندن دادهٔ فلوواست، نه اجرای SQL خام. شما با مفهوم‌هایی مثل
+`devices`، `datastreams`، `telemetry` و `events` کار می‌کنید و Engine query را
+با scope سازمانی و محدودیت‌های منابع اجرا می‌کند.
+
+```text
+authentication
+  → organization scope
+  → parse and semantic validation
+  → permission and resource limits
+  → typed result
+```
+
+## نخستین query
+
+```sql
+SELECT
+  time,
+  value
+FROM telemetry
+WHERE datastream.key = 'temperature'
+  AND time > now() - 24h
+LIMIT 100
+```
+
+نتیجه، timestamp را به‌صورت ISO-8601 UTC برمی‌گرداند و timezone مؤثر query را
+در metadata نگه می‌دارد. برای مثال‌های بیشتر [queryها](/flovaql/queries) را
+بخوانید.
+
+<Note>
+SQL، نام جدول دیتابیس، credential دیتابیس و expressionهای خارج از زبان FlovaQL
+هیچ‌کدام بخشی از قرارداد عمومی نیستند.
+</Note>

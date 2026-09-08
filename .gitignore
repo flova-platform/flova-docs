@@ -1,0 +1,6 @@
+.env
+.mintlify/
+node_modules/
+.DS_Store
+dist/
+build/

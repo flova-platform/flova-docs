@@ -1,0 +1,33 @@
+---
+title: API دیتاستریم
+description: تفاوت report، write، read و handler در SDK.
+icon: radio-tower
+---
+
+# API دیتاستریم
+
+```cpp
+auto relay = device.datastream<bool>("relay");
+
+relay.onWrite(setRelay); // فرمان remote و local به hardware boundary
+relay.write(true);       // command محلی
+relay.report(true);      // مشاهدهٔ سخت‌افزار
+bool value = relay.read(); // cache محلی؛ network request نیست
+```
+
+## دو مسیر را قاطی نکنید
+
+- `report(value)` می‌گوید سخت‌افزار چه چیزی مشاهده کرده است.
+- `write(value)` قصد تغییر مقدار را ثبت و handler را اجرا می‌کند.
+- `onWrite()` محل validation، interlock و اعمال خروجی است.
+- `read()` فقط cache محلی را می‌خواند.
+
+نتیجهٔ write را بررسی کنید:
+
+```cpp
+return FlovaWriteResult::accept();
+return FlovaWriteResult::reject("interlock_open");
+return FlovaWriteResult::failure("gpio_write_failed");
+```
+
+`reasonCode` باید کوتاه، machine-readable و بدون secret باشد.
