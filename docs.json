@@ -49,12 +49,7 @@
           {
             "group": "مفاهیم پلتفرم",
             "icon": "layers-3",
-            "pages": [
-              "concepts/overview",
-              "concepts/product-device",
-              "concepts/datastreams",
-              "concepts/lifecycle"
-            ]
+            "pages": []
           },
           {
             "group": "کنسول",
