@@ -25,18 +25,6 @@
     "eyebrows": "breadcrumbs",
     "codeblocks": "system"
   },
-  "api": {
-    "openapi": [
-      {
-        "source": "openapi/organization.yaml",
-        "directory": "reference/organization-api"
-      },
-      {
-        "source": "openapi/user.yaml",
-        "directory": "reference/user-api"
-      }
-    ]
-  },
   "navigation": {
     "groups": [
       {
@@ -124,11 +112,9 @@
         ]
       },
       {
-        "group": "مرجع و پشتیبانی",
+        "group": "پشتیبانی",
         "icon": "circle-help",
         "pages": [
-          "reference/organization-api",
-          "reference/user-api",
           "docs/support/troubleshooting"
         ]
       }

@@ -18,10 +18,6 @@ mint validate --check-redirects
 mint a11y
 ```
 
-مرجع API از فایل‌های عمومی `openapi/organization.yaml` و `openapi/user.yaml`
-ساخته می‌شود. این فایل‌ها snapshot قراردادهای عمومی Engine هستند؛ هنگام تغییر
-قرارداد API باید با منبع canonical سرویس بازبینی و همگام شوند.
-
 ## مرز محتوای عمومی
 
 این پروژه فقط رفتار عمومی و قابل‌استفادهٔ فلووا را توضیح می‌دهد. credential،
