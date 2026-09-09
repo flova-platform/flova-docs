@@ -1,0 +1,42 @@
+---
+title: ساخت محصول با universal firmware
+description: مسیر no-code برای بردهای ESP32 و ESP8266 با Console و Studio.
+icon: wand-sparkles
+---
+
+اگر هدف شما ساخت محصول است و نمی‌خواهید برای هر رفتار کوچک firmware تغییر
+دهید، universal firmware شروع مناسبی است. یک image عمومی روی برد قرار می‌گیرد
+و Device Type، mapping، automation و dashboard رفتار محصول را کامل می‌کنند.
+
+## مراحل پیشنهادی
+
+1. برد و target درست را انتخاب کنید.
+2. image universal مربوط به ESP32 یا ESP8266 را build و flash کنید.
+3. در Console یک Device Type با datastreamهای واقعی بسازید.
+4. mapping GPIO را با سیم‌کشی برد تطبیق دهید.
+5. QR activation بسازید و دستگاه را provision کنید.
+6. در Console مطمئن شوید configuration اعمال شده و دستگاه online است.
+7. dashboard و automation را در Studio و Console بسازید.
+
+برای کسی که کدنویسی نمی‌کند، این مسیر دو فایده دارد: مدل داده یک‌بار ساخته
+می‌شود و منطق محصول در automation قابل‌تغییر است. برای هر تغییر در شرط دما یا
+متن dashboard لازم نیست image تازه فلش کنید.
+
+## محدودیت را هم بشناسید
+
+universal firmware برای رفتارهای قابل‌توصیف با datastream و mapping مناسب است.
+اگر محصول شما به driver اختصاصی، timing سخت، پروتکل محلی یا کنترل پیچیدهٔ حافظه
+نیاز دارد، custom firmware انتخاب بهتری است. می‌توانید همچنان Device Type،
+FlovaLink، dashboard و FlovaQL را نگه دارید و فقط مالکیت runtime محلی را عوض کنید.
+
+## automation نمونه
+
+```text
+trigger: تغییر temperature
+condition: temperature > 30
+action: fan = true
+```
+
+پس از deploy، Engine منطق را اجرا می‌کند و firmware فرمان `fan` را از همان مسیر
+عادی datastream دریافت می‌کند. برای test، automation را روی یک دستگاه آزمایشی
+فعال کنید و هم مقدار واقعی سنسور و هم ACK خروجی را بررسی کنید.

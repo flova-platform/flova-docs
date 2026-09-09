@@ -1,0 +1,45 @@
+---
+title: اتصال firmware سفارشی
+description: حفظ برنامهٔ موجود و اضافه‌کردن datastream و FlovaLink با SDK.
+icon: code-xml
+---
+
+custom firmware برای تیمی است که برنامهٔ دستگاه، Wi-Fi، GPIO یا setup server
+خودش را دارد. در این مدل، `FlovaEsp32` و `FlovaEsp8266` facadeهای passive هستند:
+آن‌ها SoftAP ایجاد نمی‌کنند، server را جایگزین نمی‌کنند و GPIO را به‌جای
+برنامهٔ شما کنترل نمی‌کنند.
+
+## الگوی ادغام
+
+```text
+application Wi-Fi و hardware
+          ↓
+       FlovaSDK
+          ↓
+ datastream / state / command
+          ↓
+       FlovaLink
+```
+
+در setup، برنامهٔ شما Wi-Fi و server را بالا می‌آورد. بعد handoff فلووا را با
+مسیرهای ثبت‌شده یا channel دیگری دریافت می‌کند. پس از `begin`، `run` را در loop
+فراخوانی کنید و handlerهای hardware را قبل از آن ثبت کنید.
+
+## چه چیزهایی در اختیار برنامه می‌ماند؟
+
+- اتصال Wi-Fi و روش reconnect
+- server و routeهای اختصاصی برنامه
+- GPIO، driver و state محلی
+- تصمیم دربارهٔ factory reset و OTA، مگر اینکه صریحاً از composition فلووا استفاده کنید
+
+## چه چیزهایی از SDK می‌گیرید؟
+
+- typed datastreamها
+- مسیر مشترک local write، remote command و automation
+- report کردن مشاهدهٔ سنسور
+- cache و policy آفلاین
+- هویت و configuration فلووا، بر اساس adapter انتخابی
+
+اگر board شما ESP نیست، به‌جای facade از [هستهٔ portable و چهار service](/docs/sdk/custom-boards)
+استفاده کنید. این کار شما را مجبور نمی‌کند firmware محصول را با معماری
+universal بازنویسی کنید.

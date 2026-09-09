@@ -1,0 +1,58 @@
+---
+title: بردهای سفارشی
+description: استفاده از هستهٔ C++11 فلووا روی STM32، PLC، RTOS و gateway.
+icon: circuit-board
+---
+
+هستهٔ portable به Arduino، ESP، Wi-Fi، WebSocket یا filesystem وابسته نیست.
+برای یک board port باید serviceهای ارتباط، ذخیره‌سازی، ساعت و log را به runtime
+بدهید. این مرز اجازه می‌دهد همان رفتار datastream و command روی MCU، PLC یا
+gateway حفظ شود.
+
+## serviceهای لازم
+
+```text
+flova::Link
+flova::Storage
+flova::Clock
+flova::Logger
+```
+
+`Link` پیام‌ها را می‌فرستد و دریافت‌های محدود را صف می‌کند. `Storage` هویت،
+state و تاریخچهٔ bounded را نگه می‌دارد. `Clock` زمان monotonic یا UTC موردنیاز
+را می‌دهد و `Logger` پیام‌های قابل‌نمایش را ثبت می‌کند.
+
+## مرز loop
+
+callback ارتباط نباید GPIO یا منطق سنگین را اجرا کند. دادهٔ ورودی را در صف
+محدود قرار دهید و از loop اصلی صدا بزنید:
+
+```cpp
+flova::Device device(link, storage, clock, logger);
+auto relay = device.datastream<bool>("relay");
+
+relay.onWrite(setRelay);
+device.begin();
+
+for (;;) {
+  device.run();
+}
+```
+
+در `setRelay` نتیجهٔ سخت‌افزار را برگردانید. اگر نوشتن رد شد، cache، revision و
+state معتبر نباید جلو بروند.
+
+## transportهای دیگر
+
+برد سفارشی می‌تواند مستقیماً از WSS استفاده کند یا از gatewayای بهره ببرد که
+BLE، LoRaWAN، serial، CAN، Modbus یا fieldbus را به اتصال فلووا ترجمه می‌کند.
+adapter باید شناسهٔ command، revision، origin، acknowledgement و expiry را
+حفظ کند. ساختن یک پروتکل موازی که این اطلاعات را حذف کند، بعداً باعث اختلاف
+بین dashboard و سخت‌افزار می‌شود.
+
+## Wi-Fi و OTA
+
+هستهٔ portable خودش Wi-Fi یا OTA را مالک نمی‌شود. این دو قابلیت را application
+یا packageٔ board شما تعیین می‌کند. universal firmware composition این مالکیت
+را به Flova می‌دهد؛ custom board باید setup channel، storage امن، دانلود و
+بازگشت از خطا را آگاهانه تعریف کند.

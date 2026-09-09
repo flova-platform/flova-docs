@@ -39,58 +39,99 @@
   },
   "navigation": {
     "groups": [
-          {
-            "group": "شروع کار",
-            "icon": "rocket",
-            "pages": [
-              "index"
-            ]
-          },
-          {
-            "group": "مفاهیم پلتفرم",
-            "icon": "layers-3",
-            "pages": []
-          },
-          {
-            "group": "کنسول",
-            "icon": "layout-dashboard",
-            "pages": []
-          },
-          {
-            "group": "استودیو",
-            "icon": "panels-top-left",
-            "pages": []
-          },
-          {
-            "group": "FlovaAI",
-            "icon": "sparkles",
-            "pages": []
-          },
-          {
-            "group": "FlovaQL",
-            "icon": "braces",
-            "pages": []
-          },
-          {
-            "group": "اتصال برنامه‌ها",
-            "icon": "square-terminal",
-            "pages": []
-          },
-          {
-            "group": "SDK و فریم‌ور",
-            "icon": "cpu",
-            "pages": []
-          },
-          {
-            "group": "راهنماهای عملی",
-            "icon": "book-open-check",
-            "pages": []
-          },
-          {
-            "group": "پشتیبانی",
-            "icon": "circle-help",
-            "pages": []
-          }
+      {
+        "group": "شروع کار",
+        "icon": "rocket",
+        "pages": [
+          "index",
+          "docs/start/overview",
+          "docs/start/mental-model",
+          "docs/start/quickstart"
         ]
+      },
+      {
+        "group": "مفاهیم پلتفرم",
+        "icon": "layers-3",
+        "pages": [
+          "docs/concepts/datastreams",
+          "docs/concepts/device-types",
+          "docs/concepts/device-lifecycle"
+        ]
+      },
+      {
+        "group": "کنسول",
+        "icon": "layout-dashboard",
+        "pages": [
+          "docs/console/overview",
+          "docs/console/device-types",
+          "docs/console/provisioning",
+          "docs/console/automations"
+        ]
+      },
+      {
+        "group": "استودیو و اپ",
+        "icon": "panels-top-left",
+        "pages": [
+          "docs/studio/overview",
+          "docs/studio/dashboards",
+          "docs/studio/publish",
+          "docs/studio/mobile"
+        ]
+      },
+      {
+        "group": "FlovaAI",
+        "icon": "sparkles",
+        "pages": [
+          "docs/flovaai/overview"
+        ]
+      },
+      {
+        "group": "FlovaQL",
+        "icon": "braces",
+        "pages": [
+          "docs/flovaql/overview",
+          "docs/flovaql/syntax",
+          "docs/flovaql/examples"
+        ]
+      },
+      {
+        "group": "FlovaLink",
+        "icon": "waypoints",
+        "pages": [
+          "docs/flovalink/overview"
+        ]
+      },
+      {
+        "group": "SDK و فریم‌ور",
+        "icon": "cpu",
+        "pages": [
+          "docs/sdk/overview",
+          "docs/sdk/quickstart",
+          "docs/sdk/datastream-api",
+          "docs/sdk/provisioning",
+          "docs/sdk/custom-boards",
+          "docs/sdk/build-flash",
+          "docs/sdk/ota"
+        ]
+      },
+      {
+        "group": "راهنماهای عملی",
+        "icon": "book-open-check",
+        "pages": [
+          "docs/guides/universal-device",
+          "docs/guides/custom-device",
+          "docs/guides/dashboard-automation"
+        ]
+      },
+      {
+        "group": "مرجع و پشتیبانی",
+        "icon": "circle-help",
+        "pages": [
+          "reference/organization-api",
+          "reference/user-api",
+          "docs/support/troubleshooting"
+        ]
+      }
+    ]
   }
 }

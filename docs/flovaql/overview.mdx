@@ -1,0 +1,60 @@
+---
+title: FlovaQL چیست؟
+description: زبان خواندنی فلووا برای پرس‌وجوی دادهٔ دستگاه‌ها و telemetry.
+icon: braces
+---
+
+FlovaQL یک زبان کوچک و معنایی برای خواندن دادهٔ فلوواست. شکل query آن برای
+کاربر شبیه SQL است، اما SQL نیست و به table یا نام داخلی دیتابیس دسترسی نمی‌دهد.
+شما dataset، field و datastream را از catalog عمومی انتخاب می‌کنید و Engine
+بقیهٔ بررسی‌های دسترسی، نوع و محدوده را انجام می‌دهد.
+
+FlovaQL فقط خواندنی است. برای تغییر state یا فرستادن فرمان از dashboard، API یا
+automation استفاده کنید.
+
+## datasetهای اصلی
+
+| dataset | کاربرد | fieldهای شاخص |
+| --- | --- | --- |
+| `devices` | فهرست و وضعیت دستگاه‌ها | `id`, `name`, `status`, `last_seen_at` |
+| `datastreams` | تعریف کانال‌های یک Device Type | `key`, `name`, `data_type`, `mode`, `unit` |
+| `telemetry` | مقدارهای زمانی گزارش‌شده | `time`, `value`, `device_id`, `unit` |
+| `events` | رخدادها و هشدارها | `time`, `key`, `severity`, `message` |
+| `commands` | وضعیت فرمان‌های ارسالی | `time`, `datastream_key`, `status`, `acked_at` |
+
+برای دیدن catalog workspace از مسیر مربوط به Console یا API استفاده کنید. field
+را حدس نزنید، مخصوصاً وقتی نام فارسی یک دستگاه با key فنی آن فرق دارد.
+
+## یک query ساده
+
+```sql
+SELECT id, name, status, last_seen_at
+FROM devices
+WHERE status = 'offline'
+ORDER BY last_seen_at DESC
+LIMIT 100
+```
+
+برای telemetry باید بازهٔ زمانی داشته باشید:
+
+```sql
+SELECT time, value
+FROM telemetry
+WHERE datastream.key = 'temperature'
+  AND time > now() - 24h
+ORDER BY time ASC
+LIMIT 1000
+```
+
+`telemetry.key` به‌تنهایی کافی نیست. در بیشتر queryهای واقعی، از qualifierهایی
+مثل `datastream.key` یا `device.name` برای روشن‌کردن رابطه استفاده کنید.
+
+## پاسخ query
+
+نتیجه یک جدول typed است: `columns` نوع و نام ستون‌ها را توضیح می‌دهد و `rows`
+مقدار هر ردیف را دارد. metadata نیز زمان اجرا، تعداد ردیف، timezone مؤثر و
+وضعیت cache را بیان می‌کند. زمان‌ها برای interchange به‌صورت ISO-8601 با `Z`
+برمی‌گردند؛ timezone فقط برای هم‌ترازکردن bucket و نمایش استفاده می‌شود.
+
+برای ادامه، [syntax کامل](/docs/flovaql/syntax) و [مثال‌های کاربردی](/docs/flovaql/examples)
+را بخوانید.

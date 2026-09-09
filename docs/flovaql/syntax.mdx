@@ -1,0 +1,111 @@
+---
+title: syntax و قواعد FlovaQL
+description: ساختار statement، شرط‌ها، functionها، زمان و پارامترها در FlovaQL.
+icon: code-2
+---
+
+ساختار کلی query به این شکل است:
+
+```text
+[TIMEZONE '<IANA>'] SELECT <expressions> FROM <dataset>
+[JOIN <dataset> [AS <alias>] [ON <condition>]]
+[WHERE <condition>]
+[GROUP BY <expressions>]
+[HAVING <condition>]
+[ORDER BY <expressions>]
+[LIMIT <integer>]
+```
+
+ترتیب clauseها مهم است. برای بیشتر queryها به `JOIN` نیازی ندارید؛ رابطه‌های
+منتشرشده به‌صورت qualifier قابل استفاده‌اند.
+
+## expression و alias
+
+field ساده، field واجد qualifier، رشتهٔ تک‌نقل، عدد، boolean، `NULL` و function
+قابل استفاده‌اند. برای نام قابل‌اعتماد در نتیجه، expression محاسباتی را alias
+کنید:
+
+```sql
+SELECT bucket(time, 1h) AS hour, avg(value) AS average_value
+FROM telemetry
+WHERE datastream.key = 'temperature'
+  AND time > now() - 24h
+GROUP BY hour
+ORDER BY hour ASC
+LIMIT 24
+```
+
+## شرط‌ها
+
+عملگرهای مقایسه `=`, `!=`, `>`, `>=`, `<`, `<=` و عملگرهای `LIKE`، `IN`،
+`BETWEEN` و `IS NULL` پشتیبانی می‌شوند. شرط‌ها را با `AND` و `OR` ترکیب کنید و
+برای اولویت از پرانتز استفاده کنید.
+
+```sql
+SELECT id, name
+FROM devices
+WHERE (status = 'offline' OR status = 'unknown')
+  AND name LIKE 'lab%'
+ORDER BY name ASC
+LIMIT 100
+```
+
+## functionها
+
+| function | معنی |
+| --- | --- |
+| `avg`, `sum`, `min`, `max` | aggregate عددی |
+| `count` | تعداد نمونه یا مقدارهای انتخاب‌شده |
+| `count_distinct` | تعداد مقدارهای متفاوت |
+| `first`, `last` | اولین یا آخرین مقدار در گروه |
+| `bucket(timestamp, duration[, timezone])` | قراردادن زمان در بازه‌های ثابت |
+| `now()` | زمان فعلی برای ساختن بازه |
+
+برای مقدار boolean یا string از `avg` و `sum` استفاده نکنید. `count(value)`
+تعداد نمونه است، نه مدت‌زمان روشن‌بودن یا تعداد تغییر وضعیت.
+
+## بازه و bucket
+
+واحدهای duration مثل `1h`، `24h`، `7d` و `1m` در query نوشته می‌شوند. query
+خام telemetry باید بازهٔ محدود داشته باشد. برای بازه‌های طولانی‌تر، داده را
+با `bucket` گروه‌بندی کنید:
+
+```sql
+SELECT bucket(time, 1h) AS hour, count(value) AS samples
+FROM telemetry
+WHERE datastream.key = 'temperature'
+  AND time > now() - 7d
+GROUP BY hour
+ORDER BY hour ASC
+LIMIT 168
+```
+
+## timezone و پارامتر
+
+timezone پیش‌فرض `Asia/Tehran` است. اگر مرز روز یا ساعت باید بر اساس timezone
+دیگری محاسبه شود، قبل از `SELECT` بنویسید:
+
+```sql
+TIMEZONE 'UTC'
+SELECT bucket(time, 1d) AS day, avg(value) AS average_value
+FROM telemetry
+WHERE datastream.key = 'temperature'
+  AND time > now() - 30d
+GROUP BY day
+ORDER BY day ASC
+LIMIT 30
+```
+
+پارامترها با `$name` نوشته می‌شوند و باید در `parameterSchema` نوع و مقدار
+متناظر داشته باشند:
+
+```sql
+SELECT id, name, status
+FROM devices
+WHERE device_template_id = $templateId
+ORDER BY name ASC
+LIMIT 100
+```
+
+timezone نوشته‌شده در `TIMEZONE` و آرگومان سوم `bucket` باید با هم سازگار
+باشند. هر query را ابتدا validate کنید و سپس execute کنید.

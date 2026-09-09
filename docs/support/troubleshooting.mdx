@@ -1,0 +1,44 @@
+---
+title: عیب‌یابی
+description: راهنمای پیدا کردن مشکل در build، provisioning، Link، dashboard و OTA.
+icon: life-buoy
+---
+
+برای عیب‌یابی، به‌جای تکرار همهٔ مراحل، مرز شکست را پیدا کنید. این جدول مسیر
+اول بررسی را نشان می‌دهد.
+
+| نشانه | اول چه چیزی را بررسی کنیم؟ |
+| --- | --- |
+| دستگاه setup network نمی‌سازد | target firmware، تغذیه، serial log و انتخاب universal |
+| QR اسکن می‌شود اما setup تمام نمی‌شود | اتصال گوشی به `Flova-Setup-*` و اجازهٔ شبکهٔ محلی |
+| Wi-Fi ذخیره می‌شود اما دستگاه online نیست | SSID، قدرت سیگنال، زمان سیستم و Link endpoint provisioned |
+| configuration pending می‌ماند | reboot، generation گزارش‌شده و سازگاری Device Type |
+| dashboard خالی است | published بودن نسخه، binding، دستگاه انتخاب‌شده و دادهٔ موجود |
+| فرمان ACK نمی‌شود | writable بودن datastream، online بودن دستگاه و handler سخت‌افزار |
+| query رد می‌شود | catalog، نوع مقدار، time bound، timezone و LIMIT |
+| OTA شروع نمی‌شود | target، boot layout، اندازه، SHA-256 و قابلیت دستگاه |
+
+## firmware
+
+اگر `begin()` شکست خورد، keyها و handlerها را قبل از `begin` تعریف کنید و
+`run()` را در loop مرتب اجرا کنید. `report` را برای مشاهده و `write` را برای
+فرمان به‌کار ببرید. کار سخت‌افزار را داخل callback socket انجام ندهید.
+
+## provisioning
+
+اگر setup بعد از دریافت handoff قطع شد، موفقیت را از روی ذخیره‌شدن token قضاوت
+نکنید. دستگاه باید به Wi-Fi برود، bootstrap کند، configuration را commit کند،
+restart شود و generation درست را گزارش دهد. در PWA، دسترسی شبکهٔ محلی مرورگر و
+برگشتن از صفحهٔ setup را بررسی کنید.
+
+## FlovaQL
+
+از catalog شروع کنید. در telemetry همیشه شرط زمانی بگذارید و برای بازهٔ بزرگ
+از `bucket` استفاده کنید. اگر function با نوع datastream سازگار نیست، query را
+با SQL دیگری پیچیده‌تر نکنید؛ نوع داده یا metric موردنظر را اصلاح کنید.
+
+## مرز شواهد
+
+موفقیت build یا typecheck فقط کد را بررسی می‌کند. online شدن واقعی، Wi-Fi، BLE،
+TLS، OTA، قطع برق و رفتار یک برد واقعی به test سخت‌افزار یا محیط واقعی نیاز
+دارند.

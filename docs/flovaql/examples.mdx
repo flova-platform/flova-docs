@@ -1,0 +1,93 @@
+---
+title: مثال‌های FlovaQL
+description: queryهای آماده برای دستگاه، telemetry، chart و command history.
+icon: notebook-tabs
+---
+
+همهٔ نمونه‌ها از نام‌های عمومی استفاده می‌کنند. `DEVICE_NAME` و keyهای نمونه را
+با مقدار واقعی catalog خودتان جایگزین کنید. قبل از اجرا، وجود field و نوع
+datastream را بررسی کنید.
+
+## timeline یک مقدار boolean
+
+برای نمایش تغییرات خام وضعیت در طول زمان:
+
+```sql
+SELECT time, value
+FROM telemetry
+WHERE device.name = 'DEVICE_NAME'
+  AND datastream.key = 'relay'
+  AND time > now() - 7d
+ORDER BY time ASC
+LIMIT 1000
+```
+
+این query زمان روشن‌بودن را محاسبه نمی‌کند. برای آن باید از دادهٔ نمونه‌برداری
+و منطق محصولی مناسب استفاده کنید؛ `count(value)` مدت‌زمان نیست.
+
+## میانگین ساعتی دما
+
+```sql
+SELECT
+  bucket(time, 1h) AS hour,
+  avg(value) AS average_value,
+  min(value) AS minimum_value,
+  max(value) AS maximum_value
+FROM telemetry
+WHERE device.name = 'DEVICE_NAME'
+  AND datastream.key = 'temperature'
+  AND time > now() - 24h
+GROUP BY hour
+ORDER BY hour ASC
+LIMIT 24
+```
+
+## چند سری برای یک chart
+
+برای chartی که چند datastream را با هم نشان می‌دهد، نتیجه را long-form نگه
+دارید و key کانال را به‌عنوان series برگردانید:
+
+```sql
+SELECT
+  bucket(time, 1h) AS hour,
+  datastream.key AS stream,
+  count(value) AS samples
+FROM telemetry
+WHERE device.name = 'DEVICE_NAME'
+  AND datastream.key IN ('temperature', 'humidity')
+  AND time > now() - 7d
+GROUP BY hour, stream
+ORDER BY hour ASC
+LIMIT 400
+```
+
+## دستگاه‌های آفلاین
+
+```sql
+SELECT id, name, status, last_seen_at
+FROM devices
+WHERE status = 'offline'
+ORDER BY last_seen_at DESC
+LIMIT 100
+```
+
+## بررسی فرمان‌ها
+
+```sql
+SELECT time, datastream_key, status, acked_at, error_message
+FROM commands
+WHERE device_id = 'DEVICE_ID'
+  AND time > now() - 24h
+ORDER BY time DESC
+LIMIT 100
+```
+
+## خطاهای رایج
+
+- field ناشناخته: ابتدا catalog همان dataset را بخوانید.
+- aggregate نامعتبر: نوع datastream را با function مقایسه کنید.
+- نتیجهٔ بیش از حد بزرگ: بازه را کوتاه یا bucket را درشت‌تر کنید.
+- timezone ناسازگار: فقط یک timezone مؤثر برای query انتخاب کنید.
+- parameter undeclared: برای هر `$name` یک schema و مقدار bind کنید.
+
+FlovaQL queryها read-only هستند و اجرای موفق آن‌ها هیچ فرمانی به دستگاه نمی‌فرستد.

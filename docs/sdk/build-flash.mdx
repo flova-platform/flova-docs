@@ -1,0 +1,70 @@
+---
+title: ساخت و فلش firmware
+description: دستورهای عملی PlatformIO برای universal و custom firmware.
+icon: hammer
+---
+
+مخزن firmware چند profile آماده دارد. دستورها را از ریشهٔ مخزن
+`flova-firmware` اجرا کنید، نه از پوشهٔ `examples`.
+
+## universal
+
+```sh
+pio run -e universal-esp32
+pio run -e universal-esp8266
+```
+
+برای نسخهٔ BLE روی ESP32:
+
+```sh
+pio run -e universal-esp32-ble
+```
+
+برای فلش مستقیم با USB، target آپلود را اضافه کنید:
+
+```sh
+pio run -e universal-esp32 -t upload
+pio device monitor -b 115200
+```
+
+نام environment را با برد واقعی هماهنگ کنید. یک image ESP32 را روی ESP8266
+فلش نکنید؛ target، حافظه و مسیر OTA آن‌ها متفاوت است.
+
+## custom Arduino
+
+نمونهٔ برنامهٔ موجود را با profile مناسب بسازید:
+
+```sh
+pio run -e custom-arduino-client-esp32
+pio run -e custom-arduino-client-esp8266
+```
+
+برای تست datastream:
+
+```sh
+pio run -e datastream-api-esp32
+pio run -e datastream-api-esp8266
+```
+
+قبل از upload، keyهای datastream و mapping را با Device Type مقایسه کنید. هیچ
+device ID، token یا secret را داخل sketch نگذارید.
+
+## custom board
+
+نمونهٔ portable با CMake ساخته می‌شود:
+
+```sh
+cmake -S . -B /tmp/flova-firmware-host-build
+cmake --build /tmp/flova-firmware-host-build
+ctest --test-dir /tmp/flova-firmware-host-build --output-on-failure
+```
+
+این دستور قرارداد C++ را بررسی می‌کند؛ جای فلش‌کردن روی سخت‌افزار و تست شبکه
+را نمی‌گیرد.
+
+## بعد از فلش
+
+۱. monitor سریال را باز کنید. ۲. setup channel را فعال کنید. ۳. provisioning
+را تمام کنید. ۴. در Console منتظر configuration و online شدن بمانید. اگر
+دستگاه قدیمی layoutی بدون OTA دارد، اولین ارتقا باید با USB انجام شود تا
+layout سازگار روی آن قرار بگیرد.

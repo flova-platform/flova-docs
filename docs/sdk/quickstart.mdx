@@ -1,0 +1,69 @@
+---
+title: شروع سریع SDK
+description: نصب FlovaSDK و گزارش یا دریافت مقدار در یک برنامهٔ Arduino.
+icon: terminal
+---
+
+نمونهٔ زیر برای برنامه‌ای است که Wi-Fi و GPIO را خودش مدیریت می‌کند. برای یک
+برنامهٔ کامل‌تر از مثال‌های firmware استفاده کنید و handler را به سخت‌افزار
+واقعی وصل کنید.
+
+## ESP32 با PlatformIO
+
+```ini
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+lib_deps = flova-platform/FlovaSDK@^0.2.0
+```
+
+کد پایه:
+
+```cpp
+#include <Arduino.h>
+#include <WiFi.h>
+#include <FlovaEsp32.h>
+
+FlovaEsp32 client;
+auto relay = client.datastream<bool>("relay");
+auto temperature = client.datastream<float>("temperature");
+
+void setup() {
+  WiFi.begin("your-wifi", "your-password");
+  pinMode(2, OUTPUT);
+  relay.onWrite([](bool enabled) {
+    digitalWrite(2, enabled ? HIGH : LOW);
+  });
+  client.begin();
+}
+
+void loop() {
+  client.run();
+}
+```
+
+`onWrite` محل امن اعمال فرمان است. فرمانی که از Console، اپ، schedule یا
+automation می‌آید از همین مسیر عبور می‌کند. `run()` را مرتب صدا بزنید تا
+پیام‌های صف‌شده و reconnect فرصت اجرا داشته باشند.
+
+## ESP8266
+
+به‌جای `WiFi.h` از `ESP8266WiFi.h` و به‌جای `FlovaEsp32.h` از
+`FlovaEsp8266.h` استفاده کنید. پروژه‌های ESP8266 را با PlatformIO بسازید؛
+پروفایل BearSSL و تنظیمات حافظهٔ همان مثال را حذف نکنید.
+
+## سه عملیات اصلی
+
+```cpp
+relay.write(true);                 // فرمان محلی
+temperature.report(readSensor());  // مشاهدهٔ سنسور
+bool last = relay.value();         // cache محلی
+```
+
+`write` handler را اجرا می‌کند، `report` فقط مشاهده را ثبت می‌کند و `value`
+درخواستی به شبکه نمی‌فرستد. اگر مقدار سخت‌افزار خارج از handler تغییر کرد، آن
+را با `report` اعلام کنید.
+
+برای provisioning در برنامهٔ موجود، [راهنمای setup channel](/docs/sdk/provisioning)
+را ادامه دهید.

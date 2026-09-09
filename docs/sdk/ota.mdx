@@ -1,0 +1,44 @@
+---
+title: OTA و انتشار firmware
+description: ساخت release، بررسی سازگاری target و روند به‌روزرسانی دستگاه.
+icon: upload-cloud
+---
+
+OTA یعنی دستگاه بعد از provisioning، image جدید را بدون اتصال USB دریافت و
+نصب کند. این قابلیت به target، boot layout، ظرفیت image و policy firmware
+وابسته است؛ هر فایل `.bin` برای هر دستگاهی مناسب نیست.
+
+## ساخت release
+
+نسخهٔ release را هنگام build مشخص کنید:
+
+```sh
+pio run -e universal-esp32 \
+  --project-option='build_flags=-DFLOVA_FIRMWARE_VERSION=\"1.2.3\"'
+```
+
+برای production، imageهای ESP32 و ESP8266 را جدا نگه دارید. Console metadata
+مانند version، target، layout، اندازه و SHA-256 را با release مقایسه می‌کند.
+
+## قبل از rollout
+
+- target release با target دستگاه یکی باشد.
+- boot layout و strategy نصب سازگار باشند.
+- اندازه و SHA-256 artifact کامل باشد.
+- دستگاه‌های legacy را جدا از دستگاه‌های OTA-capable ببینید.
+- ابتدا یک batch کوچک آزمایشی انتخاب کنید.
+- threshold خطا و offline را قبل از شروع rollout تعیین کنید.
+
+Link و دانلود OTA دو workload جدا هستند. firmware باید اتصال Link را آزاد کند،
+artifact را از HTTPS معتبر بگیرد، checksum را بررسی کند، نصب را انجام دهد و
+بعد از restart نتیجهٔ boot و health را گزارش کند.
+
+## شکست update
+
+اگر دستگاه در وضعیت downloading یا installing ماند، connectivity و اندازهٔ
+فایل را بررسی کنید. اگر بعد از reboot نسخه تأیید نشد، rollout را متوقف کنید و
+دستگاه را با USB یا image recovery بررسی کنید. در ESP8266 همیشه مسیر recovery
+سیمی را برای image ناسازگار یا boot ناموفق در نظر بگیرید.
+
+OTA جایگزین تست سخت‌افزار نیست. قبل از rollout گسترده، قطع برق، reconnect،
+restart و گزارش version را روی هر target واقعی امتحان کنید.

@@ -1,0 +1,57 @@
+---
+title: provisioning برای توسعه‌دهندگان
+description: اتصال Wi-Fi، BLE و کانال‌های سفارشی به هویت فلووا.
+icon: radio-tower
+---
+
+Provisioning دو دادهٔ جدا دارد: اطلاعات شبکه و handoff کوتاه‌مدت برای رسیدن به
+FlovaLink. در universal firmware فلووا هر دو بخش را در setup flow مدیریت می‌کند.
+در custom firmware، application مالک Wi-Fi و server است و SDK فقط handoff را
+دریافت و مصرف می‌کند.
+
+## custom Arduino با server موجود
+
+اگر برنامهٔ شما از قبل `WebServer` دارد، SDK آن را جایگزین نمی‌کند. مسیرهای
+محدود setup را روی server خودتان ثبت کنید:
+
+```cpp
+client.attachProvisioning(server);
+server.begin();
+```
+
+این helper مسیرهای محلی `GET /status` و `POST /provision` را اضافه می‌کند.
+application همچنان `server.handleClient()` و `client.run()` را در loop خودش
+فراخوانی می‌کند.
+
+## handoff مستقل از Wi-Fi
+
+برای BLE، serial، Ethernet، cellular یا factory tool، دادهٔ کانال خودتان را به
+handoff فلووا تبدیل کنید:
+
+```cpp
+flova::ProvisioningHandoff handoff(linkUrl, shortLivedToken);
+client.provision(handoff);
+```
+
+handoff فقط URL معتبر Link و token کوتاه‌عمر را حمل می‌کند. secret دستگاه باید
+در خود دستگاه ساخته شود. credential شبکه را در handoff قابل‌حمل قرار ندهید؛
+مالکیت آن با universal composition یا application شماست.
+
+## چرخهٔ موفق
+
+1. channel، handoff را تحویل می‌دهد.
+2. SDK آن را محدود و ذخیره می‌کند.
+3. دستگاه به شبکه می‌رود و bootstrap را انجام می‌دهد.
+4. configuration را دریافت، بررسی و پایدار می‌کند.
+5. پس از restart، generation اعمال‌شده را گزارش می‌دهد.
+
+ذخیرهٔ token یا credential به‌تنهایی provisioning موفق نیست. اگر device بعد از
+setup online نشد، ابتدا Wi-Fi، سپس Link و بعد configuration را جداگانه بررسی
+کنید.
+
+## universal و BLE
+
+image `universal-esp32-ble` کانال BLE را خودش راه می‌اندازد، اما کانال BLE بخشی
+از firmware target است، نه گزینه‌ای که با تغییر Device Type فعال شود. اگر
+امنیت setup شما نیازمند احراز هویت گوشی یا policy ویژه است، قبل از release
+production، رفتار channel را روی سخت‌افزار واقعی بررسی کنید.

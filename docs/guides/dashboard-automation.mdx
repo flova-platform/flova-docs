@@ -1,0 +1,48 @@
+---
+title: راهنمای کامل dashboard و automation
+description: ساخت یک تجربهٔ واقعی از دادهٔ دستگاه تا فرمان و هشدار.
+icon: workflow
+---
+
+در این سناریو دستگاهی دارید که `temperature` را گزارش می‌کند و `fan` را
+می‌پذیرد. هدف این است که کاربر دما را ببیند، فن را دستی کنترل کند و هنگام دمای
+بالا هشدار یا فرمان خودکار دریافت کند.
+
+## مرحلهٔ اول: قرارداد داده
+
+در Device Type، `temperature` را عددی و read-only با واحد مناسب بسازید. `fan`
+را boolean و read-write از نوع state تعریف کنید. اگر firmware از key دیگری
+استفاده می‌کند، قبل از طراحی dashboard قرارداد را اصلاح کنید.
+
+## مرحلهٔ دوم: dashboard
+
+در Studio یک status card برای اتصال و یک gauge برای `temperature` اضافه کنید.
+یک toggle را به `fan` وصل کنید و برای آن label واضح بنویسید. سپس یک line chart
+بسازید و به saved query ساعتی دما متصل کنید. در Preview، یک‌بار با دستگاه
+online و یک‌بار با دادهٔ خالی صفحه را ببینید.
+
+## مرحلهٔ سوم: automation
+
+در Console این مسیر را بسازید:
+
+```text
+temperature updated
+        ↓
+temperature greater than 30
+        ↓
+fan = true
+```
+
+برای خاموش‌کردن خودکار می‌توانید schedule جداگانه یا شرط معکوس بسازید. دو
+automation را طوری ننویسید که یک event را هم‌زمان دوبار toggle کنند؛ برای
+actuator مهم، مقدار قطعی `true` یا `false` از toggle قابل‌ردیابی‌تر است.
+
+## مرحلهٔ چهارم: انتشار و test
+
+ابتدا automation را validate و deploy کنید. سپس با تغییر واقعی سنسور بررسی
+کنید که trigger، شرط، فرمان، ACK و مقدار dashboard به‌ترتیب درست دیده شوند.
+بعد dashboard را publish کنید و همان دستگاه را در PWA یا Android باز کنید.
+
+این تقسیم مسئولیت را حفظ کنید: Studio ظاهر را می‌سازد، Console مدل و automation
+را اداره می‌کند، Engine اجرا را انجام می‌دهد و firmware فرمان را روی hardware
+اعمال می‌کند.

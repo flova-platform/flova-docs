@@ -1,0 +1,35 @@
+---
+title: SDK و firmware فلووا
+description: انتخاب مدل توسعه برای ESP32، ESP8266 و بردهای سفارشی.
+icon: cpu
+---
+
+FlovaSDK برای دو مدل اصلی ساخته شده است. در مدل universal، فلووا بخش عمدهٔ
+چرخهٔ دستگاه را آماده می‌کند تا فردی که نمی‌خواهد firmware بنویسد، بتواند با
+Console و Studio محصول بسازد. در مدل custom، برنامهٔ اصلی شما باقی می‌ماند و
+SDK فقط اتصال، datastream و قابلیت‌های انتخاب‌شده را اضافه می‌کند.
+
+| مدل | مناسب برای | مالکیت برنامه |
+| --- | --- | --- |
+| `FlovaUniversalEsp32` | نمونهٔ آماده و محصول no-code روی ESP32 | Flova شبکه، provisioning، mapping، OTA و restart را مدیریت می‌کند |
+| `FlovaUniversalEsp8266` | بردهای NodeMCU و محصول ساده روی ESP8266 | همان مدل با ظرفیت و محدودیت برد ESP8266 |
+| `FlovaEsp32` / `FlovaEsp8266` | برنامهٔ Arduino موجود | application مالک Wi-Fi، server، GPIO و چرخهٔ خودش است |
+| هستهٔ قابل‌حمل C++11 | STM32، PLC، RTOS، gateway یا برد اختصاصی | application adapterهای Link، storage، clock و logger را می‌دهد |
+
+## چرا universal firmware وجود دارد؟
+
+همهٔ سازندگان محصول تیم firmware ندارند. universal firmware یک binary عمومی
+است که datastream و mapping آن از Console دریافت می‌شود. شما به جای نوشتن
+منطق ارتباط، درخت automation و dashboard را تنظیم می‌کنید. این انتخاب برای
+نمونه‌سازی، محصول‌های تکرارشونده و تجهیزاتی که رفتارشان از طریق configuration
+قابل‌توصیف است، ساده‌تر است.
+
+## چه زمانی custom بهتر است؟
+
+وقتی برنامهٔ فعلی شما کنترل دقیق Wi-Fi، موتور، سنسور، حافظه یا زمان‌بندی را
+بر عهده دارد، facade سفارشی را اضافه کنید. در این حالت فلووا GPIO یا server
+شما را تصاحب نمی‌کند. برای سخت‌افزار خارج از ESP نیز از هستهٔ portable استفاده
+کنید و چهار service لازم را با HAL خودتان پیاده کنید.
+
+از [شروع سریع SDK](/docs/sdk/quickstart) شروع کنید و سپس [ساخت و فلش](/docs/sdk/build-flash)
+را بخوانید.

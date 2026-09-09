@@ -1,0 +1,104 @@
+---
+title: API داده در SDK
+description: ساخت datastream، دریافت فرمان، گزارش مقدار و مدیریت حالت آفلاین.
+icon: code-xml
+---
+
+در SDK هر قابلیت قابل مشاهده یا قابل کنترل یک `datastream` است. نام آن باید با
+نامی که در Device Type تعریف کرده‌اید یکی باشد؛ همین نام بعداً در dashboard،
+automation و FlovaQL هم استفاده می‌شود. نوع داده را از ابتدا درست انتخاب کنید،
+چون `bool`، عدد و متن رفتار و نمایش متفاوتی دارند.
+
+## تعریف streamها
+
+```cpp
+auto relay = client.datastream<bool>("relay");
+auto temperature = client.datastream<float>("temperature");
+auto label = client.datastream<flova::Text>("label");
+```
+
+برای مقدارهای عددی، واحد و محدوده را در Device Type ثبت کنید. خود SDK قرار نیست
+معنای `temperature` یا `relay` را حدس بزند؛ قرارداد محصول در Console تعریف می‌شود
+و firmware همان قرارداد را با نام و نوع دقیق اجرا می‌کند.
+
+## دریافت فرمان با `onWrite`
+
+فرمان remote یا local باید از handler همان stream عبور کند. handler را برای
+تغییر واقعی سخت‌افزار بنویسید و نتیجهٔ عملیات را روشن نگه دارید:
+
+```cpp
+relay.onWrite([](bool enabled) {
+  digitalWrite(RELAY_PIN, enabled ? HIGH : LOW);
+  return flova::WriteResult::accept();
+});
+```
+
+اگر سخت‌افزار نمی‌تواند مقدار را اعمال کند، آن را پذیرفته اعلام نکنید:
+
+```cpp
+relay.onWrite([](bool enabled) {
+  if (!setRelay(enabled)) {
+    return flova::WriteResult::reject("relay is unavailable");
+  }
+  return flova::WriteResult::accept();
+});
+```
+
+در برنامهٔ واقعی، callback را کوتاه نگه دارید. کارهای طولانی مثل انتظار برای
+شبکه یا انجام چند مرحلهٔ سنگین را داخل آن نگذارید؛ loop اصلی باید فرصت اجرای
+`client.run()` و رسیدگی به اتصال را داشته باشد.
+
+## گزارش مقدار سنسور با `report`
+
+`report` برای اعلام مشاهدهٔ جدید از سخت‌افزار است. مثلاً بعد از خواندن سنسور:
+
+```cpp
+temperature.report(readTemperature());
+```
+
+این عمل فرمانی به سخت‌افزار نیست. اگر مقدار سنسور تغییر نکرده، لازم نیست بی‌دلیل
+آن را در هر دور loop ارسال کنید؛ فاصلهٔ نمونه‌برداری را با نیاز محصول و مصرف
+انرژی تنظیم کنید.
+
+## خواندن cache با `value`
+
+```cpp
+bool currentRelay = relay.value();
+float currentTemperature = temperature.value();
+```
+
+`value()` مقدار شناخته‌شدهٔ محلی را برمی‌گرداند و برای خواندن فوری مناسب است. آن
+را به‌عنوان درخواست تازه از دستگاه یا تضمین اتصال در نظر نگیرید. برای تصمیم‌های
+مهم، وضعیت اتصال و نتیجهٔ آخرین عملیات را هم در طراحی UI یا automation لحاظ کنید.
+
+## حالت آفلاین
+
+دستگاه ممکن است موقتاً اینترنت نداشته باشد. firmware باید بتواند منطق محلی و
+مقدار آخر سخت‌افزار را تا حد ممکن حفظ کند و پس از برگشت اتصال دوباره وارد چرخهٔ
+عادی شود. در Universal Firmware این بخش با runtime پلتفرم هماهنگ است؛ در
+firmware سفارشی، مسئولیت رفتار ایمن آفلاین با برنامهٔ شماست.
+
+برای هر stream این پرسش‌ها را پاسخ دهید:
+
+- اگر آخرین فرمان به دستگاه نرسید، خروجی باید در چه وضعیتی بماند؟
+- اگر سنسور مدتی خوانده نشد، dashboard باید چه وضعیتی نشان دهد؟
+- آیا اجرای دوبارهٔ یک فرمان بی‌خطر است؟
+
+## چرخهٔ اجرای پیشنهادی
+
+الگوی معمول برنامه چنین است:
+
+```cpp
+void loop() {
+  client.run();
+
+  if (millis() - lastSample > SAMPLE_INTERVAL) {
+    lastSample = millis();
+    temperature.report(readTemperature());
+  }
+}
+```
+
+در بردی که سخت‌افزار خاص دارد، `readTemperature` و `setRelay` را با درایور
+همان برد پیاده کنید. قرارداد datastream ثابت می‌ماند و بقیهٔ Flova لازم نیست
+بداند سنسور از I2C آمده یا ADC یا یک ماژول آماده.

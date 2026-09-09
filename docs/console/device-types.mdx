@@ -1,0 +1,47 @@
+---
+title: ساخت Device Type
+description: تعریف datastream، mapping و نسخهٔ قابل‌انتشار برای یک خانوادهٔ دستگاه.
+icon: component
+---
+
+برای ساخت Device Type از چیزی شروع کنید که کاربر باید با دستگاه انجام دهد.
+سپس هر داده یا فرمان را به یک datastream تبدیل کنید. نام فنی باید ثابت بماند؛
+عنوان و توضیح برای زبان و تجربهٔ کاربر است.
+
+## تعریف یک کانال
+
+برای هر datastream این موارد را مشخص کنید:
+
+- `key`: نام فنی مثل `temperature` یا `relay`
+- نوع مقدار: boolean، double یا string
+- mode: خواندنی، نوشتنی یا دوطرفه
+- رفتار: telemetry، state، command یا event
+- واحد، مقدار پیش‌فرض و بازه، در صورت نیاز
+- امکان زمان‌بندی برای مقدارهایی که کاربر باید در ساعت مشخص تغییر دهد
+
+نمونهٔ مدل یک چراغ:
+
+| key | type | mode | behavior | توضیح |
+| --- | --- | --- | --- | --- |
+| `light` | boolean | read_write | state | وضعیت روشنایی |
+| `brightness` | double | read_write | state | شدت نور از ۰ تا ۱۰۰ |
+| `temperature` | double | read_only | telemetry | دمای برد |
+
+## mapping سخت‌افزار
+
+در universal firmware می‌توانید `digital_input`، `digital_output`,
+`analog_input` یا `pwm_output` را به datastream وصل کنید. active level، pull،
+debounce و فاصلهٔ نمونه‌برداری باید با مدار واقعی هماهنگ باشد. یک mapping
+نادرست می‌تواند بدون اینکه query یا dashboard خطایی نشان دهد، خروجی را برعکس
+یا ورودی را پرنوسان کند.
+
+در custom firmware لازم نیست از mapping فلووا استفاده کنید. برنامهٔ شما
+می‌تواند GPIO یا HAL را خودش کنترل کند و مقدار را از طریق `onWrite()` و
+`report()` به SDK بدهد.
+
+## قبل از انتشار
+
+Device Type را با یک دستگاه آزمایشی بررسی کنید. نوع مقدار را با widget انتخابی،
+mode را با automation، و keyها را با کد firmware مقایسه کنید. بعد از انتشار،
+تغییر ناسازگار را در نسخهٔ تازه انجام دهید تا دستگاه‌های قدیمی فرصت هماهنگ‌شدن
+داشته باشند.

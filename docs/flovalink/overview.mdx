@@ -1,0 +1,56 @@
+---
+title: FlovaLink چگونه دستگاه را وصل می‌کند؟
+description: توضیح انسانی مسیر داده، فرمان و reconnect بین دستگاه و Flova.
+icon: waypoints
+---
+
+FlovaLink راهی است که firmware از طریق آن با Flova حرف می‌زند. در این مدل،
+دستگاه دادهٔ سنسور را گزارش می‌کند، فلووا آن را ذخیره و در اختیار dashboard یا
+FlovaQL می‌گذارد، و فرمان کاربر یا automation دوباره از همان مسیر به دستگاه
+برمی‌گردد.
+
+```mermaid
+flowchart LR
+  A[سنسور و actuator] --> B[SDK و firmware]
+  B --> C[FlovaLink]
+  C --> D[Flova runtime]
+  D --> E[Console و FlovaQL]
+  E --> F[Studio و اپ کاربر]
+  F --> D
+  D --> C
+  C --> B
+```
+
+## تفاوت با MQTT رایج
+
+MQTT یک الگوی عمومی publish/subscribe است و شما معمولاً باید topic، payload،
+ACL، retry، schema و ارتباط آن با مدل محصول را خودتان طراحی کنید. FlovaLink
+برای دستگاه Flova از قبل با datastream، command، state، acknowledgement و
+چرخهٔ provisioning هماهنگ است.
+
+| موضوع | FlovaLink | MQTT رایج |
+| --- | --- | --- |
+| مدل داده | datastreamهای تعریف‌شده در Device Type | topic و payload متعلق به application |
+| فرمان | به datastream و وضعیت دستگاه وصل است | باید topic فرمان و پاسخ را خودتان قرارداد کنید |
+| retry و ACK | بخشی از مسیر محصول و runtime | باید با client و broker طراحی شود |
+| provisioning | با activation و firmware هماهنگ است | معمولاً خارج از broker contract پیاده می‌شود |
+| مدیریت نسخه | Device Type و configuration version | باید در payload یا topic اضافه شود |
+| تجربهٔ محصول | مستقیماً به Console، Studio و FlovaQL وصل است | نیازمند ساخت لایه‌های جداگانه است |
+
+FlovaLink برای کم‌کردن دادهٔ تکراری و قراردادی طراحی شده است. مقدار واقعی
+صرفه‌جویی به نوع داده، تعداد فیلدها، فاصلهٔ ارسال و شبکه بستگی دارد. عدد «۳
+برابر» بدون benchmark قابل‌تکرار نباید به‌عنوان تضمین محصول نوشته شود.
+
+## وقتی شبکه قطع می‌شود
+
+firmware باید منطق محلی و policy هر datastream را رعایت کند. دادهٔ قابل‌ذخیره و
+آخرین وضعیت معتبر پس از reconnect همگام می‌شود؛ فرمان منقضی یا ردشده نباید به
+عنوان موفقیت نمایش داده شود. heartbeat برای presence است و جای گزارش دقیق
+configuration یا ACK فرمان را نمی‌گیرد.
+
+## چیزی که توسعه‌دهنده لازم نیست بداند
+
+برای استفادهٔ معمول، لازم نیست frame یا encoding داخلی را پیاده کنید. SDK
+نام‌های datastream، صف پیام، retry، TLS و اتصال را در مرز مناسب مدیریت می‌کند.
+اگر gateway یا board سفارشی دارید، [قرارداد custom board](/docs/sdk/custom-boards)
+را بخوانید و از ساختن یک data engine دوم در application خودداری کنید.
