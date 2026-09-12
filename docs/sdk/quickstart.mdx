@@ -15,7 +15,7 @@ icon: terminal
 platform = espressif32
 board = esp32dev
 framework = arduino
-lib_deps = flova-platform/FlovaSDK@^0.2.0
+lib_deps = flova-platform/FlovaSDK@^0.3.2
 ```
 
 کد پایه:
@@ -47,11 +47,41 @@ void loop() {
 automation می‌آید از همین مسیر عبور می‌کند. `run()` را مرتب صدا بزنید تا
 پیام‌های صف‌شده و reconnect فرصت اجرا داشته باشند.
 
-## ESP8266
+## ESP8266 با PlatformIO
+
+مسیر پیشنهادی، استفاده از فایل آمادهٔ
+`extras/platformio/esp8266/platformio.ini` در
+[بستهٔ منتشرشدهٔ FlovaSDK 0.3.2](https://github.com/flova-platform/flova-firmware/releases/tag/sdk-v0.3.2)
+است. این profile تنظیمات `platform`، برد، کتابخانه و MMU/IRAM لازم برای
+بافرهای TLS را دارد؛ بنابراین اگر همین profile را کپی می‌کنید، لازم نیست
+`build_flags` را دوباره اضافه کنید.
+
+اگر پروژهٔ PlatformIO خودتان را نگه می‌دارید، علاوه بر dependency، این تنظیم
+را در همان environment قرار دهید:
+
+```ini
+[env:nodemcuv2]
+platform = espressif8266@4.2.1
+board = nodemcuv2
+framework = arduino
+lib_deps = flova-platform/FlovaSDK@^0.3.2
+build_flags =
+  -DPIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED
+```
 
 به‌جای `WiFi.h` از `ESP8266WiFi.h` و به‌جای `FlovaEsp32.h` از
-`FlovaEsp8266.h` استفاده کنید. پروژه‌های ESP8266 را با PlatformIO بسازید؛
-پروفایل BearSSL و تنظیمات حافظهٔ همان مثال را حذف نکنید.
+`FlovaEsp8266.h` استفاده کنید. تنظیم MMU بخشی از تنظیمات framework است و با
+`lib_deps` به‌تنهایی به یک پروژهٔ دلخواه تزریق نمی‌شود.
+
+## ESP8266 با Arduino IDE
+
+`FlovaSDK` را از **Tools → Manage Libraries** نصب کنید، برد ESP8266 را انتخاب
+کنید و پیش از compile این گزینه را تنظیم کنید:
+
+**Tools → MMU → 16KB cache + 48KB IRAM and 2nd Heap (shared)**
+
+این گزینه معادل profile آمادهٔ PlatformIO است و برای بافرهای TLS کامل Flova
+لازم است. سپس از `ESP8266WiFi.h` و `FlovaEsp8266.h` استفاده کنید.
 
 ## سه عملیات اصلی
 

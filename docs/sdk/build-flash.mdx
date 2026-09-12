@@ -7,6 +7,25 @@ icon: hammer
 مخزن firmware چند profile آماده دارد. دستورها را از ریشهٔ مخزن
 `flova-firmware` اجرا کنید، نه از پوشهٔ `examples`.
 
+## SDK منتشرشده
+
+برای یک پروژهٔ مستقل، از profile موجود در archive نسخهٔ منتشرشدهٔ
+[FlovaSDK 0.3.2](https://github.com/flova-platform/flova-firmware/releases/tag/sdk-v0.3.2)
+استفاده کنید. فایل `extras/platformio/esp8266/platformio.ini` تنظیم MMU/IRAM
+لازم را از قبل دارد و در صورت استفاده از همان profile، نیازی به افزودن
+`build_flags` جداگانه نیست.
+
+در یک `platformio.ini` سفارشی، این گزینه باید در environment مربوط به ESP8266
+وجود داشته باشد:
+
+```ini
+build_flags =
+  -DPIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED
+```
+
+این گزینه بخشی از تنظیمات framework است و dependency کتابخانه به‌تنهایی آن را
+به پروژهٔ دلخواه اضافه نمی‌کند.
+
 ## universal
 
 ```sh
