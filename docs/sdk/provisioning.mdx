@@ -49,6 +49,37 @@ handoff فقط URL معتبر Link و token کوتاه‌عمر را حمل می
 setup online نشد، ابتدا Wi-Fi، سپس Link و بعد configuration را جداگانه بررسی
 کنید.
 
+## مشاهدهٔ نتیجه در برنامه
+
+برای برنامه‌ای که باید UI، LED یا retry خودش را با وضعیت SDK هماهنگ کند، از
+`setStatusListener()` استفاده کنید. eventها edge-triggered هستند و از
+`client.run()` فراخوانی می‌شوند؛ قطع شبکه، قطع Flova Link، رسیدن به runtime،
+تغییر configuration generation و خطاها event جداگانه دارند. callback نباید
+شبکه یا کار طولانی دیگری را همان‌جا اجرا کند.
+
+برای تشخیص مرحلهٔ فعلی، این مرزها را با هم اشتباه نگیرید:
+
+- `networkConnected()` فقط اتصال شبکهٔ محلی را نشان می‌دهد.
+- `connected()` اتصال Flova Link را نشان می‌دهد.
+- `provisioning()` نشان می‌دهد SDK هنوز در مسیر setup/provisioning یا handoff است.
+- `ready()` یعنی runtime و binding دستگاه برای datastreamها آماده‌اند.
+
+آخرین snapshot را می‌توان بدون منتظرماندن برای event خواند:
+
+```cpp
+FlovaStatusSnapshot status = {};
+client.status(status);
+Serial.printf("network=%u link=%u ready=%u generation=%lu\n",
+              status.networkConnected ? 1U : 0U,
+              status.linkConnected ? 1U : 0U,
+              status.ready ? 1U : 0U,
+              static_cast<unsigned long>(status.configurationGeneration));
+```
+
+`status.errorCode` فقط کد محدود خطا را در اختیار application می‌گذارد؛ token،
+credential و payload کامل را log نکنید. نمونهٔ کامل ثبت listener در
+[شروع سریع SDK](/docs/sdk/quickstart) آمده است.
+
 ## universal و BLE
 
 image `universal-esp32-ble` کانال BLE را خودش راه می‌اندازد، اما کانال BLE بخشی

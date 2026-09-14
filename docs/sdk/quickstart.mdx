@@ -15,7 +15,7 @@ icon: terminal
 platform = espressif32
 board = esp32dev
 framework = arduino
-lib_deps = flova-platform/FlovaSDK@^0.3.3
+lib_deps = flova-platform/FlovaSDK@^0.3.5
 ```
 
 کد پایه:
@@ -47,11 +47,66 @@ void loop() {
 automation می‌آید از همین مسیر عبور می‌کند. `run()` را مرتب صدا بزنید تا
 پیام‌های صف‌شده و reconnect فرصت اجرا داشته باشند.
 
+## گزارش وضعیت و تغییرات چرخهٔ عمر
+
+برای نمایش وضعیت اتصال یا عیب‌یابی، یک listener ثبت کنید. listener فقط هنگام
+تغییر وضعیت فراخوانی می‌شود و از همان loopی اجرا می‌شود که `client.run()` را
+صدا می‌زند؛ بنابراین callback باید کوتاه و غیرمسدودکننده باشد:
+
+```cpp
+void onFlovaStatus(void*, const FlovaStatusEvent& event) {
+  const FlovaStatusSnapshot& status = event.current;
+
+  if (event.kind == FlovaStatusEventKind::LinkChanged) {
+    Serial.println(status.linkConnected ? "Flova Link online"
+                                        : "Flova Link offline");
+  }
+
+  if (event.kind == FlovaStatusEventKind::ErrorChanged &&
+      status.errorCode[0] != '\0') {
+    Serial.printf("Flova error: %s\n", status.errorCode);
+  }
+}
+
+void setup() {
+  // Wi-Fi setup and datastream handlers come before this line.
+  client.setStatusListener(onFlovaStatus);
+  client.begin();
+}
+```
+
+برای خواندن وضعیت فعلی بدون منتظرماندن برای event، از snapshot استفاده کنید:
+
+```cpp
+FlovaStatusSnapshot status = {};
+client.status(status);
+
+bool onNetwork = status.networkConnected;
+bool onFlovaLink = status.linkConnected;
+bool readyForDatastreams = status.ready;
+```
+
+این وضعیت‌ها یک معنی ندارند:
+
+| API | معنی |
+| --- | --- |
+| `networkConnected()` / `status.networkConnected` | شبکهٔ محلی در دسترس است؛ در custom firmware خود برنامه مالک آن است. |
+| `tlsReady()` / `status.tlsReady` | ساعت و پیش‌شرط TLS آماده است. |
+| `connected()` / `status.linkConnected` | کانال Flova Link متصل است. |
+| `runtimeReady()` / `status.runtimeReady` | چرخهٔ داخلی SDK به `Runtime` رسیده است. |
+| `ready()` / `status.ready` | runtime و binding دستگاه هر دو آماده‌اند. |
+
+`FlovaStatusEventKind` شامل `LifecycleChanged`، `NetworkChanged`،
+`LinkChanged`، `ReadyChanged`، `ConfigurationChanged` و `ErrorChanged` است.
+هر event هم snapshot قبلی و هم snapshot فعلی را دارد. اگر وضعیت اولیه را
+فوراً لازم دارید، `status()` را بخوانید؛ ثبت listener یک event اولیه تولید
+نمی‌کند. `errorCode` یک کد محدود و قابل log است، نه payload کامل یا credential.
+
 ## ESP8266 با PlatformIO
 
 مسیر پیشنهادی، استفاده از فایل آمادهٔ
 `extras/platformio/esp8266/platformio.ini` در
-[بستهٔ منتشرشدهٔ FlovaSDK 0.3.3](https://github.com/flova-platform/flova-firmware/releases/tag/sdk-v0.3.3)
+[بستهٔ منتشرشدهٔ FlovaSDK 0.3.5](https://github.com/flova-platform/flova-firmware/releases/tag/sdk-v0.3.5)
 است. این profile تنظیمات `platform`، برد، کتابخانه و MMU/IRAM لازم برای
 بافرهای TLS را دارد؛ بنابراین اگر همین profile را کپی می‌کنید، لازم نیست
 `build_flags` را دوباره اضافه کنید.
@@ -64,7 +119,7 @@ automation می‌آید از همین مسیر عبور می‌کند. `run()` 
 platform = espressif8266@4.2.1
 board = nodemcuv2
 framework = arduino
-lib_deps = flova-platform/FlovaSDK@^0.3.3
+lib_deps = flova-platform/FlovaSDK@^0.3.5
 build_flags =
   -DPIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED
 ```

@@ -34,6 +34,25 @@ firmware باید طبق policy محلی خودش کار کند و با برگش
 لازم را همگام کند. اگر نسخهٔ پیکربندی گزارش نشود، Engine اجازه نمی‌دهد فقط با
 دیدن heartbeat، دستگاه را کاملاً آماده فرض کنیم.
 
+## همین مرزها در SDK
+
+در firmware سفارشی، برای نمایش وضعیت محلی از APIهای SDK استفاده کنید؛ این
+مقادیر جایگزین presence سمت Engine نیستند:
+
+| مفهوم | API یا فیلد SDK |
+| --- | --- |
+| provisioning و مرحلهٔ داخلی | `provisioning()` و `lifecycle()` |
+| شبکهٔ محلی | `networkConnected` |
+| کانال Flova Link | `linkConnected` یا `connected()` |
+| آماده‌بودن runtime | `runtimeReady` |
+| آماده‌بودن کامل datastream | `ready` |
+| نسل configuration فعال | `configurationGeneration` |
+
+`setStatusListener()` تغییر این مرزها را به‌صورت event گزارش می‌کند. برای
+وضعیت فعلی از `status()` استفاده کنید. `networkConnected` به‌تنهایی به معنی
+online بودن دستگاه در Console نیست و `ready` نیز جایگزین مشاهدهٔ advancing
+presence در Engine نمی‌شود.
+
 ## هنگام عیب‌یابی
 
 اول بپرسید مشکل در کدام مرز است: QR و handoff، Wi-Fi، اتصال Link، دریافت
