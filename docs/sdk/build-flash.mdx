@@ -11,20 +11,11 @@ icon: hammer
 
 برای یک پروژهٔ مستقل، از profile موجود در archive نسخهٔ منتشرشدهٔ
 [FlovaSDK 0.3.5](https://github.com/flova-platform/flova-firmware/releases/tag/sdk-v0.3.5)
-استفاده کنید. فایل `extras/platformio/esp8266/platformio.ini` تنظیم MMU/IRAM
-لازم را از قبل دارد و در صورت استفاده از همان profile، نیازی به افزودن
-`build_flags` جداگانه نیست.
+استفاده کنید. فایل `extras/platformio/esp8266/platformio.ini` تنظیمات برد و
+TLS را از قبل دارد و در صورت استفاده از همان profile، تنظیم اضافه‌ای لازم نیست.
 
-در یک `platformio.ini` سفارشی، این گزینه باید در environment مربوط به ESP8266
-وجود داشته باشد:
-
-```ini
-build_flags =
-  -DPIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED
-```
-
-این گزینه بخشی از تنظیمات framework است و dependency کتابخانه به‌تنهایی آن را
-به پروژهٔ دلخواه اضافه نمی‌کند.
+در یک `platformio.ini` سفارشی، environment مربوط به ESP8266 را با تنظیمات
+معمول `platform`، `board`، `framework` و dependency کتابخانه تعریف کنید.
 
 ## universal
 
