@@ -48,6 +48,43 @@ relay.onWrite([](bool enabled) {
 شبکه یا انجام چند مرحلهٔ سنگین را داخل آن نگذارید؛ loop اصلی باید فرصت اجرای
 `client.run()` و رسیدگی به اتصال را داشته باشد.
 
+## کنترل یک LED RGB
+
+در Console، گزینهٔ «وضعیت رنگ RGB» یک datastream بدون پایه با نوع `object`،
+رفتار `state` و دسترسی `read_write` می‌سازد. Studio رنگ را به‌صورت یک مقدار
+`{r,g,b}` با کانال‌های صحیح ۰ تا ۲۵۵ می‌نویسد. Device Link همان مقدار را با متن
+`#RRGGBB` به firmware می‌رساند؛ در SDK باید آن را `flova::Text` ثبت کنید.
+
+```cpp
+auto lamp = client.datastream<flova::Text>("lamp_color");
+
+flova::WriteResult applyColor(flova::Text value) {
+  flova::RgbColor color;
+  if (!flova::parseRgbHex(value, color))
+    return flova::reject("invalid_color");
+
+  // پایه‌ها و پلاریته به مدار شما بستگی دارند؛ نمونه برای LED آند مشترک باید معکوس شود.
+  analogWrite(RED_PIN, color.r);
+  analogWrite(GREEN_PIN, color.g);
+  analogWrite(BLUE_PIN, color.b);
+  return flova::accept();
+}
+
+// در setup، پیش از client.begin():
+lamp.onWrite(applyColor);
+
+// اگر رنگ روی خود دستگاه تغییر کرد:
+flova::RgbColor localColor = {255, 128, 0};
+lamp.report(flova::formatRgbHex(localColor));
+```
+
+نمونه‌های کامل ESP32 و ESP8266 در `examples/datastream-api-esp32` و
+`examples/datastream-api-esp8266` مخزن firmware هستند. مقدار مطلوب در Engine
+نگه داشته می‌شود و بعد از اتصال دوباره به دستگاه می‌رسد. پذیرش callback یعنی
+کد اعمال رنگ اجرا شده است؛ برای اطمینان از نور واقعی باید سخت‌افزار را بازخوانی
+و با `report` گزارش کنید. Universal Firmware از یک رنگ سه پایهٔ PWM را حدس
+نمی‌زند و به کد دستگاه نیاز دارد.
+
 ## گزارش مقدار سنسور با `report`
 
 `report` برای اعلام مشاهدهٔ جدید از سخت‌افزار است. مثلاً بعد از خواندن سنسور:
