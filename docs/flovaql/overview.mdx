@@ -25,6 +25,12 @@ automation استفاده کنید.
 برای دیدن catalog workspace از مسیر مربوط به Console یا API استفاده کنید. field
 را حدس نزنید، مخصوصاً وقتی نام فارسی یک دستگاه با key فنی آن فرق دارد.
 
+در saved queryهای Studio می‌توانید پارامتر متنی `deviceId` را با
+`builtin: device.id` تعریف کنید. Runtime مقدار آن را از دستگاه جاری تزریق می‌کند
+و Engine queryهای `devices`، `telemetry`، `events` و `commands` را به همان دستگاه
+محدود می‌کند. این رفتار برای query سازمانی Console یا MCP وجود ندارد؛ آنجا باید
+دستگاه را با مقدار تأییدشدهٔ catalog فیلتر کنید.
+
 ## یک query ساده
 
 ```sql

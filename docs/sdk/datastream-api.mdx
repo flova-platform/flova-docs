@@ -17,6 +17,20 @@ auto temperature = client.datastream<float>("temperature");
 auto label = client.datastream<flova::Text>("label");
 ```
 
+برای کد custom، helperهای کوتاه‌تر همین typed API را صدا می‌زنند:
+
+| helper | معنی |
+| --- | --- |
+| `FLOVA_DATASTREAM(client, type, key)` | ساخت stream تایپ‌شده |
+| `FLOVA_WRITE(stream, value)` | write محلی از مسیر handler |
+| `FLOVA_READ(stream)` | خواندن cache بدون درخواست شبکه |
+| `FLOVA_REPORT(stream, value, ...)` | گزارش مقدار مشاهده‌شده |
+| `FLOVA_ON_WRITE(stream, handler)` | ثبت handler فرمان |
+| `FLOVA_HAS_VALUE(stream)` | بررسی وجود مقدار در cache |
+
+این helperها جای قرارداد typed API را نمی‌گیرند؛ نوع، mode، behavior و key باید
+با Device Type برابر بماند.
+
 برای مقدارهای عددی، واحد و محدوده را در Device Type ثبت کنید. خود SDK قرار نیست
 معنای `temperature` یا `relay` را حدس بزند؛ قرارداد محصول در Console تعریف می‌شود
 و firmware همان قرارداد را با نام و نوع دقیق اجرا می‌کند.

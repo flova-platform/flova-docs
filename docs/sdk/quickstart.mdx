@@ -15,7 +15,7 @@ icon: terminal
 platform = espressif32
 board = esp32dev
 framework = arduino
-lib_deps = flova-platform/FlovaSDK@^0.3.5
+  lib_deps = flova-platform/FlovaSDK@^0.3.8
 ```
 
 کد پایه:
@@ -106,7 +106,7 @@ bool readyForDatastreams = status.ready;
 
 مسیر پیشنهادی، استفاده از فایل آمادهٔ
 `extras/platformio/esp8266/platformio.ini` در
-[بستهٔ منتشرشدهٔ FlovaSDK 0.3.5](https://github.com/flova-platform/flova-firmware/releases/tag/sdk-v0.3.5)
+[نسخه‌های منتشرشدهٔ FlovaSDK](https://github.com/flova-platform/flova-firmware/tags)
 است. این profile تنظیمات `platform`، برد، کتابخانه و TLS را آماده دارد؛
 بنابراین اگر همین profile را کپی می‌کنید، تنظیم اضافه‌ای لازم نیست.
 
@@ -118,7 +118,7 @@ environment مربوط به ESP8266 قرار دهید:
 platform = espressif8266@4.2.1
 board = nodemcuv2
 framework = arduino
-lib_deps = flova-platform/FlovaSDK@^0.3.5
+lib_deps = flova-platform/FlovaSDK@^0.3.8
 ```
 
 به‌جای `WiFi.h` از `ESP8266WiFi.h` و به‌جای `FlovaEsp32.h` از
@@ -143,3 +143,42 @@ bool last = relay.value();         // cache محلی
 
 برای provisioning در برنامهٔ موجود، [راهنمای setup channel](/docs/sdk/provisioning)
 را ادامه دهید.
+
+## helperهای کد سفارشی
+
+در پروژه‌های custom می‌توانید به‌جای تکرار الگوی typed API از
+`FlovaCustomCode.h` استفاده کنید. این macroها رفتار SDK را تغییر نمی‌دهند:
+
+```cpp
+#include <FlovaCustomCode.h>
+
+auto relay = FLOVA_DATASTREAM(client, bool, "relay");
+FLOVA_ON_WRITE(relay, [](bool enabled) {
+  digitalWrite(RELAY_PIN, enabled ? HIGH : LOW);
+});
+
+FLOVA_WRITE(relay, true);                 // فرمان محلی
+FLOVA_REPORT(relay, readRelayState());    // مشاهدهٔ سخت‌افزار
+bool current = FLOVA_READ(relay);         // cache محلی
+bool known = FLOVA_HAS_VALUE(relay);
+```
+
+`write` از handler عبور می‌کند و `report` فقط مقدار مشاهده‌شده را اعلام می‌کند.
+کلید و نوع stream باید دقیقاً با Device Type یکی باشد.
+
+## آماده‌سازی برای خاموشی برد
+
+برای deep sleep یا خاموشی برد، ابتدا Link را تخلیه کنید. فلووا وضعیت board را
+خودش تغییر نمی‌دهد:
+
+```cpp
+const FlovaPowerDownStatus status = client.prepareForPowerDown();
+if (status == FlovaPowerDownStatus::Ready) {
+  // Wi-Fi و wake source را برنامهٔ برد مدیریت می‌کند.
+} else {
+  client.run();
+}
+```
+
+در وضعیت `Draining` باید `run()` ادامه پیدا کند. فقط در `Ready` وارد sleep شوید؛
+`Busy` یعنی provisioning، configuration، OTA یا factory reset هنوز فعال است.

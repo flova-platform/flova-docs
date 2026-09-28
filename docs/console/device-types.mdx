@@ -13,7 +13,7 @@ icon: component
 برای هر datastream این موارد را مشخص کنید:
 
 - `key`: نام فنی مثل `temperature` یا `relay`
-- نوع مقدار: boolean، double یا string
+- نوع مقدار: boolean، double، string یا object ساختاریافته
 - mode: خواندنی، نوشتنی یا دوطرفه
 - رفتار: telemetry، state، command یا event
 - واحد، مقدار پیش‌فرض و بازه، در صورت نیاز
@@ -26,6 +26,12 @@ icon: component
 | `light` | boolean | read_write | state | وضعیت روشنایی |
 | `brightness` | double | read_write | state | شدت نور از ۰ تا ۱۰۰ |
 | `temperature` | double | read_only | telemetry | دمای برد |
+
+برای رنگ RGB از preset «وضعیت رنگ RGB» استفاده کنید. این کانال یک مقدار
+`object`، با mode برابر `read_write` و بدون mapping مستقیم پایه است. در custom
+firmware مقدار رنگ به شکل متن `#RRGGBB` به برنامه می‌رسد و تبدیل آن به PWM یا
+سخت‌افزار بر عهدهٔ application است؛ universal firmware به‌تنهایی مدار RGB را
+حدس نمی‌زند.
 
 ## mapping سخت‌افزار
 

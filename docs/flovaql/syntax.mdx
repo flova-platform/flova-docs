@@ -107,5 +107,10 @@ ORDER BY name ASC
 LIMIT 100
 ```
 
+پارامتر داخلی `deviceId` فقط برای saved queryای است که در Studio با
+`builtin: "device.id"` تعریف شده باشد. Runtime مقدار دستگاه جاری را خودش قرار
+می‌دهد؛ مقدار کاربر نباید جای آن را بگیرد. در queryهای عادی Console یا MCP، این
+تزریق وجود ندارد و باید فیلتر دستگاه را از catalog انتخاب کنید.
+
 timezone نوشته‌شده در `TIMEZONE` و آرگومان سوم `bucket` باید با هم سازگار
 باشند. هر query را ابتدا validate کنید و سپس execute کنید.
