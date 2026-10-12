@@ -1,0 +1,143 @@
+---
+title: "Quick start"
+description: "Connect an ESP32 to Flova and control its built-in LED from a dashboard in about ten minutes."
+---
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+In this guide, you'll connect an ESP32 to Flova and switch its built-in LED from a dashboard. Before you begin, have an ESP32 board with an LED on `GPIO2`, a USB data cable, and a phone or computer with Wi-Fi. You can use PlatformIO or Arduino IDE to install and flash the firmware.
+
+## 1. Create the account and device template
+
+Open the [Flova Console](https://console.flova.ir/) and create an account. In Flova, the Device Type is the *device template* that connects the rest of the platform. Devices, dashboards, queries, automations, and everything else in the platform are connected to this template.
+
+After you sign in, create a Device Type named `ESP32 LED` and choose Wi-Fi as its setup method.
+
+Add one datastream with these values:
+
+| Field | Value |
+| --- | --- |
+| Name | Internal LED |
+| Technical key | `LED` |
+| Value type | Boolean |
+| Access | Read/write |
+| Behavior | Digital output |
+| Hardware pin | `GPIO2` |
+| Active level | HIGH |
+| Default and safe value | Off |
+
+Use the technical key `LED` exactly as shown. The dashboard will use this key to reach the device later. Publish the Device Type version before you continue. Flova cannot create a device from an unpublished version.
+
+## 2. Upload the universal firmware
+
+Create a project folder, install the published `FlovaSDK` package, add the universal firmware code, then connect the board over USB and upload it. Choose the instructions for your tool:
+
+See the [Flova Firmware repository](https://github.com/flova-platform/flova-firmware/) for more information and examples.
+
+<Tabs items={['PlatformIO', 'Arduino IDE']} defaultIndex={1}>
+  <Tab>
+
+Create a folder for the project and initialize a PlatformIO ESP32 project:
+
+```bash
+mkdir flova-esp32
+cd flova-esp32
+pio project init --board esp32dev
+```
+
+Add `FlovaSDK` to `platformio.ini`:
+
+```ini
+[env:esp32dev]
+platform = espressif32@7.0.1
+board = esp32dev
+framework = arduino
+lib_deps = flova-platform/FlovaSDK@^0.3.12
+```
+
+Replace `src/main.cpp` with:
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaUniversalEsp32 device;
+
+void setup() {
+  Serial.begin(115200);
+  device.begin();
+}
+
+void loop() {
+  device.run();
+}
+```
+
+Connect the ESP32 with a USB data cable. PlatformIO detects the serial port in most cases. If it does not, set `upload_port` in `platformio.ini` to the port assigned to your board. Then upload the firmware:
+
+```bash
+pio run -t upload
+```
+
+  </Tab>
+  <Tab>
+
+Create a new Arduino sketch and save it in a new project folder, for example `flova-esp32`. Before installing the SDK, open **Tools → Board → Boards Manager**, search for `esp32` by Espressif Systems, and install the ESP32 board support package. Then open **Tools → Manage Libraries**, search for `FlovaSDK`, and install it.
+
+Select the ESP32 board that matches your hardware under **Tools → Board**, then select the USB serial port under **Tools → Port**. Replace the sketch with:
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaUniversalEsp32 device;
+
+void setup() {
+  Serial.begin(115200);
+  device.begin();
+}
+
+void loop() {
+  device.run();
+}
+```
+
+Connect the ESP32 with a USB data cable and click **Upload**. Arduino IDE compiles the sketch and flashes the complete firmware image, including the bootloader and partition table.
+
+  </Tab>
+</Tabs>
+
+On its first run, the firmware creates a temporary network named like `Flova-Setup-*`. You'll enter the Wi-Fi credentials during setup, so keep them out of the source code.
+
+## 3. Create the device
+
+In [Console's Devices page](https://console.flova.ir/devices), open the same Device Type and choose **Add Device**. Give the device a name and create it. Console will show a QR code and a manual activation code for the device.
+
+## 4. Claim the device in the web application
+
+Open the [Flova web application](https://pwa.flova.ir/) and sign in. This is the *user space* for Flova. It is separate from your *workspace* in Console and Studio, where you create Device Types and dashboards. Customers and end users use the web application to claim their devices and view the dashboards you create for your products and experiences.
+
+Choose **Add device**, scan the QR code from Console, give the device a name, and confirm.
+
+If the camera is unavailable, choose the manual activation option and enter the code shown in Console.
+
+The device is now assigned to the signed-in account. Configure its Wi-Fi while the web application is in setup mode. Connect the phone or computer to the network whose name starts with `Flova-Setup-`, return to the web application, enter the name and password of your usual Wi-Fi network, and submit the form.
+
+The local setup page sends the network settings to the ESP32. After the device accepts them, reconnect the phone or computer to its usual network. The ESP32 saves the settings, restarts, and connects to Flova. In Console, its status should move from setup and sync to online.
+
+If the web application cannot find the board, check that the browser is still connected to `Flova-Setup-*` and that the device and browser are on the same local network.
+
+## 5. Build the LED dashboard
+
+Open [Studio](https://studio.flova.ir/) and choose **New dashboard**. Enter a name, select `ESP32 LED` as the device template, choose the **Device overview** starter, and create the dashboard.
+
+In the editor, open the **Widgets** panel and add a **Toggle** to the page. Select the Toggle, open its data connection settings, and choose the option labeled `Internal LED`. Check that its description includes the technical key `LED`, the Boolean type, and read/write access. The datastream appears because section 1 created it with those settings.
+
+Wait for the draft to save, then choose **Publish**. The web application loads published dashboards, so saving the draft alone does not make this control available on the device.
+
+Return to the [Flova web application](https://pwa.flova.ir/), open the device you claimed, and open its dashboard. Change the Toggle and watch the built-in LED. The web application sends the `LED` write through FlovaLink, and the universal firmware applies it to `GPIO2`.
+
+If `LED` is not available in the Toggle's value source list, check that the `ESP32 LED` Device Type version is published and that the dashboard uses that same device template. If the dashboard is missing from the device, publish the dashboard and refresh the device page.
+
+## If something goes wrong
+
+If the device never comes online, check the setup network first. Then check the Wi-Fi credentials and the device status in Console. If the toggle does not change, make sure the Device Type version is published and that the `LED` key matches in Console and Studio.
