@@ -55,7 +55,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e
-      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
