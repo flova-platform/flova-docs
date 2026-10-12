@@ -3,6 +3,10 @@
   encode gzip zstd
   redir /docs /fa/docs/ 308
   redir /docs/* /fa{uri} 308
+  redir /fa/docs/start/quickstart /fa/docs/console/quickstart/ 308
+  redir /fa/docs/start/quickstart/ /fa/docs/console/quickstart/ 308
+  redir /en/docs/start/quickstart /en/docs/console/quickstart/ 308
+  redir /en/docs/start/quickstart/ /en/docs/console/quickstart/ 308
   @health path /_health
   respond @health 200
   file_server
