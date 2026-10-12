@@ -1,0 +1,21 @@
+name: flova-docs
+
+services:
+  flova-docs:
+    image: ${DOCS_IMAGE:?DOCS_IMAGE must point to an immutable Flova Docs image}
+    restart: unless-stopped
+    networks:
+      flova_edge:
+        aliases:
+          - flova-docs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/_health >/dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  flova_edge:
+    name: ${FLOVA_EDGE_NETWORK:-flova_edge}
+    external: true

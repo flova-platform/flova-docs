@@ -1,0 +1,82 @@
+---
+title: "FlovaQL examples"
+description: "Ready queries for device, telemetry, chart and command history."
+icon: notebook-tabs
+---
+All examples use generic names. `DEVICE_NAME` and sample keys
+Replace with your actual catalog value. Before execution, existence of field and type
+Check datastream.
+
+## timeline A boolean value
+
+To display raw state changes over time:
+```sql
+SELECT time, value
+FROM telemetry
+WHERE device.name = 'DEVICE_NAME'
+  AND datastream.key = 'relay'
+  AND time > now() - 7d
+ORDER BY time ASC
+LIMIT 1000
+```
+This query does not calculate the time it is on. For that, the data must be sampled
+and use appropriate product logic; `count(value)` is not duration.
+
+## Hourly average temperature
+```sql
+SELECT
+  bucket(time, 1h) AS hour,
+  avg(value) AS average_value,
+  min(value) AS minimum_value,
+  max(value) AS maximum_value
+FROM telemetry
+WHERE device.name = 'DEVICE_NAME'
+  AND datastream.key = 'temperature'
+  AND time > now() - 24h
+GROUP BY hour
+ORDER BY hour ASC
+LIMIT 24
+```
+## Several series for one chart
+
+For a chart that shows multiple datastream together, keep the result long-form
+and return the channel key as series:
+```sql
+SELECT
+  bucket(time, 1h) AS hour,
+  datastream.key AS stream,
+  count(value) AS samples
+FROM telemetry
+WHERE device.name = 'DEVICE_NAME'
+  AND datastream.key IN ('temperature', 'humidity')
+  AND time > now() - 7d
+GROUP BY hour, stream
+ORDER BY hour ASC
+LIMIT 400
+```
+## Offline devices
+```sql
+SELECT id, name, status, last_seen_at
+FROM devices
+WHERE status = 'offline'
+ORDER BY last_seen_at DESC
+LIMIT 100
+```
+## Check commands
+```sql
+SELECT time, datastream_key, status, acked_at, error_message
+FROM commands
+WHERE device_id = 'DEVICE_ID'
+  AND time > now() - 24h
+ORDER BY time DESC
+LIMIT 100
+```
+## Common errors
+
+- unknown field: first read the catalog of the same dataset.
+- Invalid aggregate: compare type datastream with function.
+- Too big result: shorten the interval or make the bucket bigger.
+- Incompatible timezone: Choose only an effective timezone for the query.
+- parameter undeclared: Bind a schema and value for each `$name`.
+
+FlovaQL queries are read-only and their successful execution does not send any commands to the device.

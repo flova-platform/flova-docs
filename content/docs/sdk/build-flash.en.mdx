@@ -1,0 +1,67 @@
+---
+title: "Build and flash firmware"
+description: "PlatformIO practical commands for universal and custom firmware."
+icon: hammer
+---
+The firmware repository has several profiles ready. Commands from the root of the repository
+Run `flova-firmware`, not from the `examples` folder.
+
+## SDK published
+
+For an independent project, from the profile in the archive of the published version
+[Current version of FlovaSDK](https://github.com/flova-platform/flova-firmware/tags)
+use `extras/platformio/esp8266/platformio.ini` board configuration file and
+It already has TLS, and if you use the same profile, no additional settings are necessary.
+
+In a custom `platformio.ini`, environment corresponding to ESP8266 with settings
+Define routines `platform`, `board`, `framework` and library dependencies.
+
+## universal
+```sh
+pio run -e universal-esp32
+pio run -e universal-esp8266
+```
+For BLE version on ESP32:
+```sh
+pio run -e universal-esp32-ble
+```
+To flash directly with USB, add target upload:
+```sh
+pio run -e universal-esp32 -t upload
+pio device monitor -b 115200
+```
+Match the environment name with the actual board. A ESP32 image on ESP8266
+Do not flash; their target, memory and path OTA are different.
+
+## custom Arduino
+
+Create an existing program example with a suitable profile:
+```sh
+pio run -e custom-arduino-client-esp32
+pio run -e custom-arduino-client-esp8266
+```
+To test datastream:
+```sh
+pio run -e datastream-api-esp32
+pio run -e datastream-api-esp8266
+```
+Before uploading, compare the keys datastream and mapping with Device Type. none
+Do not put the device ID, token or secret in the sketch.
+
+## custom board
+
+The portable example is built with CMake:
+```sh
+cmake -S . -B /tmp/flova-firmware-host-build
+cmake --build /tmp/flova-firmware-host-build
+ctest --test-dir /tmp/flova-firmware-host-build --output-on-failure
+```
+This command checks the C++ convention; Instead of flashing on the hardware and testing the network
+does not take
+
+## After flash
+
+1. Open the serial monitor. 2. Activate setup channel. 3. provisioning
+finish the 4. Wait for configuration and online in Console. If
+The old device has a layout without OTA, the first upgrade must be done with USB to
+Compatible layout should be placed on it.

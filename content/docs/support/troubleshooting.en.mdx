@@ -1,0 +1,43 @@
+---
+title: "troubleshooting"
+description: "Guide to find problems in build, provisioning, Link, dashboard and OTA."
+icon: life-buoy
+---
+For troubleshooting, find the point of failure instead of repeating all the steps. This is the route table
+First it shows the review.
+
+| Sign | What should we check first? |
+| --- | --- |
+| The device does not setup network target firmware, feeding, serial log and universal selection
+| QR is scanned but the setup is not completed Connecting the phone to `Flova-Setup-*` and allowing the local network
+| Wi-Fi is stored but the device is not online SSID, signal strength, system time and Link endpoint provisioned
+| configuration remains pending reboot, reported generation and compatibility Device Type |
+| dashboard is empty | published version, binding, selected device and available data
+| The command cannot be ACK datastream writable, device and hardware handler online
+| The query is rejected catalog, value type, time bound, timezone and LIMIT |
+| OTA won't start | target, boot layout, size, SHA-256 and device capabilities
+
+## firmware
+
+If `begin()` fails, define keys and handlers before `begin` and
+Run `run()` in a regular loop. `report` to view and `write` to
+Use the command. Do not do hardware work inside the callback socket.
+
+## provisioning
+
+If the setup is interrupted after receiving the handoff, judge the success by saving the token
+do not The device should go to Wi-Fi, bootstrap, commit configuration,
+restart and report the correct generation. In PWA, browser LAN access and
+Check back from the setup page.
+
+## FlovaQL
+
+Start from the catalog. In telemetry, always make a time condition and for a large interval
+Use `bucket`. If the function is not compatible with the type datastream, query
+Don't complicate it with another SQL; Modify the desired data type or metric.
+
+## Evidence limit
+
+A successful build or typecheck only checks the code. Real online, Wi-Fi, BLE,
+TLS, OTA, power failure and the behavior of a real board require hardware test or real environment
+have

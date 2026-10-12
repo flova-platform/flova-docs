@@ -1,0 +1,40 @@
+---
+title: "Device Type and configuration version"
+description: "Defining the capabilities of a device family and managing its changes."
+icon: component
+---
+Device Type describes what data and capabilities a device family has.
+Real devices are made of a Device Type, but each device's identity, status,
+It has its own firmware and configuration version.
+
+## What is included in Device Type?
+
+- datastreams, value type, unit, interval and mode
+- Input and output mapping for universal firmwares
+- Default value and displayable limits in UI
+- Automations of the same family
+- A version that can be applied to devices of that family
+
+Don't confuse hardware mapping with datastream key. `relay` is the product contract;
+Whether it is on GPIO2 or a PLC output is a firmware or Device Type decision.
+In custom firmware, you may not put the mapping in Console at all and put it in
+Keep the program code.
+
+## Why do we have prescriptions?
+
+When a datastream is added or its restriction changed, existing devices should not
+Suddenly work with an unknown contract. Console Keep changes in one version
+and the device reports the desired version and the applied version.
+
+Before releasing the version:
+
+1. Keep the name of the previous keys.
+2. Compare mode and value type with existing widgets and automations.
+3. Check the universal mappings on the actual board.
+4. Move a test device to the new version.
+5. After you are sure, publish the version to others.
+
+<Warning>
+Renaming `key` is like creating a new channel. If you just want the username
+change, change `name` and leave the technical key fixed.
+</Warning>

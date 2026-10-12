@@ -1,0 +1,42 @@
+---
+title: "Creating a dashboard"
+description: "Stacking widgets, connecting data and designing an experience that works on web and mobile."
+icon: layout-template
+---
+Start Dashboard with a question: what user to decide or control the device
+do you need anything A good page does not show all possible data; information
+It places the corresponding action near it.
+
+## Common widgets
+
+| widget | Suitable for |
+| --- | --- |
+| status card | An important value and connection status
+| toggle | read and write boolean state
+| button | action or specific command
+| gauge | Numeric value with interval and unit |
+| line chart | Changes of one or more series in time
+| text and input Description, label or user input
+| alarm/event list | Logged events and warnings
+
+## What is binding?
+
+Binding is the link between the property of a widget and the data source. Source can be datastream
+A Device Type is the selected device value or saved query from FlovaQL. for
+Readable widget, datastream must be readable. For toggle, the value must be boolean
+and the destination is writable. For charts, the query must return the time column and compatible series.
+
+## Being responsive
+
+See each page in three states: mobile, tablet and desktop. The page in canvas
+Well, it seems that it may hide the main button or chart at the bottom of the screen on mobile
+show too compact. Page grouping, the distance between sections and the order of actions
+Choose so that the user can understand the path without zooming.
+
+## A simple pattern
+
+At the top of the page, put the connection status and device name. Then the original value with gauge or
+Show the status card. Set control actions like toggle close to the same value
+give Put the history chart below and display specific text for lack of data
+give If you have multiple devices, keep the device switcher at the host level rather than the page
+Do not overcrowd the main.

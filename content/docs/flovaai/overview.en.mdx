@@ -1,0 +1,43 @@
+---
+title: "FlovaAI"
+description: "Use AI to understand device data and build product parts with reviewable changes."
+icon: sparkles
+---
+FlovaAI helps you work with a workspace without manually walking through every Console screen. Ask about devices, datastreams, historical data, or dashboards and receive an answer in the context of that workspace.
+
+FlovaAI does not make product decisions for you. A change that affects the product should be shown for review before it is applied, and answers should use the real catalog and datastream keys instead of guessed names.
+
+## Good requests
+
+```text
+Summarize the readable and writable datastreams for this Device Type.
+```
+
+```text
+Summarize the test device's temperature for the last 24 hours by hour.
+```
+
+```text
+Suggest an automation that turns on the relay when temperature exceeds the limit. Show the proposed changes before applying them.
+```
+
+Include the exact device name, datastream key, and time range. When several objects have similar names, include an ID or ask FlovaAI to list the available choices first.
+
+## Tools and agents
+
+Depending on the workspace license, FlovaAI can help with:
+
+- Reading Device Types, versions, datastreams, and hardware mappings
+- Running or explaining FlovaQL queries
+- Reading device status and values
+- Sending a datastream command when the user has permission
+- Proposing changes to Device Types, datastreams, automations, and dashboard bindings
+
+Available tools and permissions can change by workspace. FlovaAI must not expose credentials, private schemas, or source code.
+
+## Write a better prompt
+
+State the purpose, scope, and output format in one sentence. “Average `temperature` for device X over the last 24 hours, grouped hourly, and return a table” is more useful than “check the data”. For a product change, say “suggest only” or “show the review before applying”.
+
+If an answer does not match the workspace, correct it with the exact name and time range. FlovaAI should not invent fields or dummy queries to fill in missing information.
+

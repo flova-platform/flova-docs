@@ -1,0 +1,53 @@
+---
+title: "Custom boards"
+description: "Using Flova's C++11 core on STM32, PLC, RTOS and gateway."
+icon: circuit-board
+---
+The portable kernel does not depend on Arduino, ESP, Wi-Fi, WebSocket, or filesystem.
+For a board port, you need to provide communication, storage, clock and log services to the runtime
+give This border allows the same behavior as datastream and command on MCU, PLC or
+keep the gateway.
+
+## Necessary services
+```text
+flova::Link
+flova::Storage
+flova::Clock
+flova::Logger
+```
+`Link` Sends messages and queues limited receptions. `Storage` identity,
+It keeps bounded state and history. `Clock` monotonic time or UTC required
+and `Logger` logs displayable messages.
+
+## loop boundary
+
+Communication callback should not implement GPIO or heavy logic. Queue input data
+Limit and call from the main loop:
+```cpp
+flova::Device device(link, storage, clock, logger);
+auto relay = device.datastream<bool>("relay");
+
+relay.onWrite(setRelay);
+device.begin();
+
+for (;;) {
+  device.run();
+}
+```
+In `setRelay` return the hardware result. If writing is rejected, cache, revision and
+Valid state should not go forward.
+
+## Other transports
+
+A custom board can use WSS directly or use a gateway that
+Translates BLE, LoRaWAN, serial, CAN, Modbus or fieldbus to Flova connectivity.
+The adapter must have command, revision, origin, acknowledgment and expiration identifiers
+keep Creating a parallel protocol that removes this information will cause conflicts later
+between dashboard and hardware.
+
+## Wi-Fi and OTA
+
+The portable kernel itself does not own Wi-Fi or OTA. These two features can be applied
+Or your board package determines. universal firmware composition of this property
+gives to Flova; Custom board should setup channel, secure storage, download and
+Define error recovery consciously.

@@ -1,0 +1,103 @@
+---
+title: "FlovaQL syntax and rules"
+description: "Statement structure, conditions, functions, time and parameters in FlovaQL."
+icon: code-2
+---
+The general structure of the query is as follows:
+```text
+[TIMEZONE '<IANA>'] SELECT <expressions> FROM <dataset>
+[JOIN <dataset> [AS <alias>] [ON <condition>]]
+[WHERE <condition>]
+[GROUP BY <expressions>]
+[HAVING <condition>]
+[ORDER BY <expressions>]
+[LIMIT <integer>]
+```
+The order of the clauses is important. You don't need `JOIN` for most queries; relationships
+published can be used as a qualifier.
+
+## expression and alias
+
+simple field, qualified field, single quote string, number, boolean, `NULL` and function
+can be used For the trusted name in the result, the expression computes alias
+Do:
+```sql
+SELECT bucket(time, 1h) AS hour, avg(value) AS average_value
+FROM telemetry
+WHERE datastream.key = 'temperature'
+  AND time > now() - 24h
+GROUP BY hour
+ORDER BY hour ASC
+LIMIT 24
+```
+## Conditions
+
+Comparison operators `=`, `!=`, `>`, `>=`, `<`, `<=` and comparison operators `LIKE`, `IN`,
+`BETWEEN` and `IS NULL` are supported. Combine terms with `AND` and `OR` and
+Use parentheses for precedence.
+```sql
+SELECT id, name
+FROM devices
+WHERE (status = 'offline' OR status = 'unknown')
+  AND name LIKE 'lab%'
+ORDER BY name ASC
+LIMIT 100
+```
+## functions
+
+| function | Meaning |
+| --- | --- |
+| `avg`, `sum`, `min`, `max` | numerical aggregate |
+| `count` | Number of samples or selected values
+| `count_distinct` | Number of different values
+| `first`, `last` | The first or last value in the | group
+| `bucket(timestamp, duration[, timezone])` | Putting time in fixed intervals
+| `now()` | Current time to build interval |
+
+Do not use `avg` and `sum` for boolean or string value. `count(value)`
+It's the number of samples, not the duration on or the number of state transitions.
+
+## interval and bucket
+
+Duration units such as `1h`, `24h`, `7d` and `1m` are written in the query. query
+Raw telemetry should have a limited range. For longer intervals, the data
+Group with `bucket`:
+```sql
+SELECT bucket(time, 1h) AS hour, count(value) AS samples
+FROM telemetry
+WHERE datastream.key = 'temperature'
+  AND time > now() - 7d
+GROUP BY hour
+ORDER BY hour ASC
+LIMIT 168
+```
+## timezone and parameter
+
+The default timezone is `Asia/Tehran`. If the day or hour border should be based on timezone
+to calculate another, write before `SELECT`:
+```sql
+TIMEZONE 'UTC'
+SELECT bucket(time, 1d) AS day, avg(value) AS average_value
+FROM telemetry
+WHERE datastream.key = 'temperature'
+  AND time > now() - 30d
+GROUP BY day
+ORDER BY day ASC
+LIMIT 30
+```
+Parameters are written with `$name` and must be of type and value in `parameterSchema`
+have corresponding:
+```sql
+SELECT id, name, status
+FROM devices
+WHERE device_template_id = $templateId
+ORDER BY name ASC
+LIMIT 100
+```
+The internal parameter `deviceId` is only for saved query which is in Studio with
+`builtin: "device.id"` is defined. Runtime sets the value of the current device itself
+gives The user value should not replace it. In normal Console or MCP queries, this
+There is no injection and you have to select the device filter from the catalog.
+
+The timezone written in `TIMEZONE` and the third argument of `bucket` must be compatible.
+to be Validate each query first and then execute it.

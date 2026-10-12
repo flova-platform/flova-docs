@@ -1,0 +1,33 @@
+---
+title: "Publication of the dashboard"
+description: "The difference between the draft and the published version and the final review before publishing."
+icon: send
+---
+In Studio there are two important states: draft which is for your editing and published which is
+The end user receives at runtime. Save the draft, the published version
+does not change
+
+## Release process
+
+1. Edit widgets and pages in Studio.
+2. Check the data bindings and actions from the Inspector.
+3. In Preview, try the read and write paths.
+4. Fix validation errors.
+5. Review the version title and changes.
+6. Confirm Publish.
+7. Open dashboard in PWA or Android app with test device.
+
+If dashboard uses saved FlovaQL query, the query at runtime with
+Current access is executed. Saving a query does not create a new permission. If
+datastream has been removed or retyped, fix incompatible binding before release
+do
+
+## What do we see after publish?
+
+The PWA app takes the published version from the Engine and receives the live data separately
+does Therefore, the new layout may have been released, but the device is still offline
+be Check these two situations separately.
+
+To return to the previous version, use history or the valid version of workspace.
+Before any major release, include a test device and an end user account in the checklist
+put

@@ -1,0 +1,43 @@
+---
+title: "No code automations"
+description: "Build reactive and scheduled logic with Flova nodes."
+icon: workflow
+---
+An automation is a visible path from a trigger to an action. Build it in the Console canvas when behavior should change without reflashing firmware.
+
+## Available nodes
+
+| Category | Node | Use |
+| --- | --- | --- |
+| Trigger | Data update | Start when a datastream changes |
+| Trigger | Schedule | Run once, daily, or weekly |
+| Logic | Condition | Compare a value with a rule |
+| Action | Write datastream | Set a value or toggle a boolean |
+| Action | Webhook | Send an HTTPS request |
+| Action | Notification | Send an alert to a user |
+
+## A practical example
+
+Turn on a fan when the temperature rises:
+
+```text
+temperature changes
+        ↓
+temperature > 30
+        ↓
+fan = true
+```
+
+For a schedule, select the intended timezone. The selected local time controls execution; stored timestamps remain explicit and convertible.
+
+## Before deploy
+
+- The trigger has an output.
+- Every condition has an input and output.
+- The destination datastream is writable.
+- A toggle is used only with a boolean stream.
+- The value matches the datastream type.
+- Alerts have a title, message, and repetition interval.
+
+Console manages the graph, while the runtime validates and executes it. After deployment, check the execution log and timeline. For a device command, also check the acknowledgement and device state.
+

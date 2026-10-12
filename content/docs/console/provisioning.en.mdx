@@ -1,0 +1,42 @@
+---
+title: "Device activation with QR"
+description: "Creating activation, connecting the mobile phone to the device and reaching the online status."
+icon: qr-code
+---
+Provisioning means turning a newly flashed board into a device that Flova can use
+knows QR is just the beginning of this path. After receiving the handoff, the device must be connected to the network
+connect, get the configuration and report the applied version after restart.
+
+## Work path
+
+1. Select a Device Type in Console.
+2. Create a new device or a batch activation.
+3. Provide installer with QR on screen, file or sticker.
+4. In the Flova or PWA app, scan the QR.
+5. The phone is connected to the setup channel of the device.
+6. Enter the original Wi-Fi name and password.
+7. The device saves the short-term handoff and restarts.
+8. After bootstrap, Console will follow the status to report the configuration.
+
+## SoftAP and Bluetooth
+
+In universal firmware, setup is usually done with SoftAP. Network device
+creates a temporary one with the prefix `Flova-Setup-` and the phone through the local address
+`192.168.4.1` delivers information. This address is only on the device's temporary network
+It has meaning and should not be placed in the code or public link of the product.
+
+In images with BLE, the app finds the Flova device with Bluetooth, handoff and
+It sends the Wi-Fi information, and then BLE is released to allow the device to route from Wi-Fi to
+Connect FlovaLink. If you have custom firmware, the network and setup channel belong to
+It is the application itself and SDK only takes the valid handoff.
+
+## Security and practical tips
+
+- Keep the deactivated QR as a credential.
+- Do not repeat QR for multiple devices unless batch activation is made for this purpose.
+- Do not confuse "credential saved" with "device is ready".
+- If the phone does not stay in Wi-Fi after scanning, manually check the setup network connection.
+- At the end, the name of the device, Device Type, and its online status should be seen in Console.
+
+SDK details and non-universal modes in [Provisioning for the developer](/en/docs/sdk/provisioning)
+has come

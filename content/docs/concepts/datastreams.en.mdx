@@ -1,0 +1,49 @@
+---
+title: "Datastreams"
+description: "The naming, type, direction, and behavior contract between a device and Flova."
+icon: waves
+---
+A datastream is the shared boundary between hardware and the product. Sensors, switches, outputs, states, and commands use this contract. The same key can be reported by firmware, used in automation, displayed in a dashboard, and queried with FlovaQL.
+
+## Key and title
+
+`key` is the technical name. Start it with an English letter and use only letters, numbers, and underscores. Keep it stable because queries and automations depend on it. The display name can be translated for the user.
+
+```text
+key: temperature
+name: Enclosure temperature
+unit: °C
+```
+
+## Access and behavior
+
+The official firmware supports `boolean`, `double`, and `string`. Set an access mode in the Device Type:
+
+| Mode | Meaning |
+| --- | --- |
+| `read_only` | The device reports a value; users and automations do not write it |
+| `write_only` | The value is a command or input and has no normal reading |
+| `read_write` | The device reports state and accepts commands |
+
+Use `telemetry` for measurements, `state` for observable status, `command` for requested actions, and `event` for momentary events.
+
+## `write` and `report`
+
+In the SDK, `write(value)` requests a change and reaches the hardware handler. `report(value)` says that the device observed a value; it does not execute a command.
+
+```cpp
+auto temperature = device.datastream<float>("temperature");
+auto relay = device.datastream<bool>("relay");
+
+relay.onWrite(setRelay);
+relay.write(true);                 // local command
+temperature.report(readSensor());  // report a sensor reading
+bool current = relay.value();      // local cache
+```
+
+A rejected value must not be stored or published as a successful state. Choose an offline policy for each stream; for example, retain the latest valid actuator command when that is safe for the device.
+
+## Design tip
+
+Create a datastream when a value must be visible in the product, used as a command, used in automation, or retained as history. Keep internal and temporary values inside the firmware.
+

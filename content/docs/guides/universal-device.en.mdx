@@ -1,0 +1,33 @@
+---
+title: "Build a product with universal firmware"
+description: "A no code path for ESP32 and ESP8266 boards using Console and Studio."
+icon: wand-sparkles
+---
+Universal firmware is a good starting point when you want to build a product without changing firmware for every behavior change. The common image runs on the board; the Device Type, mapping, automations, and dashboard define the product behavior.
+
+## Suggested steps
+
+1. Choose the correct board family and target.
+2. Build and flash the universal ESP32 or ESP8266 image.
+3. Create a Device Type with the real datastreams.
+4. Match the GPIO mapping to the board wiring.
+5. Create an activation and provision the device.
+6. Confirm that the configuration is applied and the device is online.
+7. Build the dashboard and automations.
+
+This path lets a product team change a temperature threshold or dashboard label without producing a new image.
+
+## Know the limits
+
+Universal firmware fits behavior described by datastreams and mappings. Use custom firmware for dedicated drivers, hard timing, local protocols, or complex memory control. You can keep the same Device Type, FlovaLink, dashboard, and FlovaQL contract while moving local behavior into your application.
+
+## Example automation
+
+```text
+trigger: temperature changes
+condition: temperature > 30
+action: fan = true
+```
+
+After deployment, the runtime executes the rule and the firmware receives the `fan` command as a normal datastream operation. Test both the sensor value and the output acknowledgement.
+

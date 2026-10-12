@@ -1,0 +1,41 @@
+---
+title: "OTA and firmware release"
+description: "Creating a release, checking target compatibility and device update process."
+icon: upload-cloud
+---
+OTA means that after provisioning, the device receives the new image without USB connection
+slow installation This feature includes target, boot layout, image capacity and firmware policy
+is dependent; Not every `.bin` file is suitable for every device.
+
+## Build release
+
+Specify the release version when building:
+```sh
+pio run -e universal-esp32 \
+  --project-option='build_flags=-DFLOVA_FIRMWARE_VERSION=\"1.2.3\"'
+```
+For production, keep ESP32 and ESP8266 images separate. Console metadata
+It compares version, target, layout, size and SHA-256 with release.
+
+## Before rollout
+
+- The release target should be the same as the device target.
+- Boot layout and installation strategy are compatible.
+- The size and SHA-256 of the artifact should be complete.
+- See legacy devices separately from OTA-capable devices.
+- First choose a small trial batch.
+- Determine the error and offline threshold before starting the rollout.
+
+Link and download OTA are two separate workloads. The firmware should release the Link connection,
+Get the valid artifact from HTTPS, check the checksum, install and
+After restart, report the result of boot and health.
+
+## Update failed
+
+If the device remains in downloading or installing state, connectivity and size
+Check the file. If the version is not verified after reboot, stop the rollout and
+Check the device with USB or image recovery. In ESP8266 always recovery path
+Consider the wire for incompatible image or failed boot.
+
+OTA is not a substitute for hardware testing. Before the wide rollout, disconnect the power, reconnect,
+Try restart and report version on any real target.

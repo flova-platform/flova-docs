@@ -1,0 +1,167 @@
+---
+title: "SDK Quick Start"
+description: "Install FlovaSDK and report or get the value in an Arduino program."
+icon: terminal
+---
+The following example is for a program that manages Wi-Fi and GPIO itself. for one
+More complete program use firmware examples and handler to hardware
+Connect real.
+
+## ESP32 with PlatformIO
+```ini
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+  lib_deps = flova-platform/FlovaSDK@^0.3.8
+```
+Basic code:
+```cpp
+#include <Arduino.h>
+#include <WiFi.h>
+#include <FlovaEsp32.h>
+
+FlovaEsp32 client;
+auto relay = client.datastream<bool>("relay");
+auto temperature = client.datastream<float>("temperature");
+
+void setup() {
+  WiFi.begin("your-wifi", "your-password");
+  pinMode(2, OUTPUT);
+  relay.onWrite([](bool enabled) {
+    digitalWrite(2, enabled ? HIGH : LOW);
+  });
+  client.begin();
+}
+
+void loop() {
+  client.run();
+}
+```
+`onWrite` is the safe place to apply the command. The command from Console, app, schedule or
+Automation comes and passes through this path. Call `run()` repeatedly until
+Queued and reconnect messages have a chance to execute.
+
+## Status report and life cycle changes
+
+Register a listener to display connection status or debug. listener only when
+State change is called and executed from the same loop as `client.run()`
+calls out; Therefore, the callback should be short and non-blocking:
+```cpp
+void onFlovaStatus(void*, const FlovaStatusEvent& event) {
+  const FlovaStatusSnapshot& status = event.current;
+
+  if (event.kind == FlovaStatusEventKind::LinkChanged) {
+    Serial.println(status.linkConnected ? "Flova Link online"
+                                        : "Flova Link offline");
+  }
+
+  if (event.kind == FlovaStatusEventKind::ErrorChanged &&
+      status.errorCode[0] != '\0') {
+    Serial.printf("Flova error: %s\n", status.errorCode);
+  }
+}
+
+void setup() {
+  // Wi-Fi setup and datastream handlers come before this line.
+  client.setStatusListener(onFlovaStatus);
+  client.begin();
+}
+```
+To read the current state without waiting for an event, use snapshot:
+```cpp
+FlovaStatusSnapshot status = {};
+client.status(status);
+
+bool onNetwork = status.networkConnected;
+bool onFlovaLink = status.linkConnected;
+bool readyForDatastreams = status.ready;
+```
+These situations do not have the same meaning:
+
+| API | Meaning |
+| --- | --- |
+| `networkConnected()` / `status.networkConnected` | Local network is available; In custom firmware itself, the program owns it. |
+| `tlsReady()` / `status.tlsReady` | The clock and TLS prerequisite are ready. |
+| `connected()` / `status.linkConnected` | Flova Link channel is connected. |
+| `runtimeReady()` / `status.runtimeReady` | The internal cycle SDK has reached `Runtime`. |
+| `ready()` / `status.ready` | Both runtime and device binding are ready. |
+
+`FlovaStatusEventKind` including `LifecycleChanged`, `NetworkChanged`,
+`LinkChanged`, `ReadyChanged`, `ConfigurationChanged` and `ErrorChanged`.
+Each event has both the previous snapshot and the current snapshot. If the initial state
+Read `status()` if you need it immediately; Registering the listener of an initial production event
+does not `errorCode` is a limited, loggable code, not the full payload or credential.
+
+## ESP8266 with PlatformIO
+
+The recommended path is to use the ready file
+`extras/platformio/esp8266/platformio.ini` in
+[Released versions of FlovaSDK](https://github.com/flova-platform/flova-firmware/tags)
+is This profile has `platform` settings, board, library and TLS ready;
+Therefore, if you copy the same profile, no additional setting is required.
+
+If you keep your own PlatformIO project, the library dependency in
+environment related to ESP8266:
+```ini
+[env:nodemcuv2]
+platform = espressif8266@4.2.1
+board = nodemcuv2
+framework = arduino
+lib_deps = flova-platform/FlovaSDK@^0.3.8
+```
+instead of `WiFi.h` from `ESP8266WiFi.h` and instead of `FlovaEsp32.h` from
+Use `FlovaEsp8266.h`.
+
+## ESP8266 with Arduino IDE
+
+Install `FlovaSDK` from **Tools → Manage Libraries** and install the ESP8266 board
+choose Then use `ESP8266WiFi.h` and `FlovaEsp8266.h`.
+
+## Three main operations
+```cpp
+relay.write(true);                 // local command
+temperature.report(readSensor());  // sensor reading
+bool last = relay.value();         // local cache
+```
+`write` executes the handler, `report` only registers the view, and `value`
+It does not send a request to the network. If the hardware value changes outside of the handler, it
+declare with `report`.
+
+For provisioning in the existing program, [channel setup guide](/en/docs/sdk/provisioning)
+continue
+
+## Custom code helpers
+
+In custom projects, you can instead of repeating the pattern typed API from
+Use `FlovaCustomCode.h`. These macros do not change the behavior of SDK:
+```cpp
+#include <FlovaCustomCode.h>
+
+auto relay = FLOVA_DATASTREAM(client, bool, "relay");
+FLOVA_ON_WRITE(relay, [](bool enabled) {
+  digitalWrite(RELAY_PIN, enabled ? HIGH : LOW);
+});
+
+FLOVA_WRITE(relay, true);                 // local command
+FLOVA_REPORT(relay, readRelayState());    // hardware reading
+bool current = FLOVA_READ(relay);         // local cache
+bool known = FLOVA_HAS_VALUE(relay);
+```
+`write` passes the handler and `report` just declares the observed value.
+The stream key and type must be exactly the same as Device Type.
+
+## Preparation for board shutdown
+
+For deep sleep or board shutdown, discharge Link first. Flova status board
+It does not change itself:
+```cpp
+const FlovaPowerDownStatus status = client.prepareForPowerDown();
+if (status == FlovaPowerDownStatus::Ready) {
+  // The board application manages Wi-Fi and the wake source.
+} else {
+  client.run();
+}
+```
+`run()` should continue in `Draining` state. Enter sleep only in `Ready`;
+`Busy` means provisioning, configuration, OTA or factory reset is still active.

@@ -1,0 +1,52 @@
+---
+title: "Making Device Type"
+description: "Definition of datastream, mapping and publishable version for a device family."
+icon: component
+---
+To build Device Type, start with what the user needs to do with the device.
+Then convert any data or command to a datastream. The technical name should remain the same;
+Title and description are for language and user experience.
+
+## Define a channel
+
+For each datastream specify the following:
+
+- `key`: technical name like `temperature` or `relay`
+- Value type: boolean, double, string or structured object
+- mode: read, write or bilateral
+- Behavior: telemetry, state, command or event
+- Unit, default value and interval, if required
+- The possibility of scheduling for the values that the user must change at a certain time
+
+An example of a lamp model:
+
+| key | type | mode | behavior | Explanation
+| --- | --- | --- | --- | --- |
+| `light` | boolean | read_write | State | lighting condition
+| `brightness` | double read_write | State | Light intensity from 0 to 100
+| `temperature` | double read_only | Telemetry Board temperature
+
+For RGB color, use the "RGB color mode" preset. This channel is a value
+`object`, with mode equal to `read_write` and without direct base mapping. in custom
+firmware, the color value reaches the program in the form of the text `#RRGGBB` and converting it to PWM or
+The hardware is in charge of the application; universal firmware only RGB circuit
+does not guess
+
+## hardware mapping
+
+In universal firmware, you can use `digital_input`, `digital_output`,
+Connect `analog_input` or `pwm_output` to datastream. active level, pull,
+The debounce and sampling interval must match the actual circuit. a mapping
+False can reverse the output without the query or dashboard displaying an error
+or swing the input.
+
+In custom firmware, it is not necessary to use Flova mapping. your program
+It can control GPIO or HAL by itself and set the value via `onWrite()` and
+`report()` to SDK.
+
+## Before publication
+
+Check the Device Type with a test device. type value with selected widget,
+Compare mode with automation, and keys with firmware code. After publication,
+Make the incompatible change in the new version to give older devices a chance to sync
+have

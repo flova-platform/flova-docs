@@ -1,0 +1,45 @@
+---
+title: "Complete dashboard and automation guide"
+description: "Building a real experience from device data to commands and alerts."
+icon: workflow
+---
+In this scenario you have a device reporting `temperature` and reporting `fan`
+accepts The goal is for the user to see the temperature, manually control the fan, and when the temperature
+above to receive an automatic command or warning.
+
+## First step: data contract
+
+In Device Type, make `temperature` numeric and read-only with the appropriate unit. `fan`
+Define boolean and read-write as state. If the firmware is from another key
+uses, modify the contract before designing dashboard.
+
+## Second step: dashboard
+
+Add a status card for connection in Studio and a gauge for `temperature`.
+Attach a toggle to `fan` and write a clear label for it. Then a line chart
+Create and connect to the saved hourly temperature query. In Preview, once with the device
+online and see the page once with empty data.
+
+## The third stage: automation
+
+In Console create this path:
+```text
+temperature updated
+        ↓
+temperature greater than 30
+        ↓
+fan = true
+```
+You can create a separate schedule or reverse condition for automatic shutdown. two
+Do not write the automation so that they toggle an event twice at the same time; for
+The important actuator is the `true` or `false` cutoff value, which is more traceable than the toggle.
+
+## The fourth stage: release and test
+
+First, validate and deploy the automation. Then check with the actual sensor change
+Make sure that the trigger, condition, command, ACK and value of dashboard are seen correctly.
+Then publish dashboard and open the same device in PWA or Android.
+
+Maintain this division of responsibility: Studio builds the appearance, Console the model and automation.
+The Engine does the execution and the firmware executes the command on the hardware
+applies
