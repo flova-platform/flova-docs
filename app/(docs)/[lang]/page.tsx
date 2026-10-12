@@ -3,7 +3,7 @@ import { i18n } from '@/lib/i18n';
 
 export default async function LocaleHome({ params }: PageProps<'/[lang]'>) {
   const { lang } = await params;
-  redirect(`/${lang}/docs`);
+  redirect(`/${lang}/docs/console/overview`);
 }
 
 export function generateStaticParams() {

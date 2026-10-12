@@ -2,6 +2,23 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
+:root {
+  --color-fd-primary: #5c7f00;
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-ring: #bfff32;
+}
+
+.dark {
+  --color-fd-primary: #bfff32;
+  --color-fd-primary-foreground: #0a0c0b;
+  --color-fd-ring: #bfff32;
+}
+
+#nd-sidebar {
+  --color-fd-accent: color-mix(in oklab, var(--color-fd-primary) 14%, var(--color-fd-background));
+  --color-fd-accent-foreground: var(--color-fd-primary);
+}
+
 @font-face {
   font-family: 'Estedad';
   src: url('/fonts/Estedad-Regular.woff2') format('woff2');
@@ -31,10 +48,16 @@ html > body[data-scroll-locked] {
   font-family: 'Estedad', system-ui, sans-serif;
 }
 
+code,
+pre,
+kbd,
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
 [dir='rtl'] code,
 [dir='rtl'] pre,
 [dir='rtl'] kbd {
   direction: ltr;
   text-align: left;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }

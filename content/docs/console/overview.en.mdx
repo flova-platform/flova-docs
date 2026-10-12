@@ -1,26 +1,22 @@
 ---
-title: "What is Console?"
-description: "Build product models, manage devices, and operate connected products in Flova."
-icon: layout-dashboard
+title: "Console"
+description: "Manage and monitor devices in Flova."
 ---
-Console is where you define and operate a connected product. Start by describing the device type and its datastreams, then create device identities and publish the configuration that firmware will use.
 
-## Main tasks in Console
+Console is where you manage and monitor devices in Flova. It gives you one place
+to follow the devices connected to your products, review their current status,
+and handle day-to-day device work. Start here when your work begins with devices,
+then use the product links below to continue.
 
-1. Create a Device Type and define its datastreams.
-2. Save and publish a Device Type version.
-3. Create a device activation and QR code.
-4. Check connection status, latest values, and device history.
-5. Build and deploy automations in the visual editor.
-6. Manage compatible firmware releases and OTA updates.
+## Choose a product
 
-Console is the product control plane. Automation execution, telemetry storage, and command delivery continue in the runtime even when the Console page is closed.
-
-## From one workspace to many devices
-
-Define a Device Type once and create any number of devices from its contract. Dashboards and automations can then use stable datastream keys across the whole device family. When wiring differs, keep the family contract stable and manage the hardware mapping in the Device Type version and firmware.
-
-<Note>
-The product calls this concept a “Device Type”. Some technical screens and APIs may call the same object a template.
-</Note>
-
+<Cards>
+  <Card title="Console" description="Define device types, manage devices, and handle daily operations." href="./" />
+  <Card title="Studio" description="Build dashboards and device experiences." href="../studio/overview" />
+  <Card title="App" description="Run published apps and manage connected devices." href="../app/overview" />
+  <Card title="SDK" description="Build firmware for Flova devices." href="../sdk/overview" />
+  <Card title="FlovaQL" description="Query device data and telemetry." />
+  <Card title="FlovaAI" description="Understand device data and use it in product features." />
+  <Card title="FlovaLink" description="Connect devices to Flova and exchange data." />
+  <Card title="API documentation" description="Read API documentation and examples." href="https://api-docs.flova.ir/" external />
+</Cards>

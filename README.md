@@ -8,6 +8,11 @@ The site is available in Persian and English:
 - Persian: `https://docs.flova.ir/fa/docs`
 - English: `https://docs.flova.ir/en/docs`
 
+Machine-readable documentation:
+
+- Index: `https://docs.flova.ir/llms.txt`
+- Full text: `https://docs.flova.ir/llms-full.txt`
+
 ## Local development
 
 ```bash
@@ -30,8 +35,16 @@ The build writes the static site to `out/`.
 
 Each page has a Persian and English file with the same slug:
 
-- `content/docs/start/overview.fa.mdx`
-- `content/docs/start/overview.en.mdx`
+- `content/docs/app/overview.fa.mdx`
+- `content/docs/app/overview.en.mdx`
+- `content/docs/console/overview.fa.mdx`
+- `content/docs/console/overview.en.mdx`
+- `content/docs/console/quickstart.fa.mdx`
+- `content/docs/console/quickstart.en.mdx`
+- `content/docs/sdk/overview.fa.mdx`
+- `content/docs/sdk/overview.en.mdx`
+- `content/docs/studio/overview.fa.mdx`
+- `content/docs/studio/overview.en.mdx`
 
 Technical identifiers, protocol strings, API paths, and code remain exact in
 both languages. Public documentation must not contain credentials, private

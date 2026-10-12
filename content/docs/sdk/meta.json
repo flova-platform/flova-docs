@@ -1,0 +1,6 @@
+{
+  "title": "SDK",
+  "description": "Build Flova firmware.",
+  "icon": "Terminal",
+  "root": true
+}

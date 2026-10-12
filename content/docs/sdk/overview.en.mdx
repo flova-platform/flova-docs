@@ -1,24 +1,6 @@
 ---
-title: "Flova SDK and firmware"
-description: "Choose a development model for ESP32, ESP8266, and custom boards."
-icon: cpu
+title: "SDK overview"
+description: "Build Flova firmware."
 ---
-FlovaSDK supports two development models. Universal firmware owns the common device lifecycle so a product can be configured from Console and Studio. Custom firmware keeps your application in control and adds only the Flova connectivity and datastream features you need.
 
-| Model | Use it when | Ownership |
-| --- | --- | --- |
-| `FlovaUniversalEsp32` | You want a ready product path on ESP32 | Flova manages networking, provisioning, mapping, OTA, and restart |
-| `FlovaUniversalEsp8266` | You are building a simple ESP8266 product | The same model with ESP8266 resource limits |
-| `FlovaEsp32` / `FlovaEsp8266` | You already have an Arduino application | Your application owns Wi-Fi, server, GPIO, and its main loop |
-| Portable C++11 core | You use STM32, PLC, RTOS, gateway, or another board | Your adapters provide transport, storage, clock, and logging |
-
-## Why use universal firmware?
-
-Universal firmware is a general image whose datastreams and hardware mapping come from Console. You configure the product model, automation, and dashboard without rewriting firmware for every behavior change. It is useful for prototypes and products whose behavior can be expressed with datastreams and mapping.
-
-## When is custom firmware better?
-
-Choose custom firmware when your existing application needs precise control of Wi-Fi, motors, sensors, memory, timing, or local protocols. The SDK does not take ownership of those parts. For non ESP hardware, use the [portable board contract](/en/docs/sdk/custom-boards).
-
-Start with the [SDK quick start](/en/docs/sdk/quickstart), then read [build and flash](/en/docs/sdk/build-flash).
-
+Build firmware for Flova devices with the SDK.

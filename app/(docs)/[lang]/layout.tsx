@@ -15,7 +15,7 @@ export default function Layout({ params, children }: LayoutProps<'/[lang]'>) {
   }, [lang]);
 
   return (
-    <RootProvider i18n={i18nProvider(translations, lang)} search={{ SearchDialog }}>
+    <RootProvider dir={lang === 'fa' ? 'rtl' : 'ltr'} i18n={i18nProvider(translations, lang)} search={{ SearchDialog }}>
       <div lang={lang} dir={lang === 'fa' ? 'rtl' : 'ltr'} className="flex flex-col min-h-screen">
         {children}
       </div>
