@@ -1,0 +1,62 @@
+---
+title: "Remote updates (OTA)"
+description: "Publish a firmware release, create a rollout, and handle failed devices safely."
+---
+
+OTA lets you publish a firmware binary and send it to compatible devices over the network. A release is the uploaded firmware package. A rollout is the operation that selects devices and sends that release.
+
+## Publish a firmware release
+
+1. Open [Console](https://console.flova.ir/ota) or a template's **OTA** page.
+2. Select **Create** and then **Publish OTA release**.
+3. Choose a `.bin` file. Console checks the file size against the general and target device limits.
+4. Let Console read the version and target from a Flova firmware package, or enable the custom file option and enter the version and target details.
+5. Add release notes if needed and publish the file.
+
+The upload has separate preparation, file upload, and release registration stages. If a stage fails, use the retry action after checking the network and the file. A file that was uploaded to storage is not a rollout until the release registration succeeds.
+
+## Create a rollout
+
+1. Select **Create** and then **Create rollout**.
+2. Choose the OTA release.
+3. Wait for the compatibility check to finish.
+4. Choose a compatible device template. The template page opens this form with that template already selected.
+5. Review the eligible devices, search by name, ID, or current firmware version, and exclude any device that should wait.
+6. Choose an immediate or scheduled start.
+7. Create the rollout.
+
+Console checks the release target, boot layout, current firmware, template, and device state before enabling the rollout button. If no eligible device remains, the rollout cannot start.
+
+## Use rollout safety settings
+
+Advanced settings control how quickly the release moves through devices:
+
+| Setting | Default in Console | Purpose |
+| --- | ---: | --- |
+| Batch size | 10 | Devices processed in one batch |
+| Interval | 300 seconds | Wait between batches |
+| Stop on failure | 20% | Pause when failed updates reach this share |
+| Stop on offline | 50% | Pause when devices are unavailable at this share |
+
+You can schedule a start time in the Tehran time zone. Legacy devices may be eligible only when you explicitly accept that they do not support automatic rollback.
+
+## Follow and control a rollout
+
+Open the rollout row to inspect its devices, current firmware, update result, and error details. A rollout can be **scheduled**, **running**, **paused**, **completed**, **failed**, or **cancelled**.
+
+- **Pause** stops sending to the remaining devices.
+- **Resume** continues a paused rollout.
+- **Cancel** stops the remaining work. Devices already updated stay updated.
+- **Retry failed** creates another attempt for devices with a failed result when the rollout allows it.
+
+Use the device list and [Monitor](./monitor) together. The rollout result describes the update operation. Monitor shows whether the device reconnects and reports after the update.
+
+## Common errors
+
+- **No compatible template:** the release target or boot layout does not match the template's devices.
+- **File rejected:** choose a `.bin` file within the general and target specific size limits.
+- **No eligible devices:** the devices may be offline, already on the release, disabled, or outside the selected template.
+- **Rollout pauses itself:** inspect the failure and offline thresholds before resuming.
+- **The device updated but is not online:** check the device timeline, current firmware, and boot or network logs. OTA completion does not prove that the new runtime connected.
+
+The [Flova Firmware repository](https://github.com/flova-platform/flova-firmware/) documents the firmware package and runtime side of OTA.

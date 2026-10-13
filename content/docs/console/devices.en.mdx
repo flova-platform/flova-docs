@@ -1,0 +1,53 @@
+---
+title: "Devices"
+description: "Create devices, issue activation QR codes, inspect status, and manage access."
+---
+
+Console has two useful device views. **Devices** shows the workspace's devices. A template's **Devices** page filters that list to devices connected to one template. The device remains a workspace resource, while the template supplies its channel and firmware configuration.
+
+## Create a device
+
+1. Open [Console](https://console.flova.ir/templates) and select the template, then open its **Devices** page. You can also use the workspace **Devices** page after selecting the active template in the sidebar.
+2. Select **Add device**, then **Add one**.
+3. Enter a device name. Console uses the provisioning method configured on the template.
+4. Create the device and keep the activation QR or manual code available.
+5. Claim the device in the [Flova web application](https://pwa.flova.ir/), then provision its network settings.
+
+The device cannot use a template that has no published version. If the plan has reached its active device limit, Console shows a billing message before creation finishes.
+
+## Use activation QR codes
+
+The QR code is for claiming a device in the web application. It is separate from Wi-Fi provisioning and from the device's later runtime connection.
+
+From a device row, open **Activation QR** to view the current code, copy the manual activation value, or download the QR as an SVG file. A code can be unused, claimed, revoked, expired, or missing. When you issue a new code, Console immediately revokes the current code. Give the new QR to the person who will claim the device.
+
+The web application does not need the internal transport prefix shown by the Console implementation. Use the QR scanner or the manual code displayed by Console.
+
+## Create device batches
+
+To create a batch, open a template's **Devices** page, select **Add device**, then **Build batch**. On the workspace **Devices** page, first select the active template in the sidebar. Enter a name prefix and a quantity from 1 to 100. Console creates names such as `lamp-001` and downloads a ZIP of the activation QR codes.
+
+Open **Device batch list** from the workspace Devices page to review previous batches, see unused and claimed QR counts, and download a batch's ZIP again. Keep each QR file with its physical device label so the intended user claims the right device.
+
+## Read a device's status
+
+The device list shows its template, current state, and latest connection information. Common states include:
+
+| State | Meaning |
+| --- | --- |
+| Online | A recent presence signal is available. |
+| Offline | The device is not currently reporting presence. |
+| Connecting or provisioning | Setup or runtime connection is still in progress. |
+| Error | The device reported a problem that needs attention. |
+| Disabled | Console has disabled device operations. |
+| Archived | The device is outside the active list. |
+
+Open a device to inspect its reported and desired channel values, sync status, identifiers, firmware information, and timeline. **Last connection** is a presence detail. It does not confirm that every channel has reported telemetry.
+
+## Manage access and device actions
+
+The device detail page contains actions for access reset, enabling or disabling, archiving and restoring, factory reset, and MQTT credential rotation when the current role has permission. Read the confirmation text before using a destructive action.
+
+Use access reset when a device changes ownership or an old activation path must stop working. Use factory reset when the firmware supports the requested command and you want to return the device to its setup flow. After either action, check the timeline and wait for the device to report the resulting state.
+
+See [Monitor](./monitor) for current values and events, and [Quick start](./quickstart) for a complete ESP32 setup.

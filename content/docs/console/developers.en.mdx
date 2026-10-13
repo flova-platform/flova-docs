@@ -1,0 +1,55 @@
+---
+title: "API and developer apps"
+description: "Create API keys, register OAuth applications, and find the developer documentation."
+---
+
+Console has two credential types for different integrations:
+
+- An **API key** gives a service direct access to selected Console and data operations.
+- A **developer app** registers an OAuth client so another application can sign users in and request the scopes it needs.
+
+## Create an API key
+
+1. Open [Settings > API keys](https://console.flova.ir/settings/api-keys).
+2. Select **New key** and enter a name.
+3. Set an optional expiration date.
+4. Select only the scopes the integration needs.
+5. Create the key and copy it immediately.
+
+Console shows the secret only once. Store it in a secret manager or environment variable. Do not put it in a browser bundle, a public repository, a dashboard, or a support screenshot.
+
+Common scopes include:
+
+| Scope | Use |
+| --- | --- |
+| `devices:read` and `devices:write` | Read or manage devices |
+| `templates:read` and `templates:write` | Read or manage templates and mappings |
+| `datastreams:read`, `datastreams:write`, and `datastreams:manage` | Read values, write values, or manage channel definitions |
+| `provisioning:read` and `provisioning:write` | Read or issue activation material |
+| `mqtt:manage` | Manage device MQTT connection data |
+| `flovaql:read` and `telemetry:read` | Run FlovaQL and read telemetry |
+
+Revoke a key from the API keys page when the integration is retired, the secret may have leaked, or the owner changes. Create a replacement first when you need a zero downtime rotation.
+
+## Register an OAuth application
+
+1. Open [Settings > Developer apps](https://console.flova.ir/settings/developer-apps).
+2. Enter the application name.
+3. Choose where the application runs: server or backend, browser, or mobile and desktop.
+4. Select the allowed scopes.
+5. For a browser app, add HTTPS redirect URIs. `localhost` is allowed for development.
+6. For a native app, add a custom scheme such as `my-app://oauth/callback`.
+7. Create the app and save the Client ID and any Client Secret shown.
+
+Server applications do not use a callback URI and receive a Client Secret. Browser and native applications need at least one valid redirect URI. Deleting an application revokes its active tokens. Rotating a Client Secret makes the previous secret invalid.
+
+Use OAuth for a user-facing integration. Use an API key for a controlled service that already has a workspace owner and needs direct scoped access.
+
+## Continue with the developer docs
+
+- [API documentation](https://api-docs.flova.ir/) describes the HTTP contract and examples.
+- [FlovaQL in Console](https://console.flova.ir/flovaql) is the query workspace for device telemetry.
+- [FlovaAI in Console](https://console.flova.ir/) can help explore supported device and data operations when it is enabled for the workspace.
+- The [Flova Firmware repository](https://github.com/flova-platform/flova-firmware/) documents the SDK and device side integration.
+
+If a request is rejected, check the credential type, selected scope, active workspace, and whether the key or secret has expired or been revoked.

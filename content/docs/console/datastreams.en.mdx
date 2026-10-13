@@ -1,0 +1,71 @@
+---
+title: "Datastreams"
+description: "Define channel keys, values, access, defaults, and hardware mappings."
+---
+
+A datastream is a named value that a device reports, receives, or stores. Console uses it in device details, dashboards, automations, telemetry, and FlovaQL.
+
+## Add a datastream
+
+1. Open [Console](https://console.flova.ir/templates) and select a template.
+2. Open **Datastreams** and select **Add datastream**.
+3. Enter a display name and a technical key.
+4. Choose the value type and exchange mode.
+5. Choose a hardware connection when the value belongs to a physical input or output.
+6. Set the default, safe value, sampling, and other limits where the form provides them.
+7. Save the datastream, then publish the template version from **Versions**.
+
+The technical key is the stable identifier used by firmware, Studio, automations, API calls, and FlovaQL. It must start with an English letter and can contain English letters, numbers, and underscores, up to 64 characters. Use a key such as `temperature_c` or `LED`; do not use a translated label as the key.
+
+## Choose the value and access
+
+| Field | Options | Use it for |
+| --- | --- | --- |
+| Value type | Boolean, number, text, structured object | The shape of the value sent or stored |
+| Exchange mode | Read only, write only, read and write | Which side can report or change the value |
+| Unit | A short label such as `°C` or `%` | Display and query context |
+| Default or initial value | The value used when the channel starts | A predictable initial state |
+| Safe value | The value used by the device safety behavior | A safe output when the device needs one |
+
+Console checks the combination of hardware connection, value type, and access. Digital input and digital output channels use Boolean values. Analog input and PWM output channels use numbers. A virtual state is a read and write structured value, such as an RGB object.
+
+Use **Read only** for a sensor that reports data. Use **Write only** for a command that the device accepts. Use **Read and write** when the device reports the current state and Flova can send a new state.
+
+For writable channels, you can enable scheduling in the web application. This lets an end user schedule a value or command for a later time.
+
+## Map a channel to hardware
+
+The **Connection type** selects how the firmware should handle the channel:
+
+- **Digital input** reads a Boolean signal from a pin.
+- **Digital output** writes a Boolean signal to a pin.
+- **Analog input** reads a numeric ADC value.
+- **PWM output** writes a numeric duty or intensity value.
+- **Software status** and **software command** have no direct GPIO mapping.
+- **RGB color** stores a structured color value. Its `r`, `g`, and `b` components are between 0 and 255.
+
+Enter the board's pin reference in **Hardware pin**. The reference can be a label such as `D32`, `GPIO32`, `A0`, or `ADC1_CH4`, depending on the firmware. A pin cannot be assigned to two physical channels in the same template. If the board uses a pull-up, pull-down, or active-low circuit, set that in the channel form.
+
+The **Hardware settings** panel also contains board-level settings. Use it for the status LED, factory reset source, and other firmware settings that are independent of a channel.
+
+## Live values and history
+
+Console shows two different kinds of data:
+
+| View | What it answers |
+| --- | --- |
+| Current value | What value is available now for this device and channel? |
+| History | What values and events were recorded over a selected time range? |
+
+The current value can change without creating the history row you expect, depending on the device transport and channel behavior. Use **Monitor** to inspect current channel values, then use the history or FlovaQL path to confirm stored telemetry. A device being online only proves presence, not that a particular channel has reported a value.
+
+## Common validation errors
+
+- **Invalid key:** start with an English letter and use only English letters, numbers, and `_`.
+- **Duplicate key:** every channel key in one template must be unique.
+- **Wrong value type:** match Boolean channels to digital I/O, and numeric channels to analog or PWM I/O.
+- **Pin already used:** assign each physical pin once, or remove the older mapping.
+- **Invalid numeric range:** the maximum must be greater than the minimum, and a PWM initial value must be inside its range.
+- **No change on the device:** save the channel, publish the template version, and make sure the firmware uses the same key and pin.
+
+The [Flova Firmware repository](https://github.com/flova-platform/flova-firmware/) contains the SDK and firmware examples. [Studio](https://studio.flova.ir/) reads the published channel definition when you connect a widget.

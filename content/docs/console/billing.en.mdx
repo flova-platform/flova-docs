@@ -1,0 +1,49 @@
+---
+title: "Plans and billing"
+description: "Read workspace limits, telemetry usage, AI credits, and add-ons."
+---
+
+The **Plans and billing** page shows the active plan, billing period, resource usage, and available add-ons. Billing belongs to the workspace, so the values apply to the team's shared resources.
+
+## Read usage
+
+Open [Settings > Billing](https://console.flova.ir/settings/billing). The usage card reports the current value and limit for:
+
+| Meter | What it counts |
+| --- | --- |
+| Active devices | Devices counted against the workspace's active device capacity |
+| Telemetry | Telemetry readings counted in the current period |
+| Team members | Members in the workspace |
+| Templates and dashboards | The resources counted by the plan's shared limit |
+| AI credits | Included and purchased FlovaAI credit remaining |
+
+The page also shows the period end and the current plan status. Read a meter as `current from limit`; the progress bar is a visual version of the same values.
+
+Telemetry warnings appear when consumption reaches 80 percent or more. Reaching the displayed telemetry limit does not immediately stop the data path, but it is a signal to review the plan before the next period.
+
+## Change a plan
+
+Only the workspace owner or a role with billing management permission can change the plan or buy an add-on. Select a paid plan in the pricing section and complete the payment flow. A paid plan cannot be downgraded before the current period ends.
+
+If the payment succeeds, the plan or add-on becomes active after the payment is confirmed. If payment fails, Console does not add the amount to the workspace and shows a retry path.
+
+## Buy an add-on
+
+The page can offer add-ons for:
+
+- 100 FlovaAI credits with no expiration;
+- five devices for 30 days, when the workspace uses a paid plan.
+
+Console allows up to 10 active device add-on packages at a time. Check the billing message if it rejects another package.
+
+Extra usage is not charged automatically. Review the meter and plan before adding devices or increasing telemetry traffic.
+
+## Troubleshoot a limit
+
+- **Device creation is blocked:** review active devices and the effective device limit, including add-ons.
+- **A team invitation is rejected:** review the team member limit and current invitations.
+- **A template or dashboard cannot be created:** review the shared templates and dashboards meter.
+- **FlovaAI stops responding:** review the remaining AI credits.
+- **The purchase button is unavailable:** check that you are the workspace owner or have billing management permission.
+
+Use [Notifications](https://console.flova.ir/notifications) for quota and payment messages. Contact [Support](https://console.flova.ir/support) with the workspace and payment status when the billing page shows an error.

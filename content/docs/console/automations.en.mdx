@@ -1,0 +1,64 @@
+---
+title: "Automations and alerts"
+description: "Build rules that react to channel changes, check values, write channels, and send alerts."
+---
+
+An automation is a graph attached to a device template. It starts from a trigger, can check a condition, and then runs one or more actions. Edit it from the template's **Automations** page.
+
+## Build an automation
+
+1. Open [Console](https://console.flova.ir/templates), select a template, and open **Automations**.
+2. Add a trigger and choose the channel or schedule that starts the rule.
+3. Add a condition when the action should run only for a specific value.
+4. Add an action such as a channel write, webhook request, or notification.
+5. Connect the nodes in the direction of execution.
+6. Save the graph, then publish the template version.
+
+The editor has these node types:
+
+| Node | Purpose |
+| --- | --- |
+| Datastream update | Starts when a channel changes. Choose any change, rising, or falling. |
+| Schedule | Starts once, daily, or weekly at a selected time. |
+| Channel check | Compares a channel with a value. |
+| Channel write | Writes a value or toggles a writable channel. |
+| Webhook request | Sends an HTTP request to a configured URL. |
+| Notification | Creates an alert with a title and message. |
+
+## Use a channel trigger
+
+Select **Datastream update**, choose a channel, and choose the trigger mode:
+
+- **Any change** runs for every accepted update.
+- **When activated** runs when a Boolean value becomes true.
+- **When deactivated** runs when a Boolean value becomes false.
+
+Use a channel trigger for events such as a door opening or a temperature report changing. If you need a time based rule, use **Schedule** instead.
+
+## Check a value
+
+Add **Channel check** after the trigger. Choose a channel, an operator, and a comparison value. Supported comparisons include equal, not equal, greater than, greater than or equal, less than, less than or equal, and changed to. Connect the condition's output to the action that should run when it passes.
+
+Use a condition that matches the channel type. A numeric comparison cannot evaluate a text or structured object as a number. A Boolean condition should use `true` or `false`.
+
+## Write to a channel or send an alert
+
+For **Channel write**, choose a writable channel and either set a value or toggle the current value. The channel must allow writing in its published definition. A read-only channel makes the automation invalid.
+
+For **Notification**, enter a title and message. The notification is shown in Console's notification center. A **Webhook request** sends an HTTP request to the URL in the node. Keep the endpoint available and check its authentication requirements before enabling the rule.
+
+## Versioning and validation
+
+Automation changes are stored with the template version. Saving the graph updates the editable version; it does not make the new rule active until you publish that version.
+
+Before publication, Console validates that:
+
+- every node has the fields required for its type;
+- every channel still exists in the template;
+- a write action points to a writable channel;
+- connections form a usable path from a trigger to an action;
+- values match the selected channel type.
+
+An invalid node is marked in the editor and the validation message explains what to fix. If a channel was renamed or removed, update the automation to use its new key. Publishing an older template version can also leave a rule pointing at a channel that is absent from that version.
+
+See [Datastreams](./datastreams) for access modes and [Templates and versions](./templates) for publication behavior. Use [FlovaQL](https://console.flova.ir/flovaql) when a rule needs a query rather than a single channel comparison.

@@ -1,0 +1,68 @@
+---
+title: "Templates and versions"
+description: "Define a device template, connect it to the rest of Flova, and publish safe changes."
+---
+
+A template describes the inputs, outputs, commands, and firmware settings that a group of devices shares. Dashboards in [Studio](https://studio.flova.ir/), FlovaQL queries, automations, and OTA releases use the template as their connection point.
+
+## Create a template
+
+1. Open [Console](https://console.flova.ir/templates) and select **Create template**.
+2. Enter a name that describes the hardware or product, such as `ESP32 LED` or `Room controller`.
+3. Choose the provisioning method: Wi-Fi, BLE, or Ethernet.
+4. Create the template. Add its data channels from the template's **Datastreams** page.
+
+The provisioning method tells Flova how a device receives its first network settings. It does not replace the firmware transport. The firmware still needs to implement the selected setup flow.
+
+## Connect the template to a product
+
+Use the same template when you create the following resources:
+
+| Resource | What the template provides |
+| --- | --- |
+| Devices | The channel and hardware definition used by each device |
+| Studio dashboards | The list of channels that widgets can read or write |
+| FlovaQL | The template and channel context for telemetry queries |
+| Automations | The channels available to triggers, conditions, and actions |
+| OTA | The device family used for compatibility checks and rollouts |
+
+Choose the template before building a dashboard in [Studio](https://studio.flova.ir/). A dashboard attached to another template cannot use this template's channels.
+
+## Set template options
+
+Open the template's **Settings** page to change its name or archive it. Archiving a template also archives its active devices, so review those devices before confirming. On the **Datastreams** page, use **Firmware settings** for parameters that the firmware reads from the template. A parameter has a key, a type, and an initial value. Save the parameter before publishing a version.
+
+The **Hardware settings** panel contains board-level options such as the status LED and factory reset source. A status LED is separate from a normal data channel. Keep the pin names consistent with the firmware, for example `GPIO2` or `D32`.
+
+## Publish a version
+
+Console keeps changes in a version instead of applying every edit immediately to active devices.
+
+1. Add or edit the channels, firmware parameters, and automation graph.
+2. Open **Versions** and review the version number and validation status.
+3. Publish a version marked **Ready to publish**.
+4. Confirm the publication. Console sends the published configuration to active devices that use the template.
+
+The version list uses these states:
+
+| State | Meaning |
+| --- | --- |
+| Draft | The version is still being edited. |
+| Ready to publish | Validation passed and the version can be published. |
+| Published | This version is the active template configuration. |
+| Archived | The version is kept in history and can be restored. |
+
+Publishing a template version does not publish a Studio dashboard. Publish the dashboard separately in [Studio](https://studio.flova.ir/).
+
+## Roll back a version
+
+Open **Versions**, find an archived version, and choose **Restore version**. Console validates the selected version, makes it the published version, and sends its configuration to active devices in the template. A rollback changes the template configuration. It does not undo telemetry already stored or a firmware image already installed by OTA.
+
+## Common problems
+
+- **No device can be created:** the template has no published version. Publish one first.
+- **A channel is missing in Studio:** check that the dashboard uses the same template and that the channel exists in the published version.
+- **A version cannot be published:** open the validation message, then fix missing channels, duplicate keys, invalid pins, or an incomplete automation graph.
+- **A template should disappear from daily work:** archive it from **Settings**. This also archives its active devices, so review the affected device list first.
+
+For the channel fields used in a template, see [Datastreams](./datastreams). For the first complete device flow, see [Quick start](./quickstart).

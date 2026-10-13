@@ -2,5 +2,19 @@
   "title": "کنسول",
   "description": "مدیریت دستگاه‌ها و داده‌ها.",
   "icon": "Settings2",
-  "root": true
+  "root": true,
+  "pages": [
+    "overview",
+    "quickstart",
+    "templates",
+    "datastreams",
+    "automations",
+    "devices",
+    "monitor",
+    "ota",
+    "workspace",
+    "developers",
+    "billing",
+    "support"
+  ]
 }

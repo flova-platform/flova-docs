@@ -1,0 +1,47 @@
+---
+title: "Live monitoring"
+description: "Watch device presence, current channel values, telemetry history, and connection events."
+---
+
+The **Live monitor** page belongs to a template and gives you one view of its devices. It shows online and offline counts, numeric channel trends, and device events. Open a device's detail page to compare the latest value reported by the device with the value Flova wants it to apply.
+
+## Open the monitor
+
+1. Open [Console](https://console.flova.ir/templates).
+2. Select a template and open **Live monitor**.
+3. Choose devices, channels, and a time range to narrow the charts and events.
+4. Select **Live** for incoming updates. Refresh manually if the live connection is unavailable.
+
+The live range covers the most recent 15 minutes. For a longer period, choose a history range. Live events arrive over a realtime connection; Console shows when that connection is unavailable.
+
+## Read the current state
+
+The monitor summary includes total, online, and offline device counts, event count, and errors in the selected range. It does not show a latest-value table for every channel. Open **Devices**, then a device, and find **Datastreams** to compare reported values, desired values, sync state, and last change time. A device can be online while a channel has no reported value.
+
+When you are debugging a device, check these fields in order:
+
+1. Device status and last connection.
+2. The reported and desired values in the device's **Datastreams** section.
+3. The channel's trend in Live monitor or its stored readings in FlovaQL.
+4. The event list for provisioning, commands, errors, and presence changes.
+
+## Inspect history
+
+Choose a time range to review stored telemetry. Numeric channels can be compared over time, while Boolean and text channels show the values that were recorded. Use [FlovaQL](https://console.flova.ir/flovaql) when you need a filtered query, grouping, or an exportable result.
+
+The numeric chart and event list use the selected time range. History is different from the latest-value view on a device page: history contains readings stored by the telemetry path, while device details show reported and desired runtime values. If a device is online but history is empty, check the channel key, firmware reports, selected range, and telemetry configuration.
+
+## Read events
+
+The event list includes presence changes, provisioning, administrative actions, channel updates, console writes, app writes, automation writes, device acknowledgements, applied values, and device errors. Filter by category or severity and open an event to see its structured details.
+
+The device timeline is also available from the device detail page. It groups repeated telemetry events that are close together so a busy channel is easier to scan. Load older events when you need more history.
+
+## Troubleshoot a missing value
+
+- **The device is offline:** check its network, firmware logs, and the last presence event.
+- **The device is online but the value is empty:** confirm the firmware reports the exact technical key from the published template.
+- **A value appears on the device page but not in the chart:** the chart covers numeric series. Check the selected device, channel, and time range; use FlovaQL to inspect stored readings.
+- **A write appears but the device does not change:** check the channel access mode, hardware pin mapping, firmware acknowledgement, and the event timeline.
+
+See [Datastreams](./datastreams) for channel definitions and [Devices](./devices) for access, QR codes, and device actions.
