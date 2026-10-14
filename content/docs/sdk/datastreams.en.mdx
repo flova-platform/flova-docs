@@ -1,0 +1,182 @@
+---
+title: "Datastreams"
+description: "Connect typed application state, sensor reports, and remote commands to Flova."
+---
+
+A datastream is a typed value shared by firmware, Console, Studio, and the
+published device dashboard. Its technical key is the contract between those
+parts. Use the exact key from the published template in firmware.
+
+## Declare a stream
+
+The Arduino helpers keep a sketch compact:
+
+```cpp
+auto temperature = FLOVA_DATASTREAM(device, float, "temperature");
+auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+```
+
+The portable API uses the same types:
+
+```cpp
+auto relay = device.datastream<bool>("relay");
+```
+
+Declare streams before `begin()`. The SDK binds the declared keys when the
+device connects to the published template.
+
+## Four directions of state
+
+```cpp
+FLOVA_ON_WRITE(relay, setRelay); // remote command
+FLOVA_WRITE(relay, true);       // local application command
+FLOVA_REPORT(temperature, 23.4f); // sensor or hardware observation
+bool enabled = FLOVA_READ(relay);  // local cached value
+```
+
+`FLOVA_READ` and `value()` read the local cache. They do not make a network
+request. `FLOVA_REPORT` records an observation. It does not call the write
+handler.
+
+Use `FLOVA_HAS_VALUE` before reading a value that may not have been restored or
+received yet:
+
+```cpp
+if (FLOVA_HAS_VALUE(relay) && FLOVA_READ(relay)) {
+  digitalWrite(2, HIGH);
+}
+```
+
+## Apply remote writes safely
+
+Remote commands arrive through `run()`:
+
+```cpp
+flova::WriteResult setRelay(bool enabled) {
+  digitalWrite(2, enabled ? HIGH : LOW);
+  return flova::accept();
+}
+
+void setup() {
+  FLOVA_ON_WRITE(relay, setRelay);
+}
+
+void loop() {
+  device.run();
+}
+```
+
+If hardware cannot accept a command, return a rejection instead of changing
+the local state. Keep the handler short. Queue long work for the application
+loop and return without blocking network processing.
+
+## Value types
+
+The public typed surface supports Boolean, integer, floating point, double, and
+text values. The C++ type must match the template's value type. Text values are
+bounded by the SDK build configuration, so check the returned value when your
+application accepts user-provided text.
+
+## Offline behavior
+
+The local cache lets hardware continue using the latest accepted value while
+the network is unavailable. The exact offline policy belongs to the stream and
+firmware configuration. After reconnecting, the SDK synchronizes the state that
+the selected policy keeps.
+
+If a report is rejected, check the connection, the exact technical key, the
+value type, and the published template version. Presence alone does not prove
+that a datastream report was accepted.
+
+## Design the template contract
+
+Define the stream in Console before writing the firmware declaration. The
+following fields affect how the application should use the value:
+
+| Template choice | Firmware consequence |
+| --- | --- |
+| Boolean, integer, float, double, or text | Use the matching C++ type. |
+| Read-only | Report observations; do not attach a user command handler. |
+| Read/write | Apply remote writes and report the hardware result. |
+| Default value | Use it as an initial value only; the board still needs a safe hardware state. |
+| Hardware mapping | Let universal firmware apply it or read it in a custom application. |
+| Minimum and maximum | Validate again before driving hardware. |
+
+A datastream key is case-sensitive. `temperature`, `Temperature`, and
+`TEMPERATURE` are different keys. Renaming a key requires updating the template,
+firmware, dashboard bindings, automations, and any external clients together.
+
+## State, sample, command, and event
+
+The SDK supports different stream modes for different device behavior:
+
+- **State** represents the current value of a device or actuator.
+- **Sample** represents a measurement taken at a point in time.
+- **Command** represents an instruction for the device to apply.
+- **Event** represents an occurrence such as a button press or alarm.
+
+Use state for a relay that should be restored, sample for a temperature sensor,
+command for a one-shot action, and event for a notification that does not need
+to become the current value.
+
+## Inspect a stream
+
+The portable handle can expose more than the value:
+
+```cpp
+auto snapshot = relay.snapshot();
+if (snapshot.hasValue && snapshot.quality == flova::Quality::Good) {
+  applyRelay(snapshot.value);
+}
+```
+
+A snapshot can include the last update time, origin, quality, dirty state, and
+revision. Use it when the application needs to distinguish a restored value
+from a fresh sensor reading or a remote command.
+
+## Report accepted hardware state
+
+For a writable physical output, apply the command first and report the state
+that the hardware actually accepted:
+
+```cpp
+flova::WriteResult setRelay(bool requested) {
+  const bool applied = writeRelayHardware(requested);
+  if (!applied) return flova::reject("hardware_rejected");
+  return flova::accept();
+}
+
+void loop() {
+  device.run();
+  const bool measured = readRelayHardware();
+  FLOVA_REPORT(relay, measured, flova::Origin::PhysicalInput);
+}
+```
+
+This keeps the cloud value aligned with the physical output when a relay,
+driver, or power controller refuses a request.
+
+## Capacity and retained history
+
+Embedded builds use bounded storage for datastreams, text, command results, and
+history. Set the build capacities for the board and product instead of adding
+unbounded containers. If the device reports queue overflow, dropped history, or
+storage failures, inspect the resource plan and the frequency of reports.
+
+Do not report a sensor on every loop iteration. Sample at the rate the sensor
+needs, report meaningful changes, and keep the main loop available for network
+and hardware work.
+
+## Debugging a missing value
+
+Check the path in this order:
+
+1. The device is online and the selected template is published.
+2. The firmware key matches the template key byte for byte.
+3. The C++ type matches the template value type.
+4. The report result is accepted.
+5. The latest value appears in Console.
+6. History contains a row in the selected time range.
+
+An online device can still have an undeclared or rejected datastream. Presence,
+queue acceptance, latest value, and history prove different parts of the path.

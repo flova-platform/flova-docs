@@ -1,0 +1,105 @@
+---
+title: "Configuration and settings"
+description: "Use typed firmware settings and template configuration without duplicating values in code."
+---
+
+Firmware settings let an application read typed values configured from Flova.
+Declare the setting once in firmware, give it a default, and use the cached
+value in the application logic.
+
+## Declare a setting
+
+```cpp
+auto dryThreshold = FLOVA_SETTING(device, double, "dry_threshold", 35.0);
+auto dryCalibration = FLOVA_SETTING(device, int64_t, "dry_adc", 3000);
+```
+
+The key must match the setting declared in the published device template. The
+default is used until a valid remote value is available.
+
+Read the setting from the local firmware state and clamp values when the
+hardware has a narrower safe range:
+
+```cpp
+int32_t boundedCalibration(const flova::Setting<int64_t>& setting) {
+  const int64_t value = setting.value();
+  return static_cast<int32_t>(value < 0 ? 0 : value > 4095 ? 4095 : value);
+}
+```
+
+Configuration delivery is asynchronous. Keep using the current cached value
+until the SDK applies a valid update. Do not make a network request from a
+getter.
+
+## Hardware mappings and safety
+
+Template configuration can describe digital inputs, digital outputs, analog
+inputs, PWM outputs, defaults, limits, debounce, sampling, and safety rules.
+The universal compositions can apply supported mappings automatically. A custom
+application can read the configuration and keep the final hardware policy in
+its own code.
+
+Always validate values again at the hardware boundary. A setting that is valid
+for the template may still be unsafe for a particular sensor, motor, power
+stage, or board revision.
+
+## Configuration flow
+
+1. Declare the typed setting or datastream in firmware.
+2. Create the matching item in the device template.
+3. Publish the template version.
+4. Configure the value in Console.
+5. Let the device receive and apply the update from its normal `run()` loop.
+6. Report the resulting hardware state when the application accepts it.
+
+Use one source of truth for each setting. Duplicating the same calibration in
+the template, firmware constants, and application UI makes field changes hard
+to reason about.
+
+## Settings and datastreams are different
+
+Use a datastream for a value that belongs in the live device model, such as a
+temperature, relay state, counter, or user command. Use a setting for a value
+that configures how the firmware works, such as a threshold, calibration point,
+sampling interval, or feature switch.
+
+The two can work together. A moisture controller might read `wet_adc` and
+`dry_adc` as settings, calculate a percentage locally, and report that result
+through a read-only `MOISTURE` datastream. The dashboard can display the
+datastream while Console changes the settings.
+
+## Update behavior
+
+Configuration is applied from the normal device loop. Do not change GPIO or
+start a long calibration operation inside a transport callback. Instead:
+
+1. Let the SDK validate and cache the new value.
+2. Notice the changed value from the application loop.
+3. Validate it against the connected hardware.
+4. Apply the new behavior at a safe boundary.
+5. Report the resulting state if a datastream represents it.
+
+If a value is outside the application's safe range, keep the previous value and
+return a bounded rejection or diagnostic. A template limit is useful input, but
+it does not replace hardware-level validation.
+
+## Resource and capacity planning
+
+Embedded builds reserve fixed capacity for datastreams, parameters, text,
+history, command deduplication, hardware inputs, hardware outputs, and schedule
+occurrences. Plan those capacities before adding many template items.
+
+When a build reaches a capacity, the correct fix is usually to reduce the
+declared surface, increase the target's explicit resource budget, or choose a
+larger composition. Avoid adding a dynamic map that hides memory use on a small
+board.
+
+## Settings checklist
+
+- Use a stable, lowercase technical key.
+- Give the setting a useful default for a fresh device.
+- Define the same type and default in the published template.
+- Keep calibration and product limits in the setting model.
+- Validate again before touching hardware.
+- Test a remote update while the device is online and after a reconnect.
+- Confirm that a power cycle restores the expected setting and output state.

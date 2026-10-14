@@ -1,0 +1,192 @@
+---
+title: "شروع سریع"
+description: "در چند مرحله یک دستگاهٔ سادهٔ ESP32 را با FlovaSDK بسازید و وصل کنید."
+---
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+این سریع‌ترین مسیر برای راه‌اندازی یک دستگاهٔ Flovaست. یک قالب ESP32 می‌سازید،
+Universal Firmware را روی برد می‌ریزید، برد را راه‌اندازی می‌کنید و LED داخلی
+آن را از یک Dashboard منتشرشده تغییر می‌دهید.
+
+به یک برد ESP32 با LED روی `GPIO2`، کابل USB داده، تلفن یا رایانهٔ متصل به Wi-Fi
+و یکی از PlatformIO یا Arduino IDE نیاز دارید. پیش از شروع یک فضای کاری در Flova
+بسازید.
+
+## ۱. قالب دستگاه را بسازید
+
+به [Console Flova](https://console.flova.ir/) بروید، یک نوع دستگاه بسازید و نام آن
+را `ESP32 LED` بگذارید. روش راه‌اندازی را روی Wi-Fi بگذارید و یک Datastream با
+مشخصات زیر اضافه کنید:
+
+| فیلد | مقدار |
+| --- | --- |
+| نام | LED داخلی |
+| کلید فنی | `LED` |
+| نوع مقدار | بولی |
+| دسترسی | خواندن و نوشتن |
+| رفتار | خروجی دیجیتال |
+| پایهٔ سخت‌افزار | `GPIO2` |
+| سطح فعال | HIGH |
+| وضعیت اولیه و امن | خاموش |
+
+کلید فنی را دقیقاً `LED` وارد کنید. پیش از ساخت دستگاه، نسخهٔ نوع دستگاه را
+منتشر کنید.
+
+## ۲. Universal Firmware را نصب و فلش کنید
+
+ترکیب یونیورسال راه‌اندازی، اتصال دستگاه، نگاشت سخت‌افزار و چرخهٔ معمول
+Firmware را مدیریت می‌کند. ابزار خود را انتخاب کنید:
+
+<Tabs items={['Arduino IDE', 'PlatformIO']} defaultIndex={0}>
+  <Tab>
+
+بستهٔ برد ESP32 را نصب کنید:
+
+۱. **Tools > Board > Boards Manager** را باز کنید.
+۲. `esp32` از Espressif Systems را جست‌وجو و نصب کنید.
+۳. از **Tools > Manage Libraries**، `FlovaSDK` را جست‌وجو و نصب کنید.
+۴. برد ESP32 خود را از **Tools > Board** انتخاب کنید.
+۵. درگاه Serial USB آن را از **Tools > Port** انتخاب کنید.
+
+یک برنامهٔ تازه بسازید و آن را با این کد جایگزین کنید:
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaUniversalEsp32 device;
+
+void setup() {
+  Serial.begin(115200);
+  device.begin();
+}
+
+void loop() {
+  device.run();
+}
+```
+
+روی **Upload** بزنید. Arduino IDE بستهٔ کامل Target انتخاب‌شده را می‌سازد و
+روی برد می‌نویسد.
+
+  </Tab>
+  <Tab>
+
+یک پروژه بسازید و SDK را اضافه کنید:
+
+```sh
+mkdir flova-esp32
+cd flova-esp32
+pio project init --board esp32dev
+```
+
+این محیط را به `platformio.ini` اضافه کنید:
+
+```ini
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+lib_deps = flova-platform/FlovaSDK@^0.3.12
+```
+
+فایل `src/main.cpp` را با این کد جایگزین کنید:
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaUniversalEsp32 device;
+
+void setup() {
+  Serial.begin(115200);
+  device.begin();
+}
+
+void loop() {
+  device.run();
+}
+```
+
+برد را وصل و بارگذاری کنید:
+
+```sh
+pio run -t upload
+pio device monitor -b 115200
+```
+
+اگر PlatformIO برد را پیدا نکرد، مقدار `upload_port` را در `platformio.ini` با
+درگاه Serialی که سیستم‌عامل به برد داده تنظیم کنید.
+
+  </Tab>
+</Tabs>
+
+## ۳. دستگاه را بسازید و راه‌اندازی کنید
+
+در [صفحهٔ دستگاه‌های Console](https://console.flova.ir/devices)، قالب `ESP32
+LED` را باز کنید، **افزودن دستگاه** را بزنید، نام وارد کنید و دستگاه را بسازید.
+Console یک QR code و کد فعال‌سازی دستی نشان می‌دهد.
+
+به [Web App Flova](https://pwa.flova.ir/) بروید، وارد شوید، **افزودن دستگاه**
+را بزنید و QR code را اسکن کنید. اگر دوربین در دسترس نیست، گزینهٔ فعال‌سازی
+دستی را انتخاب کنید.
+
+برد تازه شبکه‌ای با نامی شبیه `Flova-Setup-*` می‌سازد. وقتی Web App در حالت
+راه‌اندازی است:
+
+۱. تلفن یا رایانه را به `Flova-Setup-*` وصل کنید.
+۲. به Web App برگردید.
+۳. نام و رمز Wi-Fi معمول را وارد کنید.
+۴. فرم راه‌اندازی را بفرستید.
+۵. تلفن یا رایانه را دوباره به شبکهٔ معمول وصل کنید.
+
+برد نتیجه را ذخیره، راه‌اندازی دوباره و به Flova وصل می‌شود. در Console وضعیت آن باید از
+راه‌اندازی و sync به Online برسد.
+
+## ۴. LED را آزمایش کنید
+
+در [Studio](https://studio.flova.ir/) یک Dashboard برای قالب `ESP32 LED` بسازید.
+یک کلید دوحالته اضافه کنید، آن را به `LED داخلی` وصل کنید و Dashboard را منتشر
+کنید.
+
+دستگاه را در Web App Flova باز کنید و کلید دوحالته را تغییر دهید. LED باید
+همان تغییر را نشان دهد. اگر تغییر نکرد:
+
+- مطمئن شوید نسخهٔ نوع دستگاه منتشر شده است.
+- بررسی کنید Dashboard از همان قالب `ESP32 LED` استفاده می‌کند.
+- کلید فنی را دقیقاً `LED` بررسی کنید.
+- وضعیت و timeline دستگاه را در Console ببینید.
+- هنگام راه‌اندازی اولیه، مرورگر را به شبکهٔ راه‌اندازی متصل نگه دارید.
+
+## رفتن به Custom Firmware
+
+Universal Firmware برای اولین دستگاه و محصولی مناسب است که ترکیب کامل آن
+را Flova مدیریت می‌کند. وقتی برنامه باید مالک Wi-Fi، GPIO، حسگرها، Web Server یا
+کانال راه‌اندازی دیگری باشد، از `FlovaEsp32` استفاده کنید.
+
+```cpp
+#include <Arduino.h>
+#include <WiFi.h>
+#include <FlovaSDK.h>
+
+FlovaEsp32 device;
+auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+
+void setRelay(bool enabled) {
+  digitalWrite(2, enabled ? HIGH : LOW);
+}
+
+void setup() {
+  pinMode(2, OUTPUT);
+  WiFi.begin("your-wifi", "your-password");
+  FLOVA_ON_WRITE(relay, setRelay);
+  device.begin();
+}
+
+void loop() {
+  device.run(WiFi.status() == WL_CONNECTED);
+}
+```
+
+برای ادامه، [Datastreamها](./datastreams)، [Provisioning](./provisioning) و
+[Transportها](./transports) را بخوانید.

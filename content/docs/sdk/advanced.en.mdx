@@ -1,0 +1,138 @@
+---
+title: "Advanced firmware"
+description: "Extend Flova to Linux, Ethernet, custom boards, and application-owned setup flows."
+---
+
+Use the advanced paths when the standard ESP32 or ESP8266 composition does not
+match the product's hardware or service model.
+
+## Linux
+
+Linux applications use `FlovaLinux` with a CMake package:
+
+```cpp
+#include <FlovaLinux.h>
+
+FlovaLinux device;
+auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+
+int main() {
+  FLOVA_ON_WRITE(relay, applyRelay);
+  if (!device.begin()) return 1;
+  for (;;) device.run();
+}
+```
+
+The application owns the event loop and hardware integration. A service
+supervisor owns process startup, restart, and activation of a staged OTA image.
+
+## Custom boards
+
+The portable core has four service boundaries:
+
+```cpp
+flova::Device device(link, storage, clock, logger);
+auto relay = device.datastream<bool>("relay");
+```
+
+Implement `flova::Link`, `flova::Storage`, `flova::Clock`, and `flova::Logger`
+for the board or gateway. `Device::run()` remains the point where queued
+messages reach application hardware.
+
+The transport can be a network connection or a gateway such as serial, CAN,
+BLE, or another bounded carrier. Keep the carrier adapter separate from the
+datastream and hardware logic.
+
+## Ethernet
+
+ESP32 LAN8720 projects can use `FlovaEsp32Ethernet`. The application supplies
+the PHY parameters and hardware handlers while the composition provides the
+ESP32 network and Flova connection. A different Ethernet chip or TCP/IP stack
+needs its own validated socket adapter.
+
+Check the board schematic for boot pins, RMII reservations, power, DHCP, and
+certificate setup. A successful compile does not prove physical link, TLS, or
+hardware command acceptance.
+
+## Application-owned provisioning
+
+An existing web server can keep its routes and network mode while the SDK adds
+the bounded provisioning handoff. BLE, serial, factory, and cellular setup
+paths can use the same handoff contract. The application remains responsible
+for authenticating and transporting its setup input.
+
+Keep advanced integrations small: use the public facade first, inject a custom
+service only when the product actually owns that boundary.
+
+## Custom Arduino application boundary
+
+The custom board facade is passive. It does not start a SoftAP, replace your
+web server, control GPIO, or reboot the board on its own. Your application
+chooses when to start Wi-Fi, which pins to use, and how to recover from a
+hardware fault.
+
+The normal structure is:
+
+```cpp
+FlovaEsp32 device;
+auto sensor = FLOVA_DATASTREAM(device, float, "temperature");
+
+void setup() {
+  startApplicationNetwork();
+  attachHardwareHandlers();
+  device.begin();
+}
+
+void loop() {
+  serviceApplicationHardware();
+  device.run(applicationNetworkReady());
+}
+```
+
+Keep the loop cooperative. A handler should update or queue application state,
+not wait for a second network request or perform a long blocking operation.
+
+## Status and lifecycle callbacks
+
+Use the status listener when the product needs edge-triggered changes such as
+network ready, Link connected, runtime ready, or an error code. Keep the
+listener short and read detailed state from the facade after the callback.
+
+For maintenance tools, expose bounded status fields such as network readiness,
+TLS readiness, runtime readiness, firmware target, and current lifecycle state.
+Do not expose tokens, secrets, full payloads, or private storage keys.
+
+## BLE and other setup channels
+
+Provisioning transport is a firmware capability. A BLE, serial, Ethernet,
+cellular, or factory adapter can decode its own input and pass a
+`ProvisioningHandoff` to the client. The adapter owns pairing, framing, and
+transport-specific timeouts. The SDK owns the bounded Flova handoff and runtime
+session.
+
+Keep the setup channel separate from normal telemetry. Once the handoff is
+durably accepted, release temporary setup resources before starting normal Link
+or MQTT work.
+
+## Hardware ownership
+
+Use template mappings when the universal composition should apply standard
+inputs and outputs. Use application-owned handlers when the product needs custom
+debounce, calibration, interlocks, power sequencing, or board-specific pin
+rules.
+
+Never assume that a valid cloud command is safe to apply directly. Check the
+current hardware state, limits, power conditions, and emergency policy before
+changing an output.
+
+## Custom integration checklist
+
+- Choose universal or custom composition explicitly.
+- Keep the public umbrella include in simple examples.
+- Declare datastreams and settings before `begin()`.
+- Provide storage that survives the reset behavior the product expects.
+- Call `run()` from the normal cooperative loop.
+- Keep callbacks bounded and hardware-aware.
+- Verify provisioning, reconnect, template binding, command, report, and OTA
+  separately.
+- Keep wired recovery for the first image and failed updates.

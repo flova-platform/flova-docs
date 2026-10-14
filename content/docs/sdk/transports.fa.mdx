@@ -1,0 +1,250 @@
+---
+title: "Transportها و Connection"
+description: "انتخاب Flova Link یا MQTT، شناخت آمادگی Connection و مستقل نگه داشتن کد دستگاه از Transport."
+---
+
+Transport داده‌های Identity، فرمان، Report، Configuration و Presence را میان
+دستگاه و Flova جابه‌جا می‌کند. انتخاب Transport به شیوهٔ استقرار مربوط است و
+نباید کلیدهای Datastream، نوع مقدار، Handlerهای Hardware یا قرارداد Dashboard
+را تغییر دهد.
+
+مسیر پیش‌فرض و بومی **Flova Link** است. MQTT زمانی مناسب است که محصول از قبل
+MQTT Client، Gateway یا ابزارهای عملیاتی مبتنی بر Broker داشته باشد. در هر دو
+مسیر باید Network، Connection احراز هویت‌شده، اتصال به Template، Report
+پذیرفته‌شده، Latest Value و History را جداگانه بررسی کنید.
+
+## Flova Link
+
+<code>FlovaEsp32</code> و <code>FlovaEsp8266</code> به‌صورت پیش‌فرض از Flova Link
+استفاده می‌کنند. SDK Session احراز هویت‌شدهٔ Device، پیام‌های محدود، اتصال
+Datastreamها، Cache محلی، رساندن فرمان و Connection دوباره را مدیریت می‌کند.
+برنامه بسته به Facade انتخاب‌شده مالک Wi-Fi، Ethernet، GPIO، حسگرها، سیاست
+توان و کارهای طولانی است.
+
+~~~cpp
+FlovaEsp32 device;
+auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+
+void loop() {
+  serviceHardware();
+  device.run();
+}
+~~~
+
+برقرار بودن Link به معنی آماده بودن همهٔ Datastreamها نیست. پس از پذیرفته شدن
+Runtime و Template منتشرشده، به مقدار بازیابی‌شده تکیه کنید. هنگام بررسی مقدار
+گمشده، کلید دقیق، نوع مقدار، نتیجهٔ Report، Latest Value و History را در
+Console کنترل کنید.
+
+## Wi-Fi با Flova Link
+
+Universal Firmware در ESP32 و ESP8266 می‌تواند مسیر راه‌اندازی Wi-Fi را
+مدیریت کند. در برنامهٔ سفارشی، این مالکیت با خود برنامه است:
+
+~~~cpp
+#include <WiFi.h>
+#include <FlovaSDK.h>
+
+FlovaEsp32 device;
+
+void setup() {
+  WiFi.begin("your-wifi", "your-password");
+  device.begin();
+}
+
+void loop() {
+  device.run(WiFi.status() == WL_CONNECTED);
+}
+~~~
+
+اطلاعات Wi-Fi را در Source Code ثبت نکنید. برنامه باید برای نبودن Network،
+تغییر Access Point و دستگاهی که هنوز Provisioning نشده است، رفتار مشخصی
+داشته باشد. SDK می‌تواند Connection Flova را دوباره برقرار کند، اما نمی‌تواند
+Credential معتبر بسازد یا مشکل آنتن، برق، DHCP یا Radio را برطرف کند.
+
+اگر محصول Captive Portal یا Web Server خودش را دارد، همان مسیر را در برنامه
+نگه دارید و پس از پایان آن، Provisioning Handoff Flova را به SDK بدهید. بعد
+از Commit شدن Handoff، منابع موقت راه‌اندازی را ببندید و Telemetry عادی را
+شروع کنید.
+
+## Ethernet با Flova Link
+
+Ethernet برای نصب‌های ثابت، برق پایدار یا شبکه‌هایی مناسب است که Wi-Fi را
+اجازه نمی‌دهند. در پروژهٔ ESP32 با LAN8720، Facade مربوط به Ethernet شبکه را
+برای <code>FlovaEsp32Ethernet</code> فراهم می‌کند و برنامه تنظیمات PHY و
+راه‌اندازی وابسته به برد را تعیین می‌کند.
+
+~~~cpp
+FlovaEsp32Ethernet device(EthernetConfig{
+  .phyAddress = 1,
+  .powerPin = 16,
+  .clockMode = ETH_CLOCK_GPIO0_IN,
+});
+~~~
+
+نام Constructor با Target انتخاب‌شده فرق می‌کند. پیش از انتخاب Boot Pin، پایه‌های
+RMII، کنترل برق، DHCP و Clock مربوط به PHY را از Schematic برد بررسی کنید.
+کامپایل موفق، وجود Link فیزیکی، دریافت IP، آماده بودن TLS یا پذیرفته شدن
+فرمان Hardware را ثابت نمی‌کند.
+
+اگر برد از Chip Ethernet یا TCP/IP Stack دیگری استفاده می‌کند، Driver را بیرون
+از لایهٔ Datastream نگه دارید. از Facade پشتیبانی‌شده یا یک Link Adapter
+محدود استفاده کنید و کد Datastream را به Driver وابسته نکنید.
+
+## MQTT؛ مسیر کامل از Client تا Flova
+
+MQTT یک Transport سازگار اختیاری است. وقتی محصول از قبل MQTT Client دارد،
+Gateway ترافیک Device را از MQTT عبور می‌دهد یا تیم عملیات Broker و ابزار
+پایش مخصوصی دارد، این انتخاب منطقی است. در عوض، مسئولیت‌های Network، TLS،
+Broker و Reconnect با برنامه می‌ماند؛ بنابراین MQTT را آگاهانه انتخاب کنید.
+
+برنامه مالک Wi-Fi یا Ethernet Client، DNS، طول عمر Socket، Trust Store مربوط
+به TLS، MQTT Client، سیاست Reconnect و Watchdog محلی است. SDK Topicهای Flova،
+Presence، دریافت فرمان، قالب JSON مربوط به Datastream، صف محدود و اتصال این
+مسیر به Facade نوع‌دار را فراهم می‌کند.
+
+~~~cpp
+#include <WiFiClientSecure.h>
+#include <PubSubClient.h>
+#include <FlovaSDK.h>
+
+WiFiClientSecure socket;
+PubSubClient mqtt(socket);
+FlovaEsp32 device(mqtt);
+
+void setup() {
+  socket.setCACert(FLOVA_ROOT_CA);
+  mqtt.setServer("mqtt.flova.ir", 8883);
+  device.begin(deviceId, deviceSecret);
+}
+
+void loop() {
+  maintainWifi();
+  device.run();
+}
+~~~
+
+در MQTT نام کاربری، UUID دستگاه و گذرواژه، Secret همان دستگاه است. نشانی
+Broker برابر <code>mqtts://mqtt.flova.ir:8883</code> است. بررسی Certificate را
+روشن نگه دارید. Workspace API Key گذرواژهٔ Device نیست و نباید در Firmware یا
+Bundle مربوط به Dashboard قرار بگیرد.
+
+Device فقط در سمت <code>up</code> منتشر می‌کند و در سمت <code>down</code> مشترک
+می‌شود. SDK Topicها و Envelope مستند Flova را مدیریت می‌کند. برنامه باید
+Datastream و Handler نوع‌دار ثبت کند و فقط وقتی به Message API سطح پایین برود
+که یک نیاز واقعی محصول با Facade عمومی قابل بیان نباشد.
+
+### زنجیرهٔ Connection در MQTT
+
+موفق شدن MQTT یک مرحلهٔ واحد نیست. ابتدا Wi-Fi یا Ethernet باید مسیر Network و
+IP قابل استفاده بسازد. سپس DNS، TCP، بررسی Certificate در TLS و Session MQTT
+باید موفق شوند. بعد SDK Identity دستگاه را احراز می‌کند، Session را بازیابی
+می‌کند، Template منتشرشده را می‌خواند و مسیر فرمان و Report را آماده می‌سازد.
+
+این مراحل را در Diagnostic جدا نگه دارید. Socket باز فقط وجود مسیر Network را
+ثابت می‌کند. Presence نشان می‌دهد Session با Broker برقرار است. Runtime Ready
+یعنی Identity دستگاه پذیرفته شده است. Datastream Ready یعنی کلیدهای تعریف‌شده
+با Template تطبیق دارند. Accepted Report یعنی یک مقدار مشخص از اعتبارسنجی
+عبور کرده و وارد مسیر Transport شده است. Latest Value و History رسیدن داده به
+مسیر ذخیره‌سازی Flova را نشان می‌دهند.
+
+### حلقهٔ MQTT و Connection دوباره
+
+<code>device.run()</code> را در حلقهٔ عادی و همکارانهٔ برنامه اجرا کنید. آن را
+فقط پس از تغییر حسگر صدا نزنید و پشت تأخیر طولانی قرار ندهید. SDK برای دریافت
+فرمان، پیش بردن Reconnect، انتشار Presence و تخلیهٔ صف به اجرای مرتب نیاز دارد.
+
+نگه‌داری Wi-Fi یا Ethernet را از منطق Datastream جدا کنید. Reconnect نباید
+Cache محلی یا خروجی Hardware را پاک کند، مگر آنکه محصول عمداً چنین سیاستی
+داشته باشد. پس از Connection دوباره، بررسی کنید سیاست Stream مقدار پذیرفته‌شدهٔ
+قبلی را بازیابی می‌کند یا به Report تازه از Hardware نیاز دارد.
+
+هنگام قطع Broker، برنامه را پاسخ‌گو نگه دارید و وضعیت Offline محدودی نمایش
+دهید. در حلقهٔ Reconnect بی‌نهایت سریع نچرخید. Backoff و Watchdog مناسب Target
+را رعایت کنید و هنگام توسعهٔ TLS، حافظه یا Broker، مسیر Upload سیمی را نگه
+دارید.
+
+### اندازهٔ پیام و صف MQTT
+
+اندازهٔ هر پیام MQTT دستگاه حداکثر ۲٬۰۴۸ بایت است. Report بزرگ‌تر از این
+حد، پیامی که هنگام در دسترس نبودن Adapter تولید شود یا پیامی که صف محدود را
+پر کند، نتیجهٔ خطا می‌دهد. پذیرفته شدن Enqueue فقط یعنی SDK پیام را محلی
+قبول کرده است؛ رسیدن آن به Broker، Engine، Latest Value یا History را ثابت
+نمی‌کند.
+
+برای مقدارهای مستقل از Datastreamهای نوع‌دار جدا استفاده کنید و با نرخ
+معقول Report بفرستید. متن و فیلدهای JSON غیرضروری را از Template حذف کنید.
+با کوتاه کردن بی‌صدا یا بریدن مقدار، مشکل اندازه را پنهان نکنید. خطای محدود
+ثبت کنید و وقتی Report وارد صف نمی‌شود، وضعیت پذیرفته‌شدهٔ قبلی را نگه دارید.
+
+### امنیت و مالکیت MQTT
+
+از TLS و Identity مخصوص هر Device استفاده کنید. Secret دستگاه را در Storage
+انتخاب‌شده محافظت کنید و آن را در Log، صفحهٔ وضعیت، Payload MQTT یا Diagnostic
+Provisioning چاپ نکنید. تعویض Identity باید از مسیر رسمی Provisioning یا
+Maintenance محصول انجام شود.
+
+MQTT Client متعلق به برنامه است. Buffer، Keepalive، محدودیت Callback و زمان
+Reconnect را با حافظه و بودجهٔ توان Target هماهنگ کنید. Callback باید کوتاه
+باشد؛ کار را به حلقهٔ برنامه بسپارد و داخل Callback به حسگر، File یا درخواست
+طولانی Network دست نزند.
+
+## Bluetooth و کانال‌های Provisioning
+
+Bluetooth معمولاً کانال راه‌اندازی است، نه Transport دائمی Telemetry. مسیر
+BLE در ESP32 می‌تواند Provisioning Handoff کوتاه‌عمر را حمل کند، در حالی که
+Pairing، قالب پیام، Timeout و تعامل کاربر در اختیار برنامه است. پس از پذیرش
+ماندگار Handoff، منابع BLE را آزاد کنید و Wi-Fi، Ethernet، Flova Link یا
+MQTT را برای کار عادی شروع کنید.
+
+همین مرز برای Serial، ابزار Factory یا صفحهٔ راه‌اندازی محلی Ethernet هم
+برقرار است. کانال راه‌اندازی فقط Handoff محدود را منتقل می‌کند و جای
+Connection احراز هویت‌شدهٔ زمان اجرا را نمی‌گیرد. Activation Token را در Log
+ثبت نکنید و در هر Boot دوباره نفرستید.
+
+## مستقل نگه داشتن کد برنامه از Transport
+
+Datastreamها و Handlerها را یک‌بار تعریف کنید و سپس Constructor مناسب استقرار
+را انتخاب کنید:
+
+~~~cpp
+auto temperature = FLOVA_DATASTREAM(device, float, "temperature");
+auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+
+void loop() {
+  FLOVA_REPORT(temperature, readTemperature());
+  device.run();
+}
+~~~
+
+کلیدها، Typeها، Callbackها، Cache محلی و قرارداد Dashboard با تغییر Transport
+عوض نمی‌شوند. راه‌اندازی Wi-Fi، پیکربندی Ethernet، Certificateهای TLS،
+ساخت MQTT Client و Provisioning با Bluetooth باید بیرون از منطق Datastream
+بماند.
+
+## مرزهای آمادگی Connection
+
+برای رابط محصول و Diagnostic این مرزها را جدا نمایش دهید:
+
+| بررسی | چه چیزی را ثابت می‌کند؟ |
+| --- | --- |
+| Network Ready | Wi-Fi یا Ethernet شرایط لازم برنامه را دارد. |
+| Transport Connected | Flova Link یا Session مربوط به MQTT برقرار است. |
+| Runtime Ready | Identity دستگاه و Runtime Flova احراز شده است. |
+| Datastream Ready | کلیدهای تعریف‌شده به Template منتشرشده متصل شده‌اند. |
+| Accepted Report | یک مقدار مشخص اعتبارسنجی شده و وارد مسیر Transport شده است. |
+| Latest Value و History | مقدار به مسیر دادهٔ Flova رسیده و طبق انتظار ذخیره شده است. |
+
+برای نشانگرها از متدهای وضعیت Facade یا Status Listener استفاده کنید. برچسب
+«متصل» را فقط به دلیل باز شدن Socket سبز نکنید.
+
+## انتخاب Transport
+
+برای Connection عادی و کمترین مسئولیت برنامه از Flova Link استفاده کنید. MQTT
+را زمانی انتخاب کنید که محصول از قبل MQTT Client یا مسیر Broker دارد. اگر
+برد یا Gateway حامل محدود دیگری دارد، یک Link Adapter با مرز عمومی SDK
+بسازید. <code>flova::Device</code> قابل انتقال را به APIهای Arduino و Network
+وابسته نکنید.
+
+تغییر Transport، Template در Console را تغییر نمی‌دهد؛ فقط Connection دستگاه،
+مالکیت سرویس‌های Network و بررسی‌های عملیاتی زمان استقرار را تغییر می‌دهد.

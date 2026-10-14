@@ -1,0 +1,115 @@
+---
+title: "Firmware lifecycle"
+description: "Build, identify, update, and recover Flova firmware safely."
+---
+
+The firmware lifecycle covers the image you build, the target it declares, the
+runtime logs it emits, and the OTA release that Console offers to compatible
+devices.
+
+## Build metadata
+
+Every release should identify its firmware target and version. Keep the target
+stable for the board and boot layout that can install it. Console uses this
+metadata when it checks OTA compatibility.
+
+The SDK version and the firmware application version are separate values. A
+new SDK package does not update an installed device until you build and deliver
+a firmware image.
+
+## Logging
+
+Flova diagnostics can be filtered at compile time:
+
+```ini
+build_flags =
+  -DFLOVA_LOGGING_ENABLED=1
+  -DFLOVA_LOG_LEVEL=FLOVA_LOG_LEVEL_DEBUG
+```
+
+Supported levels are `ERROR`, `WARN`, `INFO`, `DEBUG`, and `TRACE`. Production
+images can disable Flova logging. Never log credentials, provisioning tokens,
+device secrets, or complete sensitive payloads.
+
+## OTA
+
+Console accepts a firmware release, checks its target and size, and sends it in
+a rollout to compatible devices. The firmware must provide the matching OTA
+capability and boot layout for that target.
+
+ESP32 universal images use the target's supported boot layout. ESP8266 OTA
+uses staged copying and has no automatic rollback, so keep wired recovery
+available for a failed post-update boot.
+
+An OTA upload, rollout completion, and post-update runtime connection are
+separate checks. After an update, verify the device timeline, current firmware
+metadata, online status, and a fresh datastream report.
+
+## Recovery
+
+Keep a wired upload path for the first installation and for boards whose OTA
+image cannot boot. Do not erase provisioning state as a first response to a
+network failure. Inspect the device status and logs, then recover the image
+through the board's supported upload path.
+
+## Version and target policy
+
+Treat the firmware version, firmware target, boot layout, and template contract
+as one release decision. A binary that compiles for a board is not necessarily
+safe to offer to every device of that board family.
+
+Use a distinct target when any of these change:
+
+- Flash partition or boot layout.
+- OTA capability or rollback behavior.
+- Board memory profile or TLS constraints.
+- Required hardware pins or peripheral wiring.
+- Runtime features that the device cannot disable safely.
+
+Keep the target name stable for compatible releases. Publish a new target when
+the device needs a different image or recovery procedure.
+
+## Prepare an OTA release
+
+Before uploading a release to Console:
+
+1. Build the exact target used by the selected devices.
+2. Confirm the version and target metadata in the binary.
+3. Check the image size against the target's flash and OTA limits.
+4. Keep a wired recovery image and the previous known-good release.
+5. Test boot, provisioning restore, network reconnect, and one datastream.
+6. Upload the release and review the compatibility result.
+
+Create a rollout only after the release registration succeeds. Start with a
+small eligible group, watch post-update reconnection, and stop when failures or
+offline devices reach the rollout thresholds.
+
+## What to verify after OTA
+
+OTA completion only proves that the update operation finished. For each test
+device verify:
+
+- The reported firmware version is the new version.
+- The target and boot layout remain compatible.
+- The device reconnects after restart.
+- The template binding completes.
+- A command reaches the hardware.
+- A fresh sensor or state report appears in latest value and history.
+- The device keeps its provisioning and configuration.
+
+If the device updated but does not reconnect, inspect the boot result, memory,
+TLS readiness, stored session, and device timeline before retrying the rollout.
+
+## Power-down and long work
+
+Call the facade's power-down preparation method before a board-owned sleep or
+power cut when the target provides one. Finish or quiesce Link and storage work
+first. The SDK does not decide when your board sleeps and does not replace the
+board's power-management policy.
+
+## Logging by environment
+
+Use `ERROR` or `WARN` for production device logs, `INFO` for controlled field
+diagnostics, and `DEBUG` or `TRACE` during development. Log event names, bounded
+error codes, and target metadata. Redact identifiers when logs leave the device
+environment and never print credentials or provisioning material.

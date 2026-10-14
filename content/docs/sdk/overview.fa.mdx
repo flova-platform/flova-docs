@@ -1,6 +1,115 @@
 ---
 title: "نمای کلی SDK"
-description: "ساخت firmware فلووا."
+description: "ساخت دستگاه‌های متصل Linux، ESP32 و ESP8266 با FlovaSDK."
 ---
 
-با SDK فلووا برای دستگاه‌ها firmware بسازید.
+FlovaSDK لایهٔ مشترک میان برنامهٔ دستگاه و Flova است. این لایه Connection،
+Identity، Datastreamهای نوع‌دار، فرمان‌های راه دور، Settingها، وضعیت محلی و
+چرخهٔ `run()` را در اختیار برنامه می‌گذارد. برنامه همچنان مالک حسگر، خروجی،
+منطق محصول و رفتار ایمن دستگاه است.
+
+SDK روی ESP32، ESP8266، Linux و بردهای C++11 قابل انتقال کار می‌کند. کد
+Datastream در این مدل‌ها ثابت می‌ماند و فقط Transport تغییر می‌کند: در حالت
+معمول از **Flova Link** استفاده کنید و اگر محصول از قبل زیرساخت MQTT دارد،
+MQTT را به‌عنوان Transport انتخاب کنید.
+
+## از کجا شروع کنیم؟
+
+اگر اولین دستگاه را می‌سازید، [شروع سریع](./quickstart) یک نمونهٔ ESP32 را از
+ساخت Template تا مشاهدهٔ اولین مقدار در Console پیش می‌برد. پس از آن،
+[Datastreamها](./datastreams) قرارداد میان Firmware و Template را توضیح
+می‌دهد و [Provisioning](./provisioning) هویت و راه‌اندازی نخستین دستگاه را
+پوشش می‌دهد.
+
+برای پروژهٔ موجود، ابتدا ببینید کدام بخش در اختیار برنامه است:
+
+| مدل | انتخاب مناسب | برنامه مالک چیست؟ |
+| --- | --- | --- |
+| Universal Firmware | `FlovaUniversalEsp32` یا `FlovaUniversalEsp8266` | Template، راه‌اندازی اولیه، نگاشت Hardware و سیاست OTA را خود SDK مدیریت می‌کند. |
+| برنامهٔ سفارشی Arduino | `FlovaEsp32` یا `FlovaEsp8266` | Wi-Fi، GPIO، حسگرها، Web Server، Provisioning و حلقهٔ اصلی را برنامه مدیریت می‌کند. |
+| دستگاهٔ Linux | `FlovaLinux` | Process، Event Loop، Hardware و Service Supervisor با برنامه است. |
+| برد یا Gateway سفارشی | `flova::Device` | Link، Storage، Clock، Logger و اتصال Hardware را Port فراهم می‌کند. |
+
+## مدل اتصال
+
+در Universal Firmware، SDK مسیر Wi-Fi، Provisioning، ذخیرهٔ Session و اتصال
+Flova Link را تا حدی که آن Target پشتیبانی می‌کند آماده می‌کند. این مسیر برای
+دستگاهی مناسب است که می‌خواهید رفتار عمومی آن از روی Template و Console
+مدیریت شود.
+
+در برنامهٔ سفارشی، شما Wi-Fi یا Ethernet را شروع می‌کنید، زمان آماده شدن
+شبکه را تشخیص می‌دهید و سپس SDK را وارد حلقهٔ برنامه می‌کنید. می‌توانید از
+Flova Link استفاده کنید یا یک MQTT Client موجود را به SDK بدهید. در هر دو
+حالت، تعریف Datastream، Handler فرمان و گزارش مقدار یکسان می‌ماند.
+
+Bluetooth، Serial، Ethernet و حتی یک Gateway می‌توانند برای رساندن اطلاعات
+Provisioning به دستگاه به کار بروند. این مسیر موقت است؛ پس از پذیرفته شدن
+دادهٔ تحویل و ذخیره شدن Session، دستگاه باید برای کار عادی از Flova Link یا
+MQTT استفاده کند.
+
+## سطح عمومی SDK
+
+بیشتر پروژه‌های Arduino با یک Include آغاز می‌شوند:
+
+```cpp
+#include <FlovaSDK.h>
+```
+
+توابع کمکی پرکاربرد عبارت‌اند از `FLOVA_DATASTREAM`، `FLOVA_SETTING`،
+`FLOVA_WRITE`، `FLOVA_READ`، `FLOVA_REPORT`، `FLOVA_ON_WRITE` و
+`FLOVA_HAS_VALUE`.
+
+```cpp
+auto relay = device.datastream<bool>("relay");
+relay.onWrite(setRelay);
+relay.write(true);
+relay.report(readRelay());
+bool current = relay.value();
+```
+
+کلید Datastream باید دقیقاً با نسخهٔ منتشرشدهٔ Template یکی باشد. حروف بزرگ
+و کوچک در کلید تفاوت دارند. برنامه Hardware را اداره می‌کند و SDK فرمان‌های
+دریافتی را در `run()` به Handler می‌رساند؛ بنابراین Handler باید کوتاه باشد و
+کار طولانی را به حلقهٔ اصلی برنامه بسپارد.
+
+## جایگاه SDK در محصول
+
+در یک محصول کامل، پنج بخش با هم کار می‌کنند. برنامهٔ شما حسگرها را می‌خواند،
+خروجی‌ها را کنترل می‌کند و دربارهٔ رفتار امن پس از قطع برق یا شبکه تصمیم
+می‌گیرد. SDK قرارداد Datastream، Setting، Provisioning و Connection را اجرا
+می‌کند. Transport فرمان، Report و وضعیت اتصال را جابه‌جا می‌کند. Template
+کلیدها، نوع مقدار، دسترسی و نگاشت Hardware را مشخص می‌کند. Console و Studio
+هم Template، Device، Dashboard، Telemetry و انتشار Firmware را مدیریت
+می‌کنند.
+
+SDK به‌تنهایی یک پروژهٔ GPIO را به محصول تبدیل نمی‌کند. هنوز باید برای قطع
+شبکه، مقدار نامعتبر، خطای حسگر، راه‌اندازی دوباره و وضعیت اضطراری تصمیم
+مشخص داشته باشید.
+
+## حلقهٔ اجرای دستگاه
+
+در `setup()` سرویس‌هایی را که برنامه مالک آن‌هاست شروع کنید و سپس
+`device.begin()` را صدا بزنید. در `loop()` کار حسگر و Hardware را انجام دهید
+و `device.run()` را مرتب اجرا کنید. `run()` یک گام محدود از اتصال، دریافت
+فرمان، اعمال وضعیت و ارسال داده را انجام می‌دهد و نباید با یک کار طولانی
+جایگزین حلقهٔ اصلی شود.
+
+پس از آماده شدن Connection، SDK کلیدهای تعریف‌شده را با Template منتشرشده
+مطابقت می‌دهد. پیش از تکیه بر مقدار بازیابی‌شده، آماده بودن Datastream را
+بررسی کنید. وصل بودن Socket یا Online بودن Device به‌تنهایی پذیرفته شدن یک
+Report را ثابت نمی‌کند؛ نتیجهٔ Report، Latest Value و History را در Console
+بررسی کنید.
+
+## ترتیب پیشنهادی مطالعه
+
+۱. [شروع سریع](./quickstart) برای ساخت اولین Device و Dashboard.
+۲. [Datastreamها](./datastreams) برای مقدار، فرمان، Report و قرارداد Template.
+۳. [Provisioning](./provisioning) برای Identity، Session و مسیرهای Wi-Fi، BLE و Web.
+۴. [Configuration](./configuration) برای Settingهای نوع‌دار و مرز ایمنی Hardware.
+۵. [Transportها](./transports) برای Flova Link، MQTT، Connection و Adapter سفارشی.
+۶. [چرخهٔ Firmware](./lifecycle) برای Logging، OTA، Release و Recovery.
+۷. [Firmware پیشرفته](./advanced) برای Linux، Ethernet، Bluetooth و بردهای سفارشی.
+
+برای نام کلاس‌ها، توابع عمومی و متدهای وضعیت از [مرجع API](./reference)
+استفاده کنید. این مرجع سطح عمومی SDK را پوشش می‌دهد و به جزئیات خصوصی
+پیاده‌سازی وابسته نیست.

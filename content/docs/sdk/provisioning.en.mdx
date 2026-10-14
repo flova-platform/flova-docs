@@ -1,0 +1,111 @@
+---
+title: "Provisioning and identity"
+description: "Give a device its Flova identity without placing permanent credentials in firmware."
+---
+
+Provisioning connects a physical unit to a Flova device record. It supplies a
+short-lived handoff, then the device receives or creates the runtime identity it
+stores for later boots.
+
+## Universal firmware
+
+Universal ESP32 and ESP8266 firmware includes a setup path. The user completes
+the setup flow, the device receives its network and Flova handoff, and the
+firmware stores the resulting runtime state. Later boots restore the stored
+identity and connect without repeating the first-boot flow.
+
+## Custom applications
+
+Custom firmware keeps ownership of Wi-Fi, the web server, BLE, Ethernet, or
+another setup channel. The application passes the bounded Flova handoff to the
+SDK. For an application-owned Arduino server, the provisioning adapter can
+register the status and provision routes without replacing that server.
+
+The handoff contains the deployment's Link URL and a short-lived token. The
+device uses it to bootstrap and stores the resulting session. Do not commit
+tokens, device secrets, Wi-Fi passwords, or complete provisioning payloads.
+
+## A custom provisioning channel
+
+The same model works for a factory tool, serial adapter, BLE flow, or Ethernet
+setup path:
+
+```cpp
+flova::ProvisioningHandoff handoff(linkUrl, shortLivedToken);
+client.provision(handoff);
+```
+
+The channel owns its input and transport. The SDK owns the bounded handoff and
+the Flova session lifecycle. Network credentials remain with the application or
+the selected universal composition.
+
+## Factory reset
+
+Use the SDK's factory reset entry point when the product needs to clear Flova
+identity and wait for another handoff. Resetting Flova state does not silently
+change the application's Wi-Fi, web server, GPIO, or other network state.
+
+After provisioning, verify the device in Console. Check its online status,
+template, firmware target, and first datastream report separately.
+
+## What provisioning stores
+
+The completed handoff results in a Flova session containing the device identity,
+organization and template association, Link URL, and runtime secret. The SDK
+stores the session through the selected storage service. Your application should
+not copy that secret into a second configuration file or expose it through a
+status page.
+
+The activation token is a bootstrap input. It is not the runtime password and
+should not be sent on every boot. After the session is committed, later boots
+restore the session and authenticate with the stored runtime identity.
+
+## Provisioning states
+
+Treat setup as a state machine rather than a single HTTP request:
+
+| State | Application behavior |
+| --- | --- |
+| Waiting | Keep the setup channel available and run the SDK normally. |
+| Bootstrapping | Continue polling from the normal loop; do not start another session. |
+| Committing | Keep power and storage available until the session is durable. |
+| Ready | Close temporary setup resources and start normal device operation. |
+| Failed | Show a bounded error, keep recovery available, and retry deliberately. |
+
+The exact status names differ between facades, but the boundaries are the same.
+Do not treat a submitted form as proof that the device is ready. Confirm the
+stored session, authenticated Link connection, template binding, and first
+accepted report.
+
+## Application-owned web setup
+
+An Arduino application that already has a web server can attach provisioning to
+that server:
+
+```cpp
+WebServer server(80);
+FlovaEsp32 device;
+
+void setup() {
+  device.attachProvisioning(server);
+  server.begin();
+}
+```
+
+The SDK registers its bounded status and provisioning handlers. It does not
+start or replace the server, change the application's Wi-Fi mode, or take over
+the application's other routes. Keep the server loop and `device.run()` in the
+same nonblocking application loop.
+
+## Recovery and reset
+
+Use `startProvisioning()` or the facade's factory reset operation when a product
+needs to replace the Flova identity. Define the user action clearly, such as a
+physical button hold or an authenticated maintenance command. A reset should
+clear Flova-private state and return to setup; it should not silently erase
+application data or Wi-Fi credentials unless the product explicitly chooses to
+do that.
+
+If bootstrap fails, check the setup channel, HTTPS or WSS URL, token lifetime,
+clock readiness, storage availability, and device claim separately. Keep error
+messages bounded and never include the token or secret.

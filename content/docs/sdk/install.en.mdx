@@ -1,0 +1,201 @@
+---
+title: "Install and choose a target"
+description: "Install FlovaSDK for Arduino, PlatformIO, Linux, or a portable C++11 device."
+---
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+FlovaSDK is distributed as an Arduino and PlatformIO library for ESP32 and
+ESP8266. Linux applications use the CMake package. A portable device can use
+the embedded core with its own platform services.
+
+## Pick the integration model first
+
+| You have | Start with | The application owns |
+| --- | --- | --- |
+| A board and no device application | `FlovaUniversalEsp32` or `FlovaUniversalEsp8266` | Your template and product dashboard |
+| An existing Arduino application | `FlovaEsp32` or `FlovaEsp8266` | Wi-Fi, GPIO, sensors, setup, and the main loop |
+| A Raspberry Pi or Linux host | `FlovaLinux` | The process, event loop, service supervisor, and hardware |
+| Another C++11 board or gateway | `flova::Device` | Link, storage, clock, logger, and board integration |
+
+Use the [Quick start](./quickstart) if you want a working ESP32 device first.
+Use this page when you need to select a target or set up a new project.
+
+## Arduino IDE and PlatformIO
+
+<Tabs items={['Arduino IDE', 'PlatformIO']} defaultIndex={0}>
+  <Tab>
+
+### ESP32 and ESP8266
+
+<Tabs items={['ESP32', 'ESP8266']} defaultIndex={0}>
+  <Tab>
+
+1. Open **Tools > Board > Boards Manager**.
+2. Search for `esp32` by Espressif Systems and install the board package.
+3. Open **Tools > Manage Libraries** and install `FlovaSDK`.
+4. Select the board and USB port under **Tools > Board** and **Tools > Port**.
+5. Include the common entry point:
+
+```cpp
+#include <FlovaSDK.h>
+```
+
+The header selects the ESP32 facade for the selected board. Use
+`FlovaUniversalEsp32` for a complete device or `FlovaEsp32` for an existing
+application.
+
+  </Tab>
+  <Tab>
+
+1. Open **Tools > Board > Boards Manager**.
+2. Search for `esp8266` by ESP8266 Community and install the board package.
+3. Open **Tools > Manage Libraries** and install `FlovaSDK`.
+4. Select the board's ESP8266 profile and USB port.
+5. Include the common entry point:
+
+```cpp
+#include <FlovaSDK.h>
+```
+
+Use `FlovaUniversalEsp8266` or `FlovaEsp8266` according to the same ownership
+model as ESP32.
+
+ESP8266 uses stock BearSSL. TLS connect and OTA work can pause the application
+loop for seconds and require a contiguous heap block. Use the memory profile
+recommended by the SDK and keep large buffers out of the sketch.
+
+  </Tab>
+</Tabs>
+
+</Tab>
+<Tab>
+
+### ESP32 and ESP8266
+
+<Tabs items={['ESP32', 'ESP8266']} defaultIndex={0}>
+  <Tab>
+
+Add the library to `platformio.ini`:
+
+```ini
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+lib_deps = flova-platform/FlovaSDK@^0.3.12
+```
+
+Build or upload with:
+
+```sh
+pio run
+pio run -t upload
+```
+
+  </Tab>
+  <Tab>
+
+Use the SDK's packaged ESP8266 PlatformIO profile or set the board and memory
+layout recommended for your target. A normal project still includes:
+
+```ini
+lib_deps = flova-platform/FlovaSDK@^0.3.12
+```
+
+Build or upload with the same commands:
+
+```sh
+pio run
+pio run -t upload
+```
+
+Keep a wired upload path available while tuning TLS, memory, or OTA behavior.
+
+  </Tab>
+</Tabs>
+
+</Tab>
+</Tabs>
+
+## Universal firmware
+
+Use a universal composition when Flova should own the complete device image:
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaUniversalEsp32 device;
+
+void setup() {
+  Serial.begin(115200);
+  device.begin();
+}
+
+void loop() {
+  device.run();
+}
+```
+
+For ESP8266, use `FlovaUniversalEsp8266`. Universal firmware includes the board
+composition, setup path, hardware mapping, OTA policy, and restart policy
+provided by that target. It is the shortest path for a standard Wi-Fi product.
+
+## Linux and Raspberry Pi
+
+Install the native dependencies and build the package from the firmware
+repository:
+
+```sh
+sudo apt install cmake libssl-dev
+cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr/local
+cmake --build build
+sudo cmake --install build
+```
+
+Link the installed package from your application:
+
+```cmake
+find_package(FlovaLinux CONFIG REQUIRED)
+target_link_libraries(my_device PRIVATE Flova::Linux)
+```
+
+Then use the same typed datastream model:
+
+```cpp
+#include <FlovaLinux.h>
+
+FlovaLinux device;
+auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+
+int main() {
+  if (!device.begin()) return 1;
+  for (;;) device.run();
+}
+```
+
+`run()` performs one bounded step. Put it in the application's poll or event
+loop instead of giving the SDK ownership of the process.
+
+## Portable boards
+
+The portable core has no Arduino, ESP, Wi-Fi, filesystem, exception, or RTTI
+requirement in its public include path. A custom port supplies
+`flova::Link`, `flova::Storage`, `flova::Clock`, and `flova::Logger`, then
+constructs `flova::Device`.
+
+Use [Advanced firmware](./advanced) when the target needs a custom network,
+gateway, Ethernet chip, or service supervisor.
+
+## Installation checks
+
+After installation, check the following before debugging application logic:
+
+1. The board package matches the physical board.
+2. The selected serial port changes when you unplug and reconnect the board.
+3. The project can compile an empty sketch with `#include <FlovaSDK.h>`.
+4. The selected target matches the class in the sketch.
+5. The device has a published template before it tries to bind datastreams.
+
+If the library is found but the board does not connect, inspect Wi-Fi readiness,
+time or TLS readiness, provisioning state, and the device status separately.

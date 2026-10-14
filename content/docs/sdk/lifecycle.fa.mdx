@@ -1,0 +1,118 @@
+---
+title: "چرخهٔ Firmware"
+description: "ساخت، شناسایی، انتشار، به‌روزرسانی و بازیابی Firmware Flova."
+---
+
+چرخهٔ Firmware فقط ساخت یک Image نیست. Target، Version، Boot Layout، Logهای
+Runtime، مسیر OTA، Provisioning و روش Recovery باید در یک تصمیم Release کنار
+هم دیده شوند. Console هنگام پیشنهاد OTA از همین اطلاعات برای سازگاری Device
+استفاده می‌کند.
+
+## Build Metadata
+
+هر Release باید Firmware Target و Version روشن داشته باشد. Target را برای
+Board و Boot Layout سازگار ثابت نگه دارید. Version SDK و Version برنامهٔ
+Firmware دو مقدار جدا هستند؛ نصب نسخهٔ جدید SDK به‌تنهایی Device نصب‌شده را
+به‌روزرسانی نمی‌کند و باید Image تازه بسازید و تحویل دهید.
+
+Metadata را پیش از بارگذاری بررسی کنید. اشتباه در Target می‌تواند باعث شود
+Image روی Board درست Compile شود اما برای Boot Layout، حافظه یا مسیر Recovery
+Device مناسب نباشد.
+
+## Logging و Diagnostic
+
+Diagnosticهای Flova را می‌توان هنگام Compile فیلتر کرد:
+
+~~~ini
+build_flags =
+  -DFLOVA_LOGGING_ENABLED=1
+  -DFLOVA_LOG_LEVEL=FLOVA_LOG_LEVEL_DEBUG
+~~~
+
+Levelهای پشتیبانی‌شده <code>ERROR</code>، <code>WARN</code>،
+<code>INFO</code>، <code>DEBUG</code> و <code>TRACE</code> هستند. در Image
+Production می‌توانید Log Flova را خاموش کنید. Credential، Provisioning Token،
+Device Secret و Payload حساس کامل را هرگز Log نکنید.
+
+برای Diagnostic میدانی، نام Event، Error Code محدود، Target و Lifecycle را
+ثبت کنید. اگر Log از محیط Device خارج می‌شود، Identityها را Mask کنید و
+اطلاعات ورود را چاپ نکنید.
+
+## OTA
+
+Console یک Firmware Release می‌گیرد، Target و اندازهٔ Image را بررسی می‌کند
+و آن را برای Deviceهای سازگار در یک Rollout می‌فرستد. Firmware باید OTA
+Capability و Boot Layout متناسب با همان Target را داشته باشد.
+
+Imageهای Universal در ESP32 از Boot Layout پشتیبانی‌شدهٔ Target استفاده
+می‌کنند. OTA در ESP8266 از Staged Copy استفاده می‌کند و Rollback خودکار
+ندارد؛ برای Boot ناموفق پس از Update، مسیر Upload سیمی را نگه دارید.
+
+Upload شدن OTA، تمام شدن Rollout و Connection زمان اجرا پس از Restart سه
+بررسی جدا هستند. بعد از Update، Timeline Device، Metadata Version فعلی،
+Online بودن، Template Binding و یک Report تازه را بررسی کنید.
+
+## Recovery
+
+برای نصب نخستین و Boardی که Image جدید را Boot نمی‌کند، مسیر Upload سیمی
+لازم است. قطع Network را با پاک کردن Provisioning پاسخ ندهید. ابتدا Status و
+Log Device را بررسی کنید و سپس Image را از مسیر پشتیبانی‌شدهٔ Board بازیابی
+کنید.
+
+اگر OTA ناموفق شد، Version قبلی، Image Recovery، کابل و درگاه Upload را
+در دسترس نگه دارید. Recovery را به شرطی وابسته نکنید که فقط پس از برقراری
+Connection آنلاین قابل اجرا باشد.
+
+## سیاست Version و Target
+
+Version Firmware، Target، Boot Layout و قرارداد Template را یک تصمیم Release
+بدانید. Imageی که برای یک Board Compile می‌شود لزوماً برای همهٔ Deviceهای آن
+خانواده امن نیست.
+
+برای تغییر در Partition یا Boot Layout، Capability یا رفتار Rollback، Memory
+Profile یا محدودیت TLS، Pinهای لازم، Wiring ابزار جانبی یا قابلیتی که Device
+نمی‌تواند ایمن خاموش کند، Target جدا بسازید. برای Releaseهای سازگار نام Target
+را ثابت نگه دارید و وقتی روش Image یا Recovery عوض شد، Target تازه منتشر کنید.
+
+## آماده‌سازی OTA Release
+
+پیش از بارگذاری Release در Console این مسیر را کامل کنید:
+
+۱. دقیقاً همان Target مورد استفادهٔ Deviceهای انتخاب‌شده را Build کنید.
+۲. Version و Target را در Metadata Image بررسی کنید.
+۳. اندازهٔ Image را با ظرفیت Flash و OTA مقایسه کنید.
+۴. Image سیمی Recovery و آخرین Release سالم را نگه دارید.
+۵. Boot، Restore شدن Provisioning، Connection دوباره و یک Datastream را آزمایش کنید.
+۶. Release را بارگذاری و نتیجهٔ سازگاری را بررسی کنید.
+
+پس از موفق شدن ثبت Release، Rollout را برای گروه کوچک بسازید. Connection
+پس از Restart، Template Binding، فرمان و Report را ببینید. وقتی خطا یا
+Offline شدن به آستانهٔ محصول رسید، Rollout را متوقف کنید و پیش از تلاش دوباره
+علت را بررسی کنید.
+
+## بررسی پس از OTA
+
+تمام شدن عملیات OTA فقط پایان Update را ثابت می‌کند. برای هر Device آزمایشی
+Version جدید، Target و Boot Layout سازگار، Connection دوباره، Template Binding،
+رسیدن فرمان به Hardware، Report تازه در Latest Value و History و ماندن
+Provisioning و Configuration را بررسی کنید.
+
+اگر Device Update شد اما برنگشت، پیش از Retry کردن Rollout نتیجهٔ Boot،
+حافظه، آمادگی TLS، Session ذخیره‌شده و Timeline را بررسی کنید. در این مرحله
+پاک کردن Session معمولاً علت اصلی را پنهان می‌کند و Recovery را دشوارتر
+می‌سازد.
+
+## Power Down و کار طولانی
+
+اگر Target متد آماده‌سازی خاموشی دارد، پیش از Sleep یا قطع برق آن را صدا بزنید.
+ابتدا کار Flova Link یا MQTT و Storage را تمام یا آرام کنید. زمان Sleep و
+سیاست Power Management را خود Board و برنامه تعیین می‌کنند؛ SDK جای آن را
+نمی‌گیرد.
+
+## Logging بر اساس محیط
+
+برای Log دستگاه در Production از <code>ERROR</code> یا <code>WARN</code>،
+برای Diagnostic کنترل‌شدهٔ میدانی از <code>INFO</code> و در توسعه از
+<code>DEBUG</code> یا <code>TRACE</code> استفاده کنید. Error Code محدود و
+Metadata Target را نگه دارید و اطلاعات ورود یا مادهٔ Provisioning را چاپ
+نکنید.

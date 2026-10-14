@@ -1,0 +1,123 @@
+---
+title: "Public API reference"
+description: "A compact reference for the public FlovaSDK classes, helpers, and result types."
+---
+
+This page lists the public application surface used by the guides. For exact
+signatures and target-specific overloads, use the exported headers in the
+FlovaSDK release.
+
+## Board facades
+
+| Type | Use |
+| --- | --- |
+| `FlovaEsp32` | Custom ESP32 application using Flova Link or optional MQTT. |
+| `FlovaEsp8266` | Custom ESP8266 application using the same typed datastream model. |
+| `FlovaUniversalEsp32` | Complete ESP32 composition with Flova-owned setup and device behavior. |
+| `FlovaUniversalEsp8266` | Complete ESP8266 composition. |
+| `FlovaLinux` | Linux or Raspberry Pi device process. |
+| `flova::Device` | Portable core for a custom board or gateway. |
+
+## Lifecycle methods
+
+| Method | Meaning |
+| --- | --- |
+| `begin()` | Initialize the selected device composition and restore or start its session. |
+| `run()` | Perform one bounded connection, configuration, and command-processing step. |
+| `connected()` | Report the current transport connection state. |
+| `datastream<T>(key)` | Return a typed datastream handle in the portable API. |
+| `value()` | Read the local cached value. |
+| `write(value)` | Apply a local application command. |
+| `report(value)` | Report an observation from a sensor or hardware state. |
+| `onWrite(handler)` | Register the hardware boundary for remote writes. |
+
+## Arduino helpers
+
+```cpp
+FLOVA_DATASTREAM(device, bool, "relay")
+FLOVA_SETTING(device, double, "threshold", 35.0)
+FLOVA_ON_WRITE(relay, setRelay)
+FLOVA_WRITE(relay, true)
+FLOVA_READ(relay)
+FLOVA_REPORT(temperature, 23.4f)
+FLOVA_HAS_VALUE(relay)
+```
+
+Use the helpers only after declaring the device and before calling `begin()`.
+Keep the technical key in one place so it cannot drift from the template.
+
+## Results and state
+
+`flova::WriteResult` reports `Accepted`, `Rejected`, `NoChange`, or `Failed`.
+Use `accepted()` when the application needs to know whether the value may be
+treated as applied. A rejected hardware command must leave the application and
+SDK state unchanged.
+
+The public value types are Boolean, `int64_t`, `float`, `double`, and bounded
+text. Public lifecycle and diagnostic enums are defined in the exported SDK
+headers. Avoid depending on generated protocol types or private adapter
+classes.
+
+## Facade status methods
+
+Custom Arduino applications can inspect lifecycle boundaries without reaching
+into the transport implementation:
+
+| Method | Use |
+| --- | --- |
+| `networkConnected()` | The application network is available. |
+| `tlsReady()` | The TLS or secure transport prerequisites are ready. |
+| `runtimeReady()` | The authenticated Flova runtime is ready. |
+| `ready()` | The facade can perform normal device work. |
+| `status(output)` | Copy a bounded status snapshot for diagnostics. |
+| `setStatusListener(...)` | Observe edge-triggered lifecycle changes. |
+| `startProvisioning()` | Clear the Flova session path and wait for a new handoff. |
+| `factoryReset()` | Reset Flova-owned device state through the facade. |
+
+Status is useful for a product indicator or maintenance screen. It does not
+replace an accepted command or a fresh telemetry check.
+
+## Firmware and power methods
+
+Target facades may expose these product lifecycle operations:
+
+| Method | Use |
+| --- | --- |
+| `setFirmwareTarget(target)` | Set the target identifier reported by the image. |
+| `enableOta(enabled)` | Enable or disable the target's OTA path. |
+| `setOtaProfile(...)` | Describe the target's OTA strategy and boot layout. |
+| `setRestartHandler(...)` | Let the application own the restart action. |
+| `restartRequired()` | Check whether the runtime requests a restart. |
+| `prepareForPowerDown()` | Quiesce SDK work before board-owned sleep or power loss. |
+
+Use only methods supported by the selected target. A Linux supervisor, ESP32
+boot layout, and ESP8266 staged updater have different ownership boundaries.
+
+## Common result handling
+
+```cpp
+const flova::WriteResult result = FLOVA_REPORT(sensor, value);
+if (!result.accepted()) {
+  logReportFailure(result.status, result.reason);
+}
+```
+
+An accepted result means the SDK accepted the operation at its boundary. For
+MQTT, continue calling `run()` and verify the resulting latest value or history
+in Console. For a hardware write, acceptance should mean that the handler
+accepted the requested state.
+
+## Header selection
+
+| Include | Use |
+| --- | --- |
+| `<FlovaSDK.h>` | Simple Arduino sketches and the normal public entry point. |
+| `<FlovaEsp32.h>` | Direct ESP32 facade access. |
+| `<FlovaEsp8266.h>` | Direct ESP8266 facade access. |
+| `<FlovaUniversalEsp32.h>` | Direct ESP32 universal composition. |
+| `<FlovaUniversalEsp8266.h>` | Direct ESP8266 universal composition. |
+| `<FlovaLinux.h>` | Linux device applications. |
+| `<FlovaDevice.h>` | Portable core integrations. |
+
+Prefer the umbrella header until the application needs a target-specific
+constructor or lifecycle method.

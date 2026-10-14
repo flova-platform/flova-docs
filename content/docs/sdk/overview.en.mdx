@@ -1,6 +1,91 @@
 ---
 title: "SDK overview"
-description: "Build Flova firmware."
+description: "Build connected Linux, ESP32, and ESP8266 devices with FlovaSDK."
 ---
 
-Build firmware for Flova devices with the SDK.
+FlovaSDK connects an application or firmware image to Flova. It gives your code
+typed datastreams, local cached state, remote commands, configuration, device
+identity, and a `run()` loop that fits the board's normal event loop.
+
+The SDK supports ESP32, ESP8266, Linux, and portable C++11 applications. The
+same datastream code can use Flova Link or the optional MQTT adapter.
+
+## Choose an integration model
+
+| Model | Use it when |
+| --- | --- |
+| Universal firmware | Flova should own provisioning, networking, hardware mappings, OTA, and restart behavior. |
+| Custom Arduino client | Your application already owns Wi-Fi, GPIO, sensors, and its web server. |
+| Linux device | A Raspberry Pi or Linux host runs the device process and its own service supervisor. |
+| Portable device | Your board supplies the SDK's link, storage, clock, and logger services. |
+
+Start with [Quick start](./quickstart) for an ESP32. Then read [Datastreams](./datastreams)
+to connect application state to Console and Studio.
+
+## Public SDK surface
+
+Most Arduino projects need one include:
+
+```cpp
+#include <FlovaSDK.h>
+```
+
+The common application helpers are `FLOVA_DATASTREAM`, `FLOVA_WRITE`,
+`FLOVA_READ`, `FLOVA_REPORT`, `FLOVA_ON_WRITE`, and `FLOVA_HAS_VALUE`.
+Advanced applications can use the typed C++ API directly:
+
+```cpp
+auto relay = device.datastream<bool>("relay");
+relay.onWrite(setRelay);
+relay.write(true);
+relay.report(sensorValue);
+bool current = relay.value();
+```
+
+Datastream keys must match the published device template. The application owns
+the hardware action. The SDK delivers remote writes from `run()`, so callbacks
+should be short and should not block the board loop.
+
+## How the SDK fits into a Flova product
+
+The device side usually has five layers:
+
+1. **Your application** reads sensors, drives outputs, owns product rules, and
+   decides how the board starts and recovers.
+2. **The SDK facade** exposes typed datastreams, settings, provisioning, status,
+   and the normal `run()` lifecycle.
+3. **The transport** carries bounded commands, reports, configuration, and
+   presence to Flova.
+4. **The published template** defines the keys, value types, access rules,
+   mappings, settings, and limits that the device can use.
+5. **Console and Studio** manage the template, device, dashboard, telemetry,
+   automation, and firmware rollout.
+
+The SDK does not turn an arbitrary GPIO project into a product automatically.
+Your code still decides what a sensor reading means, whether an output is safe,
+and what should happen when power or network access disappears.
+
+## The device loop
+
+In `setup()`, start the board services your application owns, then call
+`device.begin()`. In the regular `loop()`, run your sensor and hardware work and
+call `device.run()` often. The SDK handles connection work and applies remote
+commands from this normal application context.
+
+After connecting, the SDK matches the declared datastream keys to the published
+device template. Wait for that binding before treating the streams as ready. A
+connected device does not by itself prove that a particular report was
+accepted; check the report result and the resulting value in Console.
+
+## What to learn in order
+
+1. [Quick start](./quickstart) gets one ESP32 device online.
+2. [Datastreams](./datastreams) explains the contract between code and template.
+3. [Provisioning](./provisioning) covers identity and first boot.
+4. [Configuration](./configuration) adds remote settings and hardware policy.
+5. [Transports](./transports) explains Link, MQTT, readiness, and limits.
+6. [Firmware lifecycle](./lifecycle) covers logging, OTA, versions, and recovery.
+7. [Advanced firmware](./advanced) covers Linux, Ethernet, and custom boards.
+
+Use the [API reference](./reference) while reading the examples. It lists the
+public names without exposing the SDK's private implementation.

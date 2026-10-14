@@ -1,0 +1,180 @@
+---
+title: "Datastreamها"
+description: "وضعیت نوع‌دار برنامه، Report حسگر و فرمان‌های راه دور را به Flova وصل کنید."
+---
+
+Datastream یک مقدار Typeدار است که میان Firmware، Console، Studio و Dashboard
+منتشرشدهٔ Device مشترک می‌شود. Technical Key آن قرارداد میان این بخش‌هاست و
+باید دقیقاً با Key موجود در Template منتشرشده یکسان باشد.
+
+## تعریف Datastream
+
+توابع کمکی Arduino برنامه را کوتاه نگه می‌دارند:
+
+~~~cpp
+auto temperature = FLOVA_DATASTREAM(device, float, "temperature");
+auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+~~~
+
+API قابل انتقال همین Typeها را ارائه می‌کند:
+
+~~~cpp
+auto relay = device.datastream<bool>("relay");
+~~~
+
+Datastreamها را پیش از <code>begin()</code> تعریف کنید. SDK هنگام Connection
+Device، Keyهای تعریف‌شده را با Template منتشرشده Bind می‌کند. تعریف شدن یک
+Datastream در Firmware بدون وجود همان Key در Template، آن را در Console قابل
+مشاهده نمی‌کند.
+
+## چهار مسیر کار با وضعیت
+
+~~~cpp
+FLOVA_ON_WRITE(relay, setRelay);       // فرمان راه دور
+FLOVA_WRITE(relay, true);              // فرمان محلی برنامه
+FLOVA_REPORT(temperature, 23.4f);      // مشاهدهٔ حسگر یا Hardware
+bool enabled = FLOVA_READ(relay);      // مقدار Cache محلی
+~~~
+
+<code>FLOVA_READ</code> و <code>value()</code> Cache محلی را می‌خوانند و
+درخواست Network نمی‌فرستند. <code>FLOVA_REPORT</code> یک مشاهده را ثبت
+می‌کند و Handler نوشتن را اجرا نمی‌کند.
+
+پیش از خواندن مقداری که ممکن است هنوز Restore یا دریافت نشده باشد،
+<code>FLOVA_HAS_VALUE</code> را بررسی کنید:
+
+~~~cpp
+if (FLOVA_HAS_VALUE(relay) && FLOVA_READ(relay)) {
+  digitalWrite(2, HIGH);
+}
+~~~
+
+## اعمال امن فرمان راه دور
+
+فرمان‌ها از مسیر <code>run()</code> به Handler می‌رسند:
+
+~~~cpp
+flova::WriteResult setRelay(bool enabled) {
+  digitalWrite(2, enabled ? HIGH : LOW);
+  return flova::accept();
+}
+
+void setup() {
+  FLOVA_ON_WRITE(relay, setRelay);
+}
+
+void loop() {
+  device.run();
+}
+~~~
+
+اگر Hardware فرمان را نمی‌پذیرد، به‌جای تغییر وضعیت محلی یک Rejection برگردانید.
+Handler باید کوتاه باشد. کار طولانی را در State برنامه قرار دهید تا حلقهٔ
+اصلی آن را انجام دهد و پردازش Connection متوقف نشود.
+
+## Typeهای مقدار
+
+سطح Typeدار عمومی از Boolean، عدد صحیح، عدد اعشاری، Double و متن محدود
+پشتیبانی می‌کند. Type زبان C++ باید با Type تعریف‌شده در Template یکی باشد.
+طول متن به ظرفیت Build وابسته است؛ اگر متن از کاربر می‌گیرید، نتیجه و محدودیت
+آن را پیش از اعمال به Hardware بررسی کنید.
+
+## Offline و Connection دوباره
+
+Cache محلی اجازه می‌دهد Hardware هنگام قطع Network از آخرین مقدار Accepted
+استفاده کند. سیاست Offline به نوع Stream و Configuration Firmware بستگی دارد.
+پس از Connection دوباره، SDK بر اساس همان سیاست وضعیت را Sync می‌کند.
+
+اگر Report رد شد، Network، Connection، Technical Key، Type مقدار و Version
+Template را بررسی کنید. Online بودن Device به‌تنهایی Accepted بودن Report را
+ثابت نمی‌کند.
+
+## طراحی قرارداد Template
+
+Datastream را ابتدا در Console تعریف کنید و بعد Declaration متناظر Firmware را
+بنویسید. انتخاب‌های Template رفتار برنامه را مشخص می‌کنند:
+
+| انتخاب Template | نتیجه در Firmware |
+| --- | --- |
+| Boolean، Integer، Float، Double یا Text | از Type متناظر C++ استفاده کنید. |
+| Read-only | Observation را Report کنید و Handler فرمان نسازید. |
+| Read/write | فرمان راه دور را اعمال و نتیجهٔ واقعی Hardware را Report کنید. |
+| Default Value | فقط مقدار اولیه است؛ Hardware هنوز به Safe State نیاز دارد. |
+| Hardware Mapping | در Universal Firmware اعمال یا در برنامهٔ سفارشی خوانده می‌شود. |
+| Minimum و Maximum | پیش از اعمال به Hardware دوباره Validate کنید. |
+
+Technical Key به حروف بزرگ و کوچک حساس است. <code>temperature</code>،
+<code>Temperature</code> و <code>TEMPERATURE</code> سه Key متفاوت‌اند. تغییر
+Key باید هم‌زمان در Template، Firmware، Dashboard، Automation و Clientهای
+بیرونی انجام شود.
+
+## State، Sample، Command و Event
+
+برای مقدار فعلی Device یا Actuator از State استفاده کنید؛ برای اندازه‌گیری
+در یک لحظه از Sample؛ برای دستوری که Device باید اعمال کند از Command؛ و برای
+وقوعی مانند فشردن Button یا Alarm از Event. یک Relay که باید پس از Restart
+بازیابی شود معمولاً State است، در حالی که دمای حس‌شده Sample و یک Trigger
+یک‌بارمصرف Command یا Event است.
+
+این انتخاب روی Restore، History، Dashboard و رفتار Offline اثر می‌گذارد.
+پیش از ساخت Template مشخص کنید که مقدار باید «آخرین وضعیت» باشد یا «یک
+اندازه‌گیری مستقل».
+
+## خواندن نمای کامل Datastream
+
+Handle قابل انتقال می‌تواند اطلاعاتی بیشتر از Value بدهد:
+
+~~~cpp
+auto snapshot = relay.snapshot();
+if (snapshot.hasValue && snapshot.quality == flova::Quality::Good) {
+  applyRelay(snapshot.value);
+}
+~~~
+
+Snapshot می‌تواند زمان آخرین تغییر، Origin، Quality، Dirty بودن و Revision را
+شامل شود. وقتی برنامه باید مقدار Restoreشده را از Sensor تازه یا Command راه
+دور جدا کند، از Snapshot استفاده کنید.
+
+## Report کردن وضعیت واقعی Hardware
+
+برای یک خروجی فیزیکی، ابتدا Command را اعمال کنید و سپس چیزی را Report کنید
+که Hardware واقعاً پذیرفته است:
+
+~~~cpp
+flova::WriteResult setRelay(bool requested) {
+  const bool applied = writeRelayHardware(requested);
+  if (!applied) return flova::reject("hardware_rejected");
+  return flova::accept();
+}
+
+void loop() {
+  device.run();
+  const bool measured = readRelayHardware();
+  FLOVA_REPORT(relay, measured, flova::Origin::PhysicalInput);
+}
+~~~
+
+به این ترتیب Value در Cloud با خروجی واقعی Relay، Driver یا Power Controller
+هماهنگ می‌ماند، حتی اگر Hardware به دلیل خطای برق یا محدودیت مکانیکی فرمان را
+نپذیرد.
+
+## ظرفیت و History
+
+Buildهای Embedded برای Datastream، Text، نتیجهٔ Command و History ظرفیت
+محدود دارند. ظرفیت را برای Board و محصول برنامه‌ریزی کنید و Container بدون
+حدی اضافه نکنید. Queue Overflow، History حذف‌شده یا خطای Storage نشانهٔ آن
+است که باید Resource Plan یا نرخ Report را بررسی کنید.
+
+Sensor را در هر دور Loop Report نکنید. با نرخ مناسب Sample بگیرید، تغییرهای
+معنادار را Report کنید و زمان کافی برای Network و Hardware باقی بگذارید.
+
+## بررسی یک Value گمشده
+
+مسیر را به همین ترتیب بررسی کنید: Device Online باشد و Template انتخاب‌شده
+منتشر شده باشد؛ Key Firmware با Key Template بایت‌به‌بایت یکی باشد؛ C++ Type
+با Value Type هماهنگ باشد؛ نتیجهٔ Report Accepted باشد؛ Latest Value در Console
+دیده شود؛ و در بازهٔ زمانی انتخاب‌شده یک ردیف در History وجود داشته باشد.
+
+Online بودن، Queue Acceptance، Latest Value و History بخش‌های متفاوت مسیر را
+ثابت می‌کنند. Device می‌تواند Online باشد اما Datastream تعریف‌نشده یا Report
+ردشده داشته باشد.

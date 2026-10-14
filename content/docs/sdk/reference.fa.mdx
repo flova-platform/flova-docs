@@ -1,0 +1,127 @@
+---
+title: "مرجع عمومی API"
+description: "مرجع کلاس‌ها، توابع کمکی و Typeهای عمومی FlovaSDK."
+---
+
+این صفحه سطح عمومی برنامه را که در راهنماها استفاده شده فهرست می‌کند. برای
+امضای دقیق و Overloadهای مخصوص هر Target، Headerهای ارائه‌شده در نسخهٔ
+FlovaSDK را ببینید. به Classها و Typeهای داخلی که در این صفحه نیامده‌اند
+وابسته نشوید.
+
+## Facadeهای برد
+
+| Type | کاربرد |
+| --- | --- |
+| <code>FlovaEsp32</code> | برنامهٔ سفارشی ESP32 با Flova Link یا MQTT اختیاری. |
+| <code>FlovaEsp8266</code> | برنامهٔ سفارشی ESP8266 با همان مدل Typeدار Datastream. |
+| <code>FlovaUniversalEsp32</code> | ترکیب کامل ESP32 با Provisioning و رفتار Device تحت مدیریت Flova. |
+| <code>FlovaUniversalEsp8266</code> | ترکیب کامل ESP8266. |
+| <code>FlovaLinux</code> | Process دستگاه در Linux یا Raspberry Pi. |
+| <code>flova::Device</code> | هستهٔ قابل انتقال برای برد یا Gateway سفارشی. |
+
+## متدهای چرخهٔ اجرا
+
+| متد | کاربرد |
+| --- | --- |
+| <code>begin()</code> | Facade انتخاب‌شده را آماده می‌کند و Session را بازیابی یا آغاز می‌کند. |
+| <code>run()</code> | یک گام محدود از Connection، Configuration و پردازش فرمان را انجام می‌دهد. |
+| <code>connected()</code> | وضعیت فعلی Connection مربوط به Transport را گزارش می‌کند. |
+| <code>datastream&lt;T&gt;(key)</code> | یک مرجع Typeدار برای Datastream می‌دهد. |
+| <code>value()</code> | مقدار موجود در Cache محلی را می‌خواند. |
+| <code>write(value)</code> | یک فرمان محلی از طرف برنامه را اعمال می‌کند. |
+| <code>report(value)</code> | مشاهدهٔ حسگر یا وضعیت واقعی Hardware را Report می‌کند. |
+| <code>onWrite(handler)</code> | Handler مرز Hardware برای فرمان راه دور را ثبت می‌کند. |
+
+## توابع کمکی Arduino
+
+~~~cpp
+FLOVA_DATASTREAM(device, bool, "relay")
+FLOVA_SETTING(device, double, "threshold", 35.0)
+FLOVA_ON_WRITE(relay, setRelay)
+FLOVA_WRITE(relay, true)
+FLOVA_READ(relay)
+FLOVA_REPORT(temperature, 23.4f)
+FLOVA_HAS_VALUE(relay)
+~~~
+
+توابع کمکی را پس از تعریف Device و پیش از <code>begin()</code> استفاده کنید.
+کلید فنی را در یک محل ثابت نگه دارید تا بین Firmware و Template تغییر نکند.
+اگر برنامه به Type یا رفتار مخصوص Target نیاز ندارد، از
+<code>&lt;FlovaSDK.h&gt;</code> شروع کنید.
+
+## نتیجه و وضعیت نوشتن
+
+<code>flova::WriteResult</code> وضعیت‌های <code>Accepted</code>،
+<code>Rejected</code>، <code>NoChange</code> و <code>Failed</code> را گزارش
+می‌کند. وقتی برنامه باید بداند مقدار واقعاً پذیرفته شده است یا نه، نتیجه را
+بررسی کنید. فرمان ردشدهٔ Hardware نباید وضعیت برنامه یا SDK را به‌طور بی‌صدا
+تغییر دهد.
+
+Typeهای عمومی مقدار شامل Boolean، <code>int64_t</code>، <code>float</code>،
+<code>double</code> و متن محدود هستند. Enumهای عمومی Lifecycle و Diagnostic
+در Headerهای SDK تعریف شده‌اند. به Protocolهای تولیدشده یا Classهای خصوصی
+Adapter وابسته نشوید.
+
+## متدهای وضعیت
+
+برنامه‌های سفارشی Arduino می‌توانند بدون ورود به پیاده‌سازی Transport، مرزهای
+چرخهٔ اجرا را بررسی کنند:
+
+| متد | کاربرد |
+| --- | --- |
+| <code>networkConnected()</code> | Network برنامه در دسترس است. |
+| <code>tlsReady()</code> | پیش‌نیازهای TLS یا Transport امن آماده هستند. |
+| <code>runtimeReady()</code> | Runtime احراز هویت‌شدهٔ Flova آماده است. |
+| <code>ready()</code> | Facade برای کار عادی Device آماده است. |
+| <code>status(output)</code> | یک نمای لحظه‌ای محدود برای Diagnostic می‌نویسد. |
+| <code>setStatusListener(...)</code> | تغییرهای Lifecycle را مشاهده می‌کند. |
+| <code>startProvisioning()</code> | Session Flova را پاک و منتظر Handoff تازه می‌ماند. |
+| <code>factoryReset()</code> | وضعیت خصوصی Flova را از مسیر Facade بازنشانی می‌کند. |
+
+وضعیت برای نشانگر محصول یا صفحهٔ Maintenance مفید است، اما جای Accepted
+Command یا Telemetry تازه را نمی‌گیرد.
+
+## متدهای Firmware و توان
+
+Facadeهای Target ممکن است این عملیات Lifecycle را ارائه کنند:
+
+| متد | کاربرد |
+| --- | --- |
+| <code>setFirmwareTarget(target)</code> | شناسهٔ Target گزارش‌شدهٔ Image را تعیین می‌کند. |
+| <code>enableOta(enabled)</code> | مسیر OTA مربوط به Target را فعال یا غیرفعال می‌کند. |
+| <code>setOtaProfile(...)</code> | روش OTA و Boot Layout را مشخص می‌کند. |
+| <code>setRestartHandler(...)</code> | اجرای Restart را به برنامه می‌سپارد. |
+| <code>restartRequired()</code> | بررسی می‌کند Runtime به Restart نیاز دارد یا نه. |
+| <code>prepareForPowerDown()</code> | پیش از Sleep یا قطع برق کار SDK را آرام می‌کند. |
+
+فقط از متدهای Target انتخاب‌شده استفاده کنید. Service Supervisor در Linux،
+Boot Layout در ESP32 و Staged Update در ESP8266 مرزهای مالکیت یکسانی ندارند.
+
+## مدیریت نتیجه‌ها
+
+~~~cpp
+const flova::WriteResult result = FLOVA_REPORT(sensor, value);
+if (!result.accepted()) {
+  logReportFailure(result.status, result.reason);
+}
+~~~
+
+نتیجهٔ Accepted یعنی SDK عملیات را در مرز خودش پذیرفته است. در MQTT همچنان
+<code>run()</code> را اجرا کنید و Latest Value یا History را در Console
+بررسی کنید. در نوشتن Hardware، Accepted باید به معنی پذیرفته شدن وضعیت واقعی
+توسط Handler محصول باشد.
+
+## انتخاب Header
+
+| Include | کاربرد |
+| --- | --- |
+| <code>&lt;FlovaSDK.h&gt;</code> | برنامه‌های سادهٔ Arduino و نقطهٔ ورود عمومی. |
+| <code>&lt;FlovaEsp32.h&gt;</code> | دسترسی مستقیم به Facade مربوط به ESP32. |
+| <code>&lt;FlovaEsp8266.h&gt;</code> | دسترسی مستقیم به Facade مربوط به ESP8266. |
+| <code>&lt;FlovaUniversalEsp32.h&gt;</code> | ترکیب مستقیم Universal برای ESP32. |
+| <code>&lt;FlovaUniversalEsp8266.h&gt;</code> | ترکیب مستقیم Universal برای ESP8266. |
+| <code>&lt;FlovaLinux.h&gt;</code> | برنامه‌های Device در Linux. |
+| <code>&lt;FlovaDevice.h&gt;</code> | اتصال‌های قابل انتقال به هسته. |
+
+تا وقتی به Constructor یا متد مخصوص Target نیاز ندارید، Header عمومی
+<code>&lt;FlovaSDK.h&gt;</code> را ترجیح دهید.

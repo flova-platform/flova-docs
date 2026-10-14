@@ -1,0 +1,167 @@
+---
+title: "Firmware پیشرفته"
+description: "گسترش Flova برای Linux، Ethernet، Bluetooth، بردهای سفارشی و مسیرهای Provisioning تحت مالکیت برنامه."
+---
+
+وقتی ترکیب استاندارد ESP32 یا ESP8266 با Hardware یا مدل سرویس محصول
+هماهنگ نیست، از مسیرهای پیشرفته استفاده کنید. قاعدهٔ اصلی در همهٔ این مسیرها
+این است که مرزهای مالکیت روشن بماند: برنامه Network و Hardware را اداره کند،
+SDK قرارداد Flova و Connection را اجرا کند و Adapter فقط همان بخش مورد نیاز را
+به هم متصل کند.
+
+## Linux
+
+برنامه‌های Linux از <code>FlovaLinux</code> و بستهٔ CMake استفاده می‌کنند:
+
+~~~cpp
+#include <FlovaLinux.h>
+
+FlovaLinux device;
+auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+
+int main() {
+  FLOVA_ON_WRITE(relay, applyRelay);
+  if (!device.begin()) return 1;
+  for (;;) device.run();
+}
+~~~
+
+برنامه مالک Process، Event Loop و اتصال Hardware است. Service Supervisor شروع
+Process، Restart و فعال‌سازی بستهٔ OTA مرحله‌بندی‌شده را مدیریت می‌کند. اگر
+برنامه در Linux به خواب یا Restart می‌رود، پیش از آن کارهای Link و Storage را
+تمام کند و سپس سیاست خودش را اجرا کند.
+
+## بردهای سفارشی و هستهٔ قابل انتقال
+
+هستهٔ قابل انتقال چهار مرز سرویس دارد:
+
+~~~cpp
+flova::Device device(link, storage, clock, logger);
+auto relay = device.datastream<bool>("relay");
+~~~
+
+برای برد یا Gateway، <code>flova::Link</code>، <code>flova::Storage</code>،
+<code>flova::Clock</code> و <code>flova::Logger</code> را پیاده‌سازی کنید.
+<code>Device::run()</code> نقطه‌ای است که پیام‌های صف‌شده را به Context برنامه
+و Hardware می‌رساند.
+
+Transport می‌تواند Network، Serial، CAN، BLE یا یک Carrier محدود دیگر باشد.
+Carrier را از منطق Datastream و Hardware جدا نگه دارید. Adapter نباید منطق
+محصول، تبدیل نوع مقدار یا سیاست ایمنی خروجی را در خود پنهان کند.
+
+## Ethernet
+
+پروژه‌های ESP32 با LAN8720 می‌توانند از
+<code>FlovaEsp32Ethernet</code> استفاده کنند. برنامه پارامترهای PHY،
+Power و Startup وابسته به برد را فراهم می‌کند و Facade، Network و Connection
+Flova را آماده می‌سازد. برای Ethernet Chip یا TCP/IP Stack متفاوت، Adapter
+محدود و اعتبارسنجی‌شدهٔ خودتان را فراهم کنید.
+
+پیش از راه‌اندازی، Schematic برد را برای Boot Pin، پایه‌های RMII، Power،
+DHCP و Clock مربوط به PHY بررسی کنید. سپس این موارد را جداگانه آزمایش کنید:
+Link فیزیکی، دریافت IP، آماده بودن TLS، برقرار شدن Connection، پیوند Template
+و پذیرفته شدن فرمان Hardware. کامپایل موفق هیچ‌کدام از این مراحل را ثابت
+نمی‌کند.
+
+## Bluetooth و مسیرهای دیگر Provisioning
+
+Bluetooth معمولاً برای Provisioning است و Transport دائمی Telemetry نیست.
+Adapter مربوط به BLE می‌تواند Pairing، Framing، Timeout و تعامل با Mobile App
+را مدیریت کند و سپس <code>ProvisioningHandoff</code> را به SDK بدهد. SDK
+Handoff محدود، اعتبارسنجی، ذخیرهٔ Session و ادامهٔ چرخهٔ Runtime را مدیریت
+می‌کند.
+
+همین الگو برای Serial، ابزار Factory، صفحهٔ راه‌اندازی Ethernet و Cellular
+کار می‌کند. ورودی این مسیر باید کوتاه‌عمر و قابل اعتبارسنجی باشد. پس از
+پذیرش ماندگار Handoff، منابع موقت Provisioning را آزاد کنید و Flova Link یا
+MQTT را برای کار عادی شروع کنید. توکن راه‌اندازی و Secret را در Log یا پاسخ
+Diagnostic چاپ نکنید.
+
+## Provisioning تحت مالکیت برنامه
+
+یک Web Server موجود می‌تواند Routeها و Mode شبکهٔ خودش را نگه دارد و SDK فقط
+Handoff محدود Flova را به آن اضافه کند. برنامه مسئول Authentication ورودی،
+حفاظت از Route و نگه‌داری Wi-Fi یا Ethernet است. SDK نباید Web Server شما را
+جایگزین کند یا بدون درخواست برنامه SoftAP راه بیندازد.
+
+در برنامهٔ Arduino، ساختار معمول چنین است:
+
+~~~cpp
+WebServer server(80);
+FlovaEsp32 device;
+
+void setup() {
+  device.attachProvisioning(server);
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+  device.run();
+}
+~~~
+
+Provisioning را با درخواست فرم یکی نگیرید. پس از ارسال فرم باید Session
+Commit شود، Connection احراز هویت شود، Template پیوند بخورد و نخستین Report
+پذیرفته شود. این مراحل را جداگانه در Device و Console بررسی کنید.
+
+## مرز برنامهٔ سفارشی Arduino
+
+Facade سفارشی Passive است. خودش SoftAP شروع نمی‌کند، Web Server را جایگزین
+نمی‌کند، GPIO را کنترل نمی‌کند و بدون تصمیم برنامه Device را Restart نمی‌کند.
+برنامه انتخاب می‌کند چه زمانی Wi-Fi یا Ethernet شروع شود، کدام Pinها استفاده
+شوند و خطای Hardware چگونه بازیابی شود.
+
+~~~cpp
+FlovaEsp32 device;
+auto sensor = FLOVA_DATASTREAM(device, float, "temperature");
+
+void setup() {
+  startApplicationNetwork();
+  attachHardwareHandlers();
+  device.begin();
+}
+
+void loop() {
+  serviceApplicationHardware();
+  device.run(applicationNetworkReady());
+}
+~~~
+
+حلقه را همکارانه نگه دارید. Handler باید وضعیت برنامه را تغییر دهد یا کاری را
+در صف قرار دهد و نباید برای درخواست Network دوم، File یا عملیات طولانی منتظر
+بماند.
+
+## Status و Callbackهای چرخهٔ اجرا
+
+وقتی محصول به تغییرهای مرزی مانند Network Ready، Flova Link Connected،
+Runtime Ready یا Error Code نیاز دارد، از Status Listener استفاده کنید.
+Listener باید کوتاه باشد؛ جزئیات را پس از آن از Facade بخوانید.
+
+برای ابزار Maintenance، فیلدهای محدودی مانند آمادگی Network، آمادگی TLS،
+آمادگی Runtime، Firmware Target و Lifecycle فعلی را نشان دهید. Token، Secret،
+Payload کامل یا کلیدهای خصوصی Storage را نمایش ندهید.
+
+## مالکیت Hardware
+
+وقتی Universal Firmware باید ورودی و خروجی استاندارد را اعمال کند، از
+Mappingهای Template استفاده کنید. وقتی محصول به Debounce، Sensor Calibration،
+Interlock، Power Sequencing یا قانون Pin مخصوص نیاز دارد، Handler را در خود
+برنامه نگه دارید.
+
+فرمان معتبر Cloud را مستقیماً امن فرض نکنید. پیش از تغییر خروجی، وضعیت فعلی
+Hardware، Limitها، شرایط Power و سیاست Emergency را بررسی کنید. اگر Hardware
+فرمان را نپذیرفت، همان وضعیت واقعی را Report کنید و نتیجهٔ رد شدن را پنهان
+نکنید.
+
+## مرور پیش از تحویل
+
+پیش از تحویل یک Integration سفارشی، مدل Universal یا Custom را صریح انتخاب
+کنید، Datastream و Settingها را پیش از <code>begin()</code> تعریف کنید و
+Storageای فراهم کنید که با Reset مورد انتظار محصول باقی بماند. سپس
+<code>run()</code> را در حلقهٔ همکارانه اجرا کنید و Handlerها را کوتاه و
+آگاه از Hardware نگه دارید.
+
+در نهایت Provisioning، Connection دوباره، Template Binding، فرمان، Report،
+MQTT یا Flova Link، OTA و مسیر Recovery سیمی را جداگانه بررسی کنید. برای
+اولین Image و Update ناموفق همیشه یک مسیر بازیابی قابل اتکا نگه دارید.

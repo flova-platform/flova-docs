@@ -1,0 +1,206 @@
+---
+title: "نصب و انتخاب Target"
+description: "نصب FlovaSDK برای Arduino، PlatformIO، Linux یا Device قابل انتقال C++11."
+---
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+FlovaSDK برای ESP32 و ESP8266 به‌صورت Library برای Arduino و PlatformIO
+منتشر می‌شود. برنامه‌های Linux از Package مربوط به CMake استفاده می‌کنند.
+یک Device قابل انتقال می‌تواند Core تعبیه‌شده را با Serviceهای Platform خودش
+به کار بگیرد.
+
+## ابتدا مدل Integration را انتخاب کنید
+
+| چیزی که دارید | از اینجا شروع کنید | مالکیت برنامه |
+| --- | --- | --- |
+| Board بدون برنامهٔ Device | <code>FlovaUniversalEsp32</code> یا <code>FlovaUniversalEsp8266</code> | Template و Dashboard محصول |
+| برنامهٔ موجود Arduino | <code>FlovaEsp32</code> یا <code>FlovaEsp8266</code> | Wi-Fi، GPIO، Sensor، Provisioning و Main Loop |
+| Raspberry Pi یا Host لینوکسی | <code>FlovaLinux</code> | Process، Event Loop، Service Supervisor و Hardware |
+| Board یا Gateway دیگر با C++11 | <code>flova::Device</code> | Link، Storage، Clock، Logger و اتصال Board |
+
+برای یک Device آمادهٔ ESP32 از [شروع سریع](./quickstart) شروع کنید. این صفحه
+برای انتخاب Target، ساخت Project تازه و شناخت مرز مالکیت هر مدل است.
+
+## Arduino IDE و PlatformIO
+
+این دو مسیر در یک مجموعهٔ تب قرار دارند تا انتخاب ابزار و انتخاب Board از هم
+جدا نشوند. تب پیش‌فرض Arduino IDE است.
+
+<Tabs items={['Arduino IDE', 'PlatformIO']} defaultIndex={0}>
+  <Tab>
+
+### ESP32 و ESP8266
+
+<Tabs items={['ESP32', 'ESP8266']} defaultIndex={0}>
+  <Tab>
+
+۱. **Tools > Board > Boards Manager** را باز کنید.
+۲. Package مربوط به <code>esp32</code> از Espressif Systems را نصب کنید.
+۳. از **Tools > Manage Libraries**، Library با نام <code>FlovaSDK</code> را نصب کنید.
+۴. Board و USB Serial Port را از **Tools > Board** و **Tools > Port** انتخاب کنید.
+۵. نقطهٔ ورود عمومی را وارد کنید:
+
+~~~cpp
+#include <FlovaSDK.h>
+~~~
+
+این Header Facade مربوط به ESP32 را در اختیار می‌گذارد. برای یک Device کامل
+از <code>FlovaUniversalEsp32</code> و برای برنامهٔ موجود از
+<code>FlovaEsp32</code> استفاده کنید.
+
+  </Tab>
+  <Tab>
+
+۱. **Tools > Board > Boards Manager** را باز کنید.
+۲. Package مربوط به <code>esp8266</code> از ESP8266 Community را نصب کنید.
+۳. از **Tools > Manage Libraries**، Library با نام <code>FlovaSDK</code> را نصب کنید.
+۴. Profile برد ESP8266 و USB Serial Port را انتخاب کنید.
+۵. نقطهٔ ورود عمومی را وارد کنید:
+
+~~~cpp
+#include <FlovaSDK.h>
+~~~
+
+با همان مدل مالکیت ESP32، از <code>FlovaUniversalEsp8266</code> یا
+<code>FlovaEsp8266</code> استفاده کنید.
+
+ESP8266 از BearSSL استاندارد استفاده می‌کند. اتصال TLS و کار OTA ممکن است
+Loop برنامه را برای چند ثانیه متوقف کند و به یک Heap پیوسته نیاز داشته باشد.
+Memory Profile توصیه‌شدهٔ SDK را انتخاب کنید و Bufferهای بزرگ را از Sketch دور
+نگه دارید.
+
+  </Tab>
+</Tabs>
+
+  </Tab>
+  <Tab>
+
+### ESP32 و ESP8266
+
+<Tabs items={['ESP32', 'ESP8266']} defaultIndex={0}>
+  <Tab>
+
+Library را به <code>platformio.ini</code> اضافه کنید:
+
+~~~ini
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+lib_deps = flova-platform/FlovaSDK@^0.3.12
+~~~
+
+برای Build و Upload:
+
+~~~sh
+pio run
+pio run -t upload
+~~~
+
+  </Tab>
+  <Tab>
+
+از Profile بسته‌بندی‌شدهٔ ESP8266 در SDK استفاده کنید یا Board و Memory Layout
+توصیه‌شدهٔ Target را تنظیم کنید. وابستگی پروژه:
+
+~~~ini
+lib_deps = flova-platform/FlovaSDK@^0.3.12
+~~~
+
+Build و Upload با همین دستورها انجام می‌شود:
+
+~~~sh
+pio run
+pio run -t upload
+~~~
+
+هنگام تنظیم TLS، Memory یا OTA، مسیر Upload سیمی را در دسترس نگه دارید.
+
+  </Tab>
+</Tabs>
+
+  </Tab>
+</Tabs>
+
+## Universal Firmware
+
+وقتی می‌خواهید Flova کل Composition مربوط به Device را مدیریت کند، از
+Universal Firmware استفاده کنید:
+
+~~~cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaUniversalEsp32 device;
+
+void setup() {
+  Serial.begin(115200);
+  device.begin();
+}
+
+void loop() {
+  device.run();
+}
+~~~
+
+برای ESP8266 از <code>FlovaUniversalEsp8266</code> استفاده کنید. Universal
+Firmware Composition برد، مسیر Provisioning، Hardware Mapping، سیاست OTA و
+سیاست Restart مربوط به Target را فراهم می‌کند و برای یک محصول استاندارد
+Wi-Fi کوتاه‌ترین مسیر است.
+
+## Linux و Raspberry Pi
+
+Dependencyهای بومی را از ریشهٔ Repository مربوط به Firmware نصب و Package را
+Build کنید:
+
+~~~sh
+sudo apt install cmake libssl-dev
+cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr/local
+cmake --build build
+sudo cmake --install build
+~~~
+
+Package نصب‌شده را به برنامه Link کنید:
+
+~~~cmake
+find_package(FlovaLinux CONFIG REQUIRED)
+target_link_libraries(my_device PRIVATE Flova::Linux)
+~~~
+
+سپس از همان مدل Typeدار Datastream استفاده کنید:
+
+~~~cpp
+#include <FlovaLinux.h>
+
+FlovaLinux device;
+auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+
+int main() {
+  if (!device.begin()) return 1;
+  for (;;) device.run();
+}
+~~~
+
+<code>run()</code> یک گام محدود انجام می‌دهد. آن را در Poll یا Event Loop
+برنامه قرار دهید و مالکیت Process را به SDK ندهید.
+
+## Boardهای قابل انتقال
+
+Core قابل انتقال در Include عمومی خود به Arduino، ESP، Wi-Fi، File System،
+Exception یا RTTI نیاز ندارد. برای Port سفارشی، این Serviceها را فراهم کنید:
+
+<code>flova::Link</code>، <code>flova::Storage</code>، <code>flova::Clock</code>
+و <code>flova::Logger</code>؛ سپس <code>flova::Device</code> را بسازید.
+
+اگر Target به Network سفارشی، Gateway، Ethernet Chip یا Service Supervisor
+نیاز دارد، [Firmware پیشرفته](./advanced) را بخوانید.
+
+## بررسی نصب
+
+پس از نصب و پیش از Debug منطق برنامه، هماهنگ بودن Board Package با Board
+فیزیکی، تغییر کردن Serial Port هنگام جدا و وصل کردن Board، Compile شدن یک
+Sketch خالی با <code>#include &lt;FlovaSDK.h&gt;</code>، یکسان بودن Class
+برنامه با Target انتخاب‌شده و Publish بودن Template Device را بررسی کنید.
+
+اگر Library پیدا می‌شود اما Device وصل نمی‌شود، Wi-Fi یا Ethernet، زمان و TLS،
+وضعیت Provisioning، Session و Status Device را جداگانه بررسی کنید.

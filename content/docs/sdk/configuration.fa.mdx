@@ -1,0 +1,94 @@
+---
+title: "Configuration و Settingها"
+description: "از Settingهای Typeدار Firmware و Configuration Template بدون تکرار مقدار در کد استفاده کنید."
+---
+
+Setting به برنامه اجازه می‌دهد مقدار Typeدار تنظیم‌شده در Flova را بخواند.
+Setting را یک‌بار در Firmware تعریف کنید، Default Value بدهید و از Cache محلی
+آن در منطق برنامه استفاده کنید.
+
+## تعریف Setting
+
+~~~cpp
+auto dryThreshold = FLOVA_SETTING(device, double, "dry_threshold", 35.0);
+auto dryCalibration = FLOVA_SETTING(device, int64_t, "dry_adc", 3000);
+~~~
+
+Key باید با Setting موجود در Template منتشرشده یکی باشد. تا زمان رسیدن یک
+Value معتبر از راه دور، Default Value استفاده می‌شود.
+
+برای خواندن Setting و محدود کردن آن به دامنهٔ امن Hardware:
+
+~~~cpp
+int32_t boundedCalibration(const flova::Setting<int64_t>& setting) {
+  const int64_t value = setting.value();
+  return static_cast<int32_t>(value < 0 ? 0 : value > 4095 ? 4095 : value);
+}
+~~~
+
+تحویل Configuration ناهمگام است. تا زمان اعمال Update معتبر، از Value فعلی
+استفاده کنید. Getter نباید درخواست Network بفرستد.
+
+## Hardware Mapping و Safety
+
+Configuration Template می‌تواند Digital Input، Digital Output، Analog Input،
+PWM Output، Default، Limit، Debounce، Sampling و Safety Rule را توصیف کند.
+Universal Firmware Mappingهای پشتیبانی‌شده را خودکار اعمال می‌کند. برنامهٔ
+سفارشی می‌تواند Configuration را بخواند و Safety Policy نهایی را در کد خود
+نگه دارد.
+
+Value را در مرز Hardware دوباره Validate کنید. مقداری که برای Template معتبر
+است ممکن است برای Sensor، Motor، Power Stage یا Revision خاص Board ایمن نباشد.
+
+## مسیر Configuration
+
+فرایند را چنین نگه دارید: Setting یا Datastream نوع‌دار را در Firmware تعریف
+کنید؛ مورد متناظر را در Device Template بسازید؛ Version Template را Publish
+کنید؛ Value را در Console تنظیم کنید؛ اجازه دهید Device آن را از Loop عادی
+<code>run()</code> دریافت کند؛ و پس از پذیرفتن آن توسط Hardware، وضعیت حاصل
+را Report کنید.
+
+برای هر Setting یک Source of Truth داشته باشید. تکرار Calibration در Template،
+Constantهای Firmware و رابط برنامه، تغییر میدانی را دشوار و خطا را پنهان می‌کند.
+
+## تفاوت Setting و Datastream
+
+برای مقداری که در مدل زندهٔ Device دیده می‌شود، مانند دما، وضعیت Relay،
+Counter یا Command کاربر، از Datastream استفاده کنید. برای مقداری که شیوهٔ
+کار Firmware را تنظیم می‌کند، مانند Threshold، Calibration Point، Sampling
+Interval یا Feature Switch، از Setting استفاده کنید.
+
+این دو می‌توانند کنار هم باشند. یک کنترلر رطوبت می‌تواند <code>wet_adc</code>
+و <code>dry_adc</code> را به‌عنوان Setting بخواند، درصد را محلی حساب کند و
+نتیجه را در Datastream فقط‌خواندنی <code>MOISTURE</code> Report کند. Dashboard
+Datastream را نشان می‌دهد و Console مقدار Setting را تغییر می‌دهد.
+
+## رفتار Update
+
+Configuration از Loop عادی Device اعمال می‌شود. داخل Transport Callback، GPIO
+را تغییر ندهید و Calibration طولانی را شروع نکنید. Value جدید را بگیرید،
+در Loop برنامه تغییر آن را ببینید، آن را با Hardware متصل Validate کنید، رفتار
+تازه را در یک مرز امن اعمال کنید و اگر Datastream نمایندهٔ آن رفتار است، State
+حاصل را Report کنید.
+
+اگر Value خارج از دامنهٔ امن برنامه بود، Value قبلی را نگه دارید و یک
+Rejection یا Diagnostic محدود برگردانید. Limit موجود در Template ورودی مفیدی
+است اما جای Validation در سطح Hardware را نمی‌گیرد.
+
+## برنامه‌ریزی ظرفیت
+
+Buildهای Embedded برای Datastream، Parameter، Text، History، جلوگیری از
+تکرار Command، ورودی و خروجی Hardware و Schedule ظرفیت ثابت رزرو می‌کنند.
+پیش از افزودن موارد زیاد به Template، این ظرفیت را برای Board برنامه‌ریزی کنید.
+
+وقتی Build به ظرفیت رسید، سطح تعریف‌شده را کوچک کنید، Resource صریح Target را
+افزایش دهید یا Composition بزرگ‌تری انتخاب کنید. روی Board کوچک Map پویا
+اضافه نکنید تا مصرف حافظه پنهان نماند.
+
+## بررسی نهایی Setting
+
+پیش از تحویل، Stable و lowercase بودن Technical Key، وجود Default قابل استفاده
+برای Device تازه، یکسان بودن Type و Default در Template، نگه‌داری Calibration
+و Product Limit در مدل Setting، Validation دوباره پیش از تماس با Hardware،
+Update در حالت Online و پس از Connection دوباره، و بازیابی درست پس از Power
+Cycle را بررسی کنید.

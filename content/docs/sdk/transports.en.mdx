@@ -1,0 +1,259 @@
+---
+title: "Transports and connection"
+description: "Choose Flova Link or MQTT, understand connection readiness, and keep device code transport neutral."
+---
+
+A Transport carries identity, commands, reports, configuration, and presence
+between the device and Flova. The Transport is a deployment decision. It should
+not change Datastream keys, value types, hardware handlers, or the Dashboard
+contract used by the application.
+
+The normal native path is **Flova Link**. MQTT is available when an existing
+MQTT architecture, gateway, or operational tool is part of the product. Both
+paths still require separate checks for network readiness, authenticated
+Connection, Template binding, accepted Report, Latest Value, and History.
+
+## Flova Link
+
+<code>FlovaEsp32</code> and <code>FlovaEsp8266</code> use Flova Link by default.
+The SDK manages the authenticated device session, bounded messages, Datastream
+binding, cached state, command delivery, and reconnect work. The application
+owns Wi-Fi, Ethernet, GPIO, sensors, power policy, and long-running work
+according to the selected facade.
+
+~~~cpp
+FlovaEsp32 device;
+auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+
+void loop() {
+  serviceHardware();
+  device.run();
+}
+~~~
+
+A connected Link session does not mean every Datastream is ready. Wait until
+the runtime and the published Template have been accepted before depending on a
+restored value. When debugging a missing value, verify the exact key, value
+type, Report result, Latest Value, and History in Console.
+
+## Wi-Fi with Flova Link
+
+Universal ESP32 and ESP8266 compositions can own the Wi-Fi setup path. A
+custom application owns it explicitly:
+
+~~~cpp
+#include <WiFi.h>
+#include <FlovaSDK.h>
+
+FlovaEsp32 device;
+
+void setup() {
+  WiFi.begin("your-wifi", "your-password");
+  device.begin();
+}
+
+void loop() {
+  device.run(WiFi.status() == WL_CONNECTED);
+}
+~~~
+
+The application must keep credentials out of source control and decide how to
+handle a missing network, a changed access point, and a device that has never
+completed Provisioning. The SDK can reconnect its Flova session, but it cannot
+invent a valid Wi-Fi credential or repair an antenna, power, DHCP, or radio
+problem.
+
+For a product that owns its own captive portal or Web Server, keep that setup
+flow in the application and pass the completed Flova Provisioning handoff to
+the SDK. Once the handoff is committed, close temporary setup resources before
+starting normal telemetry.
+
+## Ethernet with Flova Link
+
+Ethernet is useful when the product has stable power, a wired installation, or
+a network policy that does not allow Wi-Fi. An ESP32 LAN8720 composition can
+provide the network to <code>FlovaEsp32Ethernet</code>; the application still
+supplies PHY configuration and board-specific startup.
+
+~~~cpp
+FlovaEsp32Ethernet device(EthernetConfig{
+  .phyAddress = 1,
+  .powerPin = 16,
+  .clockMode = ETH_CLOCK_GPIO0_IN,
+});
+~~~
+
+The exact constructor depends on the target facade. Validate the board
+schematic before choosing boot pins, RMII pins, power control, DHCP behavior,
+and the PHY clock. A successful compile proves none of physical link, IP
+assignment, TLS readiness, or accepted hardware commands.
+
+If the board uses another Ethernet chip or TCP/IP stack, keep that driver
+outside the Datastream layer. Supply a bounded Link implementation or use the
+supported Ethernet facade rather than changing application Datastream code.
+
+## MQTT
+
+MQTT is an optional compatibility Transport. It fits a product that already
+has a maintained MQTT Client, a Gateway that routes device traffic through
+MQTT, or established broker tooling and observability. It adds application
+owned responsibilities, so use it deliberately.
+
+The application owns the Wi-Fi or Ethernet Client, DNS, socket lifetime, TLS
+trust store, MQTT Client, broker reconnect policy, and local watchdog. The SDK
+supplies Flova device topics, presence behavior, command delivery, the
+Datastream JSON envelope, a bounded queue, and integration with the typed
+Datastream facade.
+
+~~~cpp
+#include <WiFiClientSecure.h>
+#include <PubSubClient.h>
+#include <FlovaSDK.h>
+
+WiFiClientSecure socket;
+PubSubClient mqtt(socket);
+FlovaEsp32 device(mqtt);
+
+void setup() {
+  socket.setCACert(FLOVA_ROOT_CA);
+  mqtt.setServer("mqtt.flova.ir", 8883);
+  device.begin(deviceId, deviceSecret);
+}
+
+void loop() {
+  maintainWifi();
+  device.run();
+}
+~~~
+
+Use the device UUID as the MQTT username and the device secret as the
+password. The broker endpoint is <code>mqtts://mqtt.flova.ir:8883</code>. Keep
+certificate verification enabled. A Workspace API key is not a device
+password and must not be placed in a firmware bundle or used as the MQTT
+password.
+
+The device publishes on its <code>up</code> side and subscribes on its
+<code>down</code> side. The SDK handles the documented Flova topics and message
+envelope. Application code should register typed Datastreams and handlers
+rather than constructing private topics. Use the lower level message API only
+when the public facade cannot express a real product requirement.
+
+### MQTT connection sequence
+
+An MQTT connection has more than one successful step. First, the application
+must bring up Wi-Fi or Ethernet and obtain a usable network path. Next, DNS,
+TCP, TLS certificate verification, and the MQTT session must succeed. The SDK
+then authenticates the device identity, restores session state, binds the
+published Template, and starts the normal command and Report path.
+
+Keep these steps visible in diagnostics. An open socket proves only that a
+network path exists. MQTT presence proves a broker session. Runtime readiness
+proves that the device identity is accepted. Datastream readiness proves that
+declared keys match the published Template. An accepted Report proves that a
+particular value entered the SDK path. Latest Value and History prove that the
+value reached the Flova data path.
+
+### MQTT loop and reconnect behavior
+
+Call <code>device.run()</code> from the normal cooperative loop. Do not call it
+only after a sensor changes or place it behind a long delay. The SDK needs
+regular execution to process commands, advance reconnect work, publish
+presence, and flush queued messages.
+
+Keep Wi-Fi or Ethernet maintenance separate from Datastream logic. A reconnect
+attempt should not erase the local cache or reset hardware outputs unless the
+product explicitly chooses that policy. After reconnecting, verify whether the
+stream policy restores the last accepted value or requires a fresh hardware
+Report.
+
+If the broker is unavailable, keep the application responsive and expose a
+bounded offline state. Do not spin in a tight reconnect loop. Use the target's
+backoff and watchdog policy, and keep a wired recovery path while developing
+TLS, memory, or broker configuration.
+
+### MQTT boundaries and message size
+
+Device MQTT messages are limited to 2,048 bytes. A Report that exceeds the
+limit, arrives while the adapter is unavailable, or exhausts the bounded queue
+returns a failure result. A successful enqueue means that the SDK accepted the
+message locally; it does not prove that the broker, Engine, Latest Value, or
+History received it.
+
+Use several typed Datastreams for independent values and report at a sensible
+rate. Reduce text and JSON fields that do not belong in the public Template.
+Never solve a message size problem by silently truncating a command or sensor
+value. Log a bounded error and keep the previous accepted state when a Report
+cannot be queued.
+
+### MQTT security and ownership
+
+Use TLS certificate verification and a device specific identity. Protect the
+device secret in the selected Storage service and never print it in logs,
+status pages, MQTT payloads, or Provisioning diagnostics. Rotate or replace
+the identity through the product's supported Provisioning or maintenance flow.
+
+The MQTT Client belongs to the application. Choose its socket buffer, keepalive,
+callback limits, and reconnect timing for the target's memory and power budget.
+Keep callbacks short; hand work to the application loop instead of performing
+sensor access, file writes, or long network requests inside an MQTT callback.
+
+## Bluetooth and other Provisioning channels
+
+Bluetooth is normally a setup channel, not the device's long term telemetry
+Transport. An ESP32 BLE flow can carry a short lived Provisioning handoff while
+the application owns pairing, framing, timeout, and user interaction. After
+the handoff is durably accepted, release BLE resources and start Wi-Fi,
+Ethernet, Flova Link, or MQTT.
+
+The same boundary applies to Serial, a factory tool, or a local Ethernet setup
+page. The setup channel carries the bounded handoff; it does not replace the
+authenticated runtime Connection. Keep the activation token out of logs and
+do not send it again on every boot.
+
+## Keep application code Transport neutral
+
+Declare Datastreams and handlers once, then choose the constructor that matches
+the deployment:
+
+~~~cpp
+auto temperature = FLOVA_DATASTREAM(device, float, "temperature");
+auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+
+void loop() {
+  FLOVA_REPORT(temperature, readTemperature());
+  device.run();
+}
+~~~
+
+The keys, types, callbacks, local cache, and Dashboard contract do not change
+when the Transport changes. Keep Wi-Fi setup, Ethernet configuration, TLS
+certificates, MQTT Client construction, and Bluetooth setup outside Datastream
+logic.
+
+## Connection readiness
+
+Use separate readiness boundaries in product UI and diagnostics:
+
+| Check | What it proves |
+| --- | --- |
+| Network ready | Wi-Fi or Ethernet has the conditions required by the application. |
+| Transport connected | Flova Link or the MQTT session is connected. |
+| Runtime ready | Device identity and the Flova runtime are authenticated. |
+| Datastream ready | Declared keys are bound to the published Template. |
+| Accepted Report | One specific value passed validation and entered the Transport path. |
+| Latest Value and History | The value reached the Flova data path and was stored as expected. |
+
+Use facade status methods or a status listener for indicators. Do not show a
+green “connected” label when the application has only opened a socket.
+
+## Choosing a Transport
+
+Use Flova Link for the normal native device Connection and the smallest
+application surface. Use MQTT when the product already owns a broker Client or
+requires MQTT routing. Use a custom Link Adapter when a board or Gateway has a
+different bounded carrier and can implement the public service boundary. Keep
+portable <code>flova::Device</code> independent from Arduino and network APIs.
+
+Changing Transport does not change the Console Template. It changes the device
+Connection, ownership of network services, and the operational checks required
+during deployment.

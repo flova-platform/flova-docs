@@ -1,0 +1,135 @@
+---
+title: "Provisioning و Identity"
+description: "دادن Identity به Device بدون قرار دادن Credential دائمی در Firmware."
+---
+
+Provisioning یک واحد فیزیکی را به یک Device Record در Flova متصل می‌کند.
+در این فرایند، یک Handoff کوتاه‌عمر به Device می‌رسد، Identity زمان اجرا
+ساخته یا دریافت می‌شود و SDK آن را برای Bootهای بعدی در Storage انتخاب‌شده
+نگه می‌دارد.
+
+Provisioning را با اتصال معمول اشتباه نگیرید. Wi-Fi، Ethernet، Bluetooth یا
+Serial می‌توانند کانال رساندن اطلاعات اولیه باشند؛ پس از تکمیل Handoff،
+Device باید با Flova Link یا MQTT احراز هویت شود و وارد مسیر عادی Telemetry
+شود.
+
+## Universal Firmware
+
+Universal Firmware در ESP32 و ESP8266 مسیر Setup را در خود دارد. کاربر Flow
+راه‌اندازی را کامل می‌کند، Device اطلاعات Network و Handoff Flova را می‌گیرد
+و Firmware وضعیت نهایی را ذخیره می‌کند. در Boot بعدی، Session ذخیره‌شده
+بازیابی می‌شود و Device بدون تکرار Flow نخستین به Flova وصل می‌شود.
+
+این مسیر برای محصولی مناسب است که SDK مالک SoftAP، فرم Setup، نگاشت Hardware
+و رفتار عمومی Restart باشد. پیش از انتشار، نام Wi-Fi راه‌اندازی، محدودیت
+زمانی Token و رفتار Reset را با Mobile App یا Web App واقعی بررسی کنید.
+
+## برنامهٔ سفارشی
+
+در Firmware سفارشی، برنامه مالک Wi-Fi، Web Server، BLE، Ethernet یا هر کانال
+Setup دیگری است. برنامه Handoff محدود Flova را به SDK می‌دهد؛ SDK اعتبارسنجی،
+Bootstrap، Commit کردن Session و ادامهٔ Connection را انجام می‌دهد.
+
+Handoff شامل Link URL و Token کوتاه‌عمر مربوط به استقرار است:
+
+~~~cpp
+flova::ProvisioningHandoff handoff(linkUrl, shortLivedToken);
+client.provision(handoff);
+~~~
+
+کانال Setup ورودی و Transport خودش را مدیریت می‌کند. SDK Handoff محدود و
+Lifecycle مربوط به Session Flova را مدیریت می‌کند. Token، Device Secret،
+Credentialهای Wi-Fi و Payload کامل Provisioning را در Source Code، Log یا
+صفحهٔ وضعیت قرار ندهید.
+
+## کانال‌های Provisioning
+
+یک Factory Tool می‌تواند از Serial استفاده کند. Mobile App می‌تواند از BLE
+برای Pairing و انتقال Handoff استفاده کند. یک محصول صنعتی می‌تواند یک صفحهٔ
+Setup روی Ethernet یا Web Server خودش داشته باشد. در همهٔ این حالت‌ها، کانال
+فقط دادهٔ تحویل اولیه را حمل می‌کند و نباید Secret زمان اجرا را برای هر Boot
+دوباره ارسال کند.
+
+Adapter هر کانال مسئول Framing، Timeout، Authentication ورودی و آزاد کردن
+منابع موقت است. SDK مسئول محدود نگه داشتن Handoff، ذخیرهٔ Session، اتصال به
+Flova و گزارش نتیجه است. پس از Commit شدن Session، BLE یا SoftAP را ببندید و
+Transport دائمی انتخاب‌شده را شروع کنید.
+
+## چیزی که Provisioning ذخیره می‌کند
+
+نتیجهٔ Handoff یک Session Flovaست که Identity دستگاه، ارتباط آن با
+Organization و Template، Link URL و Secret زمان اجرا را در بر می‌گیرد. SDK
+این Session را از طریق Storage انتخاب‌شده نگه می‌دارد. برنامه نباید Secret را
+در Configuration File دیگری کپی کند یا در Status Page نمایش دهد.
+
+Activation Token فقط ورودی Bootstrap است. این Token گذرواژهٔ Runtime نیست و
+نباید در هر Boot ارسال شود. پس از Commit، Bootهای بعدی Session ذخیره‌شده را
+بازیابی و با Identity زمان اجرا احراز هویت می‌کنند.
+
+## Statusهای Provisioning
+
+Setup را یک State Machine بدانید، نه یک درخواست HTTP منفرد:
+
+| Status | رفتار برنامه |
+| --- | --- |
+| Waiting | کانال Setup را در دسترس نگه دارید و SDK را طبق معمول اجرا کنید. |
+| Bootstrapping | از حلقهٔ عادی بررسی کنید و Session دوم شروع نکنید. |
+| Committing | برق و Storage را تا ماندگار شدن Session حفظ کنید. |
+| Ready | منابع موقت Setup را ببندید و کار عادی Device را شروع کنید. |
+| Failed | خطای محدود نمایش دهید، Recovery را باز بگذارید و آگاهانه دوباره تلاش کنید. |
+
+نام دقیق Status در Facadeهای مختلف ممکن است فرق کند، اما مرزها ثابت هستند.
+ارسال موفق Form به معنی آماده بودن Device نیست. Session ذخیره‌شده، Connection
+احراز هویت‌شده، Template Binding و نخستین Accepted Report را جداگانه بررسی
+کنید.
+
+## Web Setup تحت مالکیت برنامه
+
+اگر برنامهٔ Arduino از قبل Web Server دارد، Provisioning را به همان Server
+وصل کنید:
+
+~~~cpp
+WebServer server(80);
+FlovaEsp32 device;
+
+void setup() {
+  device.attachProvisioning(server);
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+  device.run();
+}
+~~~
+
+SDK Handlerهای محدود Status و Provisioning را ثبت می‌کند. Server را شروع یا
+جایگزین نمی‌کند، Mode مربوط به Wi-Fi را تغییر نمی‌دهد و Routeهای دیگر برنامه
+را در اختیار نمی‌گیرد. حلقهٔ Server و <code>device.run()</code> را در یک Loop
+غیرمسدودکننده نگه دارید.
+
+## Reset و Recovery
+
+وقتی محصول باید Identity Flova را عوض کند، از
+<code>startProvisioning()</code> یا عملیات Factory Reset مربوط به Facade
+استفاده کنید. Trigger را روشن تعریف کنید؛ برای نمونه نگه داشتن یک Button
+فیزیکی یا یک Maintenance Command احراز هویت‌شده.
+
+Reset باید State خصوصی Flova را پاک کند و Device را به Setup برگرداند. Wi-Fi،
+Web Server، GPIO یا دادهٔ محصول را بی‌دلیل پاک نکنید، مگر اینکه محصول صریحاً
+چنین رفتاری بخواهد.
+
+اگر Bootstrap شکست خورد، Setup Channel، URL از نوع HTTPS یا WSS، زمان سیستم،
+عمر Token، دسترسی Storage و Device Claim را جدا بررسی کنید. خطا را محدود نگه
+دارید و Token یا Secret را در پیام Diagnostic قرار ندهید.
+
+## بررسی پس از Provisioning
+
+پس از پایان Flow، در Console این مسیر را مرحله‌به‌مرحله بررسی کنید: Device
+به Record درست متصل شده باشد، Template مورد انتظار را داشته باشد، Firmware
+Target درست گزارش شود، Connection Online باشد، Datastreamها Bind شده باشند و
+یک Report واقعی به Latest Value و History رسیده باشد.
+
+وجود Device در Console یا Online بودن آن به‌تنهایی موفقیت Provisioning را ثابت
+نمی‌کند. این بررسی‌ها را برای Universal Firmware، Web Setup، BLE و Factory
+Tool یکسان انجام دهید.

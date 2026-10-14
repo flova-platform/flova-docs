@@ -1,6 +1,7 @@
 {
   "title": "SDK",
-  "description": "ساخت firmware فلووا.",
+  "description": "ساخت Firmware برای Flova.",
   "icon": "Terminal",
-  "root": true
+  "root": true,
+  "pages": ["overview", "quickstart", "install", "datastreams", "provisioning", "configuration", "transports", "lifecycle", "advanced", "reference"]
 }

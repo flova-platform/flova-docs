@@ -1,0 +1,197 @@
+---
+title: "Quick start"
+description: "Build and connect a simple ESP32 device with FlovaSDK in a few steps."
+---
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+This is the fastest path to a working Flova device. You will create an ESP32
+template, flash the universal firmware, provision the board, and switch its
+built-in LED from a published dashboard.
+
+You need an ESP32 board with an LED on `GPIO2`, a USB data cable, a phone or
+computer with Wi-Fi, and either PlatformIO or Arduino IDE. Create a Flova
+workspace before you begin.
+
+## 1. Create a device template
+
+Open [Flova Console](https://console.flova.ir/), create a Device Type, and name
+it `ESP32 LED`. Choose Wi-Fi as its setup method. Add one datastream with these
+values:
+
+| Field | Value |
+| --- | --- |
+| Name | Internal LED |
+| Technical key | `LED` |
+| Value type | Boolean |
+| Access | Read/write |
+| Behavior | Digital output |
+| Hardware pin | `GPIO2` |
+| Active level | HIGH |
+| Default and safe value | Off |
+
+Use `LED` exactly as the technical key. Publish the Device Type version before
+creating a device from it.
+
+## 2. Install and flash universal firmware
+
+The universal composition owns the setup flow, device connection, hardware
+mapping, and normal firmware lifecycle. Choose your tool:
+
+<Tabs items={['Arduino IDE', 'PlatformIO']} defaultIndex={0}>
+  <Tab>
+
+Install the ESP32 board package:
+
+1. Open **Tools > Board > Boards Manager**.
+2. Search for `esp32` by Espressif Systems and install it.
+3. Open **Tools > Manage Libraries**, search for `FlovaSDK`, and install it.
+4. Select your ESP32 board under **Tools > Board**.
+5. Select its USB serial port under **Tools > Port**.
+
+Create a new sketch and replace it with:
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaUniversalEsp32 device;
+
+void setup() {
+  Serial.begin(115200);
+  device.begin();
+}
+
+void loop() {
+  device.run();
+}
+```
+
+Click **Upload**. Arduino IDE builds and flashes the complete image for the
+selected board.
+
+  </Tab>
+  <Tab>
+
+Create a project and add the SDK:
+
+```sh
+mkdir flova-esp32
+cd flova-esp32
+pio project init --board esp32dev
+```
+
+Add this environment to `platformio.ini`:
+
+```ini
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+lib_deps = flova-platform/FlovaSDK@^0.3.12
+```
+
+Replace `src/main.cpp` with:
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaUniversalEsp32 device;
+
+void setup() {
+  Serial.begin(115200);
+  device.begin();
+}
+
+void loop() {
+  device.run();
+}
+```
+
+Connect the board and upload:
+
+```sh
+pio run -t upload
+pio device monitor -b 115200
+```
+
+If PlatformIO cannot find the board, set `upload_port` in `platformio.ini` to
+the serial port assigned by your operating system.
+
+  </Tab>
+</Tabs>
+
+## 3. Create and provision the device
+
+In [Console's Devices page](https://console.flova.ir/devices), open `ESP32 LED`,
+choose **Add Device**, enter a name, and create the device. Console shows a QR
+code and a manual activation code.
+
+Open the [Flova web application](https://pwa.flova.ir/), sign in, choose **Add
+device**, and scan the QR code. Use the manual activation option if the camera
+is unavailable.
+
+The fresh board starts its setup network with a name like `Flova-Setup-*`.
+While the web application is in setup mode:
+
+1. Connect your phone or computer to `Flova-Setup-*`.
+2. Return to the web application.
+3. Enter the usual Wi-Fi name and password.
+4. Submit the setup form.
+5. Reconnect your phone or computer to its normal network.
+
+The board stores the setup result, restarts, and connects to Flova. In Console,
+its status should move from setup and sync to online.
+
+## 4. Test the LED
+
+Open [Studio](https://studio.flova.ir/) and create a dashboard for the `ESP32
+LED` template. Add a Toggle, connect it to `Internal LED`, and publish the
+dashboard.
+
+Open the device in the Flova web application and change the Toggle. The LED
+should follow the command. If it does not:
+
+- Confirm that the Device Type version is published.
+- Confirm that the dashboard uses the same `ESP32 LED` template.
+- Check that the datastream key is exactly `LED`.
+- Check the device status and timeline in Console.
+- Keep the browser connected to the setup network while provisioning.
+
+## Move to custom firmware
+
+Universal firmware is useful for the first device and for products where Flova
+owns the complete device composition. Use `FlovaEsp32` when your application
+must own Wi-Fi, GPIO, sensors, a web server, or another setup channel.
+
+```cpp
+#include <Arduino.h>
+#include <WiFi.h>
+#include <FlovaSDK.h>
+
+FlovaEsp32 device;
+auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+
+void setRelay(bool enabled) {
+  digitalWrite(2, enabled ? HIGH : LOW);
+}
+
+void setup() {
+  pinMode(2, OUTPUT);
+  WiFi.begin("your-wifi", "your-password");
+  FLOVA_ON_WRITE(relay, setRelay);
+  device.begin();
+}
+
+void loop() {
+  device.run(WiFi.status() == WL_CONNECTED);
+}
+```
+
+Continue with [Datastreams](./datastreams), [Provisioning](./provisioning), and
+[Transports](./transports) when you are ready to build an application around
+the SDK.
+
+This sketch shows the datastream and network loop. A custom product must also
+provide its provisioning handoff; see [Provisioning](./provisioning) before
+flashing it to a new device.
