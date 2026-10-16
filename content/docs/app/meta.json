@@ -1,6 +1,16 @@
 {
   "title": "App",
-  "description": "Run published apps.",
+  "description": "Use published dashboards and manage connected devices.",
   "icon": "Smartphone",
-  "root": true
+  "root": true,
+  "pages": [
+    "overview",
+    "quickstart",
+    "devices",
+    "setup",
+    "dashboards",
+    "alerts",
+    "account",
+    "troubleshooting"
+  ]
 }

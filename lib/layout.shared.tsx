@@ -23,8 +23,8 @@ export const docsSections = [
   },
   {
     slug: 'app',
-    en: { title: 'App', description: 'Run published apps.' },
-    fa: { title: 'اپ', description: 'اجرای اپ‌های منتشرشده.' },
+    en: { title: 'App', description: 'Use published dashboards.' },
+    fa: { title: 'اپلیکیشن', description: 'استفاده از داشبوردهای منتشرشده.' },
   },
 ] as const;
 
