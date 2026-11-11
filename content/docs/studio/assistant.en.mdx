@@ -1,0 +1,40 @@
+---
+title: "Studio Assistant"
+description: "Use the in-editor assistant to understand and change a dashboard."
+---
+
+The Studio Assistant is available in the editor's Assistant panel. It can
+inspect the current dashboard context, describe its structure, and prepare
+supported dashboard edits. Treat its output as a proposal that needs review.
+
+1. Open the Assistant panel.
+2. Describe the result in terms of pages, widgets, data, and layout.
+3. Let it inspect the current dashboard.
+4. Review widgets, bindings, and layout changes.
+5. If the Assistant offers a visual preview, inspect it before applying the proposal.
+6. Apply the proposal only when it matches the dashboard.
+7. Check every breakpoint.
+8. Save and publish through the normal Studio flow.
+
+A request such as "add a numeric temperature value, a history chart, and a
+writable pump control" gives the assistant a clearer target than a request
+that only names a visual style.
+
+| Review area | Question |
+| --- | --- |
+| Page | Did it choose the intended page and parent? |
+| Widget | Is the widget appropriate for the value or action? |
+| Binding | Is the template, device, key, and type correct? |
+| Layout | Does it fit mobile, tablet, and desktop? |
+| Style | Does it follow the existing theme and spacing? |
+| Action | Is the target resource correct? |
+| Validation | Did the proposal pass available checks? |
+
+The assistant should inspect the current dashboard before changing an existing
+node. If another session changed the dashboard, reload current context and
+make a new proposal. Applying an old proposal can create a history conflict.
+
+The in-editor Assistant and external agent clients solve related problems at
+different boundaries. The Assistant is the chat panel inside Studio. External
+clients use [Flova MCP](../mcp). MCP setup, OAuth, and permissions are separate
+from the in-editor chat.

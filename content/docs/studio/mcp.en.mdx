@@ -1,0 +1,164 @@
+---
+title: "Flova MCP for Studio"
+description: "Connect agent clients to Studio dashboards through the Flova MCP server."
+---
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+Flova MCP lets supported agent clients read and edit Flova workspace resources
+through the Model Context Protocol. Studio tools can list dashboards, read
+dashboard context, inspect nodes and authoring capabilities, dry-run semantic
+edits, apply approved edits, save drafts, validate, visually inspect, publish,
+and archive dashboards.
+
+The hosted endpoint is:
+
+~~~text
+https://mcp.flova.ir/mcp
+~~~
+
+MCP uses OAuth through Flova Auth. The client opens a browser when it needs
+access. Sign in, choose the Flova workspace, approve access, and start a fresh
+agent session when the client asks you to.
+
+## Add Flova MCP
+
+These examples register the server with the name flova.
+
+<Tabs items={['Codex CLI', 'Claude Code', 'Cursor', 'Antigravity', 'OpenCode']} defaultIndex={0}>
+  <Tab>
+
+~~~bash
+codex mcp add flova --url https://mcp.flova.ir/mcp
+codex mcp list
+~~~
+
+Codex opens Flova Auth during add when needed. Use codex mcp login flova if
+the OAuth session expires.
+
+  </Tab>
+  <Tab>
+
+~~~bash
+claude mcp add --transport http flova https://mcp.flova.ir/mcp
+claude mcp list
+~~~
+
+Use /mcp inside Claude Code when the server needs OAuth. Use
+--scope project only when your team wants a shared .mcp.json entry.
+
+  </Tab>
+  <Tab>
+
+Create .cursor/mcp.json in the project, or use the global Cursor file:
+
+~~~json
+{
+  "mcpServers": {
+    "flova": {
+      "url": "https://mcp.flova.ir/mcp"
+    }
+  }
+}
+~~~
+
+Reload Cursor and authenticate the server from its MCP controls. The global
+configuration is usually ~/.cursor/mcp.json.
+
+  </Tab>
+  <Tab>
+
+Open the Agent panel menu, choose MCP Servers, Manage MCP Servers, and View
+raw config. Add this entry to mcp_config.json:
+
+~~~json
+{
+  "mcpServers": {
+    "flova": {
+      "serverUrl": "https://mcp.flova.ir/mcp"
+    }
+  }
+}
+~~~
+
+Antigravity uses serverUrl for remote Streamable HTTP connections. The entry
+can live in .agents/mcp_config.json or the global
+~/.gemini/config/mcp_config.json.
+
+  </Tab>
+  <Tab>
+
+~~~bash
+opencode mcp add flova --url https://mcp.flova.ir/mcp
+opencode mcp list
+~~~
+
+Use --global for every OpenCode project. If authentication is needed, open
+the OpenCode MCP manager with /mcps and complete browser sign-in.
+
+  </Tab>
+</Tabs>
+
+## Verify and edit safely
+
+Ask the agent to list Flova workspace resources or read the Studio dashboard
+authoring guide. A connected client exposes only tools allowed by OAuth scopes
+and the workspace role.
+
+For dashboard changes:
+
+1. Read dashboard context.
+2. Inspect the page or nodes that will change.
+3. Prepare one small semantic edit batch.
+4. Run the dashboard edit dry run.
+5. Apply the exact successful batch with a new operation ID and preview
+   fingerprint.
+6. Save or validate the draft.
+7. Review the dashboard in Studio before publishing.
+
+For a normal edit, the corresponding tool sequence is:
+
+1. `dashboard_authoring_context`
+2. `dashboard_nodes_inspect` for the affected pages or widgets
+3. `dashboard_edit_dry_run` with 1 to 12 semantic edits
+4. `dashboard_edit_semantic` with the exact successful batch, a new
+   `operationId`, and the returned `previewFingerprint`
+5. `dashboard_visual_inspect` at the requested breakpoints
+6. `dashboard_validate`
+7. `dashboard_publish` with `confirm: true` only after explicit human approval
+
+If a dry run fails, follow its returned `nextTool` and `repair` guidance,
+change the edit, and do not resend the same `failureFingerprint`. If the
+dashboard has a history conflict, read fresh context before inspecting again.
+If responsive geometry fails, inspect the affected Grid or Stack and split the
+content into a smaller responsive parent when needed.
+
+A history conflict means the dashboard changed after the agent read it. Read a
+fresh context and inspect the affected areas. A responsive geometry error means
+a Grid or Stack cannot fit the requested content at one or more breakpoints.
+
+| Area | Examples |
+| --- | --- |
+| Console authoring | Templates, datastreams, mappings, automations, and versions |
+| Studio authoring | Dashboards, pages, widgets, bindings, styles, validation, and publishing |
+| FlovaQL | Catalog, validation, query execution, and saved-query management |
+| Devices | Device lists and runtime state |
+| Firmware planning | Current template and datastream context |
+
+MCP does not expose direct device commands, provisioning, flashing, OTA
+publishing, or activation-code creation. Elevated or destructive operations
+require confirmation. MCP calls count against the organization plan quota.
+
+The MCP quota is shared by the workspace and resets every 30 days:
+
+| Plan | MCP calls |
+| --- | ---: |
+| Free | 250 |
+| Starter | 500 |
+| Pro | 2,500 |
+| Business | 10,000 |
+
+The Console billing page shows the current period's MCP usage. When the quota
+is exhausted, MCP returns `mcp_quota_exhausted` with the billing URL.
+
+Return to [Assistant](../assistant) for the relationship between external MCP
+clients and the in-editor Assistant.

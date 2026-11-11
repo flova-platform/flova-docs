@@ -1,0 +1,73 @@
+---
+title: "Quick start"
+description: "Create, connect, preview, and publish a small device dashboard."
+---
+
+This guide uses the ESP32 LED template from the [Console quick
+start](../../console/quickstart). It creates a dashboard with a Toggle connected
+to the LED datastream.
+
+Before you begin:
+
+- Sign in to [Studio](https://studio.flova.ir/).
+- Have access to a workspace and a published device template.
+- Make sure the template contains a readable or writable datastream.
+- To test a real device, claim and provision it in the [Flova web
+  application](https://pwa.flova.ir/).
+
+## 1. Create a dashboard
+
+1. Open Studio and choose **New dashboard**.
+2. Enter a name that tells the team what the dashboard is for.
+3. Select the device template that owns the datastreams you will use.
+4. Choose a starter:
+
+   | Starter | Use it when |
+   | --- | --- |
+   | Device overview | You want a starting page with common device information and status areas. |
+   | Blank | You want to decide the page structure yourself. |
+
+5. Create the dashboard.
+
+The device template controls which datastreams Studio can offer while you
+configure bindings. If the template is missing, open [Console
+templates](../../console/templates), publish a version, and check the workspace.
+
+## 2. Add a control
+
+1. Open the **Widgets** panel.
+2. Find **Toggle** and drag it onto the canvas.
+3. Select the widget. The Inspector opens on the right.
+4. Open the data or binding section.
+5. Choose the LED datastream, or a matching writable boolean datastream in
+   your own template.
+6. Move or resize the Toggle so it is easy to use.
+
+A boolean datastream fits a Toggle. A numeric datastream fits a Slider or
+Number Control. A read-only datastream can display a value, but it cannot
+receive a write from a control that needs write access.
+
+## 3. Preview
+
+Use the breakpoint control to check mobile, tablet, and desktop. Switch from
+design mode to preview mode to try navigation and interaction without the
+editor controls.
+
+Preview helps with layout and interaction wiring. It does not prove that a
+physical device is online or that it has reported a fresh value. For a live
+check, open the device in the web application and compare it with [Console
+monitoring](../../console/monitor).
+
+## 4. Publish
+
+Wait for the draft save to settle, then choose **Publish** and confirm the
+version. Saving the draft alone does not update what an end user sees.
+
+Open the [Flova web application](https://pwa.flova.ir/), open the claimed
+device, and open its dashboard. For the ESP32 example, change the Toggle and
+check the built-in LED.
+
+If the Toggle cannot find the datastream, check the template version, exact
+technical key, boolean type, write access, active workspace, and your Studio
+permissions. If preview works but the device does not change, check device
+status, firmware key, access mode, and the event timeline.

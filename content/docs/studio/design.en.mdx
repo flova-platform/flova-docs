@@ -1,0 +1,51 @@
+---
+title: "Design and styling"
+description: "Control layout, typography, colors, assets, and visual states."
+---
+
+Start with layout and content, then style the page. The Inspector separates
+visual design from data and behavior.
+
+| Area | Use it for |
+| --- | --- |
+| Position and size | Location, width, height, alignment, and rotation. |
+| Spacing | Margins, padding, and child gaps. |
+| Background | Solid color, gradient, opacity, or theme color. |
+| Border and corners | Border style, width, color, and radius. |
+| Effects | Shadows, blur, and supported effects. |
+| Text and font | Family, size, weight, line height, alignment, and color. |
+| Widget presentation | Properties specific to charts, gauges, controls, or navigation. |
+
+## Layout first
+
+1. Set a useful widget size.
+2. Align it with nearby content.
+3. Check wrapping and minimum size.
+4. Add internal padding.
+5. Check parent overflow.
+6. Repeat at mobile, tablet, and desktop.
+
+Grid and Stack have their own spacing and alignment controls. A small parent
+change is easier to maintain than many child-specific offsets.
+
+Theme tokens such as $colors.primary, $colors.text, and
+$typography.fontFamily keep values consistent. Use a direct value for a
+deliberate exception. Check contrast for labels, controls, disabled states,
+and chart lines.
+
+The Image widget can use an uploaded asset or supported URL. Choose a fit that
+keeps the important part visible at every breakpoint. Use the Icon widget for
+a Lucide icon, and provide nearby text when the meaning is not obvious.
+
+Test Persian and Latin text separately. They can wrap differently at the same
+width. If an HTML Widget needs a font, load it inside the widget because page
+styles do not cascade into the sandbox.
+
+## Visual review
+
+- Text is readable on its background.
+- Controls show normal, active, disabled, and error states.
+- Charts remain legible with legends and time labels.
+- Images use the intended crop.
+- Effects do not hide borders or labels.
+- Long, empty, and unavailable values still fit.

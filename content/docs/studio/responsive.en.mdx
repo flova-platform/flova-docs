@@ -1,0 +1,42 @@
+---
+title: "Responsive layouts"
+description: "Adapt dashboard pages for mobile, tablet, and desktop."
+---
+
+Studio stores layout information for mobile, tablet, and desktop breakpoints.
+A dashboard is ready when its content remains readable and usable at all three
+sizes.
+
+1. Select the page.
+2. Choose a breakpoint in the editor bar.
+3. Arrange the page.
+4. Check containers, wrapping, controls, and overlays.
+5. Repeat at the other breakpoints.
+6. Use preview to test navigation and interaction at each size.
+
+| Layout approach | Use it when | Watch for |
+| --- | --- | --- |
+| Absolute placement | A small composition needs exact positions. | Overlap, clipping, and long labels. |
+| Stack | Content should flow vertically. | Child heights and content length. |
+| Grid | Items should share columns or tracks. | Minimum widths, overflow, and collapse. |
+| Area | You need a named region or parent. | Parent size and child selection. |
+
+On mobile, check the first screen before scrolling. Navigation must not cover
+content. Controls need room for touch. Persian labels, technical keys, and
+numbers must not cause horizontal scrolling. Sheets and drawers need a usable
+close path. Tables need sensible density and an empty state.
+
+On tablet, check that columns do not become too narrow. On desktop, check that
+wide content does not create long empty spaces or push controls away from the
+title.
+
+| Check | Mobile | Tablet | Desktop |
+| --- | --- | --- | --- |
+| Navigation | Reachable and clear | Easy to scan | Uses width without dominating |
+| Text | Wraps without clipping | Readable line length | Does not become too wide |
+| Controls | Comfortable touch area | Clear grouping | Consistent alignment |
+| Charts | Legible labels | Useful plot area | Uses width without excess space |
+| Tables | Sensible density | Understandable columns | Uses available width |
+
+Review the responsive layout after data and style changes. Real content often
+reveals problems that placeholders hide.

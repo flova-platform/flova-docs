@@ -2,5 +2,6 @@
   "title": "Studio",
   "description": "Build dashboards.",
   "icon": "PanelsTopLeft",
-  "root": true
+  "root": true,
+  "pages": ["overview", "quickstart", "editor", "pages", "widgets", "data", "design", "interactions", "responsive", "assistant", "mcp", "publish", "support"]
 }

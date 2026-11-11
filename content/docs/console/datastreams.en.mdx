@@ -3,7 +3,7 @@ title: "Datastreams"
 description: "Define channel keys, values, access, defaults, and hardware mappings."
 ---
 
-A datastream is a named value that a device reports, receives, or stores. Console uses it in device details, dashboards, automations, telemetry, and FlovaQL.
+A datastream is a named value that a device reports, receives, or stores. Its definition is shared by device details, Studio dashboards, automations, telemetry, and FlovaQL.
 
 ## Add a datastream
 
@@ -15,7 +15,7 @@ A datastream is a named value that a device reports, receives, or stores. Consol
 6. Set the default, safe value, sampling, and other limits where the form provides them.
 7. Save the datastream, then publish the template version from **Versions**.
 
-The technical key is the stable identifier used by firmware, Studio, automations, API calls, and FlovaQL. It must start with an English letter and can contain English letters, numbers, and underscores, up to 64 characters. Use a key such as `temperature_c` or `LED`; do not use a translated label as the key.
+The technical key is the stable identifier used by firmware, Studio, automations, API calls, and FlovaQL. Treat it as part of the device contract. It must start with an English letter and can contain English letters, numbers, and underscores, up to 64 characters. Use a key such as `temperature_c` or `LED`; do not use a translated label as the key.
 
 ## Choose the value and access
 
@@ -27,15 +27,15 @@ The technical key is the stable identifier used by firmware, Studio, automations
 | Default or initial value | The value used when the channel starts | A predictable initial state |
 | Safe value | The value used by the device safety behavior | A safe output when the device needs one |
 
-Console checks the combination of hardware connection, value type, and access. Digital input and digital output channels use Boolean values. Analog input and PWM output channels use numbers. A virtual state is a read and write structured value, such as an RGB object.
+Console checks the hardware connection, value type, and access mode together. Digital input and digital output channels use Boolean values. Analog input and PWM output channels use numbers. A virtual state is a read and write structured value, such as an RGB object.
 
-Use **Read only** for a sensor that reports data. Use **Write only** for a command that the device accepts. Use **Read and write** when the device reports the current state and Flova can send a new state.
+Use **Read only** for a sensor that reports data. Use **Write only** for a command that the device accepts. Use **Read and write** when the device reports its current state and Flova can send a new state.
 
 For writable channels, you can enable scheduling in the web application. This lets an end user schedule a value or command for a later time.
 
 ## Map a channel to hardware
 
-The **Connection type** selects how the firmware should handle the channel:
+The **Connection type** tells the firmware how the channel is connected:
 
 - **Digital input** reads a Boolean signal from a pin.
 - **Digital output** writes a Boolean signal to a pin.
@@ -57,7 +57,7 @@ Console shows two different kinds of data:
 | Current value | What value is available now for this device and channel? |
 | History | What values and events were recorded over a selected time range? |
 
-The current value can change without creating the history row you expect, depending on the device transport and channel behavior. Use **Monitor** to inspect current channel values, then use the history or FlovaQL path to confirm stored telemetry. A device being online only proves presence, not that a particular channel has reported a value.
+A current value can change without creating the history row you expect, depending on the device transport and channel behavior. Use **Monitor** to inspect current channel values, then use the history or FlovaQL path to confirm stored telemetry. An online device proves presence only; it does not prove that a particular channel has reported a value.
 
 ## Common validation errors
 

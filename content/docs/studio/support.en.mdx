@@ -1,0 +1,35 @@
+---
+title: "Studio support"
+description: "Troubleshoot dashboard creation, data, layout, preview, and publishing."
+---
+
+Start with the dashboard context. Check the active workspace, device template,
+page, and selected source. Many problems come from different parts of the
+platform using different template versions.
+
+| Symptom | Check first | Next step |
+| --- | --- | --- |
+| No template appears | Workspace, access, and published version | Open [Console templates](../../console/templates). |
+| Dashboard cannot be created | Name, template, and available dashboard | Use a non-empty name and an available template. |
+| Datastream is missing | Template version, key, and access | Refresh the dashboard after publishing the template. |
+| Gauge or Toggle binding error | Source and value type | Choose a compatible source or transform. |
+| Chart is empty | Range, device, and telemetry | Check [Console monitoring](../../console/monitor) and FlovaQL. |
+| Table has no rows | Query filters or parameters | Run the query and check its output. |
+| Preview works but device does not | Device status, firmware key, and write access | Compare exact technical keys and the event timeline. |
+| Desktop works but mobile breaks | Breakpoint layout and content length | Review [responsive layouts](../responsive). |
+| Published dashboard is old | Draft was not published or wrong dashboard opened | Publish again and verify the web app route. |
+| Publish is unavailable | Role, validation, or stale session | Resolve errors, reload context, and check permissions. |
+
+Preview values help with layout. They do not prove that a device is online or
+that telemetry has been stored. A device can be online without a reported
+datastream value, and a latest value can exist while the selected history range
+has no readings. Check those views separately.
+
+If a setup flow stops, confirm that the page is assigned to the correct stage
+and contains the required control. Do not remove a protected setup page to
+work around a validation error.
+
+When asking for help, include the dashboard name, workspace, template, page,
+widget, source, exact error, whether the problem is in design, preview, or the
+published web app, and the relevant device event. Do not include passwords,
+tokens, API keys, or activation codes.

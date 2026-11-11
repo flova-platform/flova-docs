@@ -1,6 +1,55 @@
 ---
 title: "Studio overview"
-description: "Build dashboards."
+description: "Design dashboards and device experiences for the Flova web application."
 ---
 
-Build dashboards in Studio.
+Studio is the workspace for designing dashboards for connected devices. Choose
+a device template, arrange pages and widgets, connect widgets to device data,
+preview the result, and publish the dashboard for the Flova web application.
+
+Console owns device templates and datastreams. Studio uses those definitions
+when it offers data sources and validates a dashboard. The web application
+displays the published result for an end user.
+
+<Cards>
+  <Card title="Quick start" description="Create and publish a small dashboard from a device template." href="../quickstart" />
+  <Card title="The editor" description="Learn the canvas, panels, Inspector, preview, and draft workflow." href="../editor" />
+  <Card title="Pages" description="Organize dashboard pages and setup-flow screens." href="../pages" />
+  <Card title="Widgets" description="Choose widgets for data, layout, content, and user input." href="../widgets" />
+  <Card title="Data" description="Connect widgets to datastreams, devices, and saved FlovaQL queries." href="../data" />
+  <Card title="Design" description="Control layout, typography, colors, images, and visual styles." href="../design" />
+  <Card title="Interactions" description="Configure writes, commands, navigation, visibility, and motion." href="../interactions" />
+  <Card title="Responsive layouts" description="Adjust a dashboard for mobile, tablet, and desktop." href="../responsive" />
+  <Card title="Assistant" description="Use the in-editor assistant to inspect and plan dashboard changes." href="../assistant" />
+  <Card title="MCP" description="Connect Codex, Claude Code, Cursor, Antigravity, OpenCode, and other MCP clients." href="../mcp" />
+  <Card title="Publish" description="Review drafts, preview changes, and publish a dashboard version." href="../publish" />
+  <Card title="Troubleshooting" description="Find fixes for missing data, validation errors, and publishing problems." href="../support" />
+</Cards>
+
+## A useful way to think about Studio
+
+A dashboard has three parts:
+
+1. **Pages** define where a user goes. A dashboard can have regular pages,
+   shared app layout, setup pages, and protected system pages.
+2. **Widgets** display information or let a user take an action. Charts,
+   gauges, tables, toggles, images, text blocks, and navigation controls all
+   occupy a place on a page.
+3. **Bindings and settings** connect widgets to data and define how they look
+   and behave. A binding can read a datastream, write a value, or use a saved
+   FlovaQL query where the widget supports it.
+
+The editor saves a draft while you work. Users do not see a draft in the web
+application until you publish it.
+
+| If you need to... | Start here |
+| --- | --- |
+| Define a device template or datastream | [Console templates](../../console/templates) and [datastreams](../../console/datastreams) |
+| Create and activate a device | [Console devices](../../console/devices) and the [Console quick start](../../console/quickstart) |
+| Query stored telemetry | [FlovaQL](https://console.flova.ir/flovaql) |
+| Design the user-facing dashboard | Studio |
+| Use a published dashboard | [Flova web application](https://pwa.flova.ir/) |
+
+If a widget cannot find the value you expect, check the Console definition
+first. Studio can only offer sources from the selected template or the current
+workspace.

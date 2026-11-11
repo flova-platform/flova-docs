@@ -3,7 +3,7 @@ title: "Templates and versions"
 description: "Define a device template, connect it to the rest of Flova, and publish safe changes."
 ---
 
-A template describes the inputs, outputs, commands, and firmware settings that a group of devices shares. Dashboards in [Studio](https://studio.flova.ir/), FlovaQL queries, automations, and OTA releases use the template as their connection point.
+A template defines the inputs, outputs, commands, and firmware settings shared by a group of devices. [Studio](https://studio.flova.ir/) dashboards, FlovaQL queries, automations, and OTA releases use the template as their connection point.
 
 ## Create a template
 
@@ -36,7 +36,7 @@ The **Hardware settings** panel contains board-level options such as the status 
 
 ## Publish a version
 
-Console keeps changes in a version instead of applying every edit immediately to active devices.
+Console keeps edits in a version instead of applying every change immediately to active devices.
 
 1. Add or edit the channels, firmware parameters, and automation graph.
 2. Open **Versions** and review the version number and validation status.
@@ -65,4 +65,4 @@ Open **Versions**, find an archived version, and choose **Restore version**. Con
 - **A version cannot be published:** open the validation message, then fix missing channels, duplicate keys, invalid pins, or an incomplete automation graph.
 - **A template should disappear from daily work:** archive it from **Settings**. This also archives its active devices, so review the affected device list first.
 
-For the channel fields used in a template, see [Datastreams](./datastreams). For the first complete device flow, see [Quick start](./quickstart).
+For the channel fields used in a template, see [Datastreams](../datastreams). For the first complete device flow, see [Quick start](../quickstart).

@@ -1,0 +1,38 @@
+---
+title: "Interactions and behavior"
+description: "Configure writes, commands, navigation, conditions, and motion."
+---
+
+Interactions describe what happens when a user activates a widget. The widget
+still needs the right binding. An action cannot make an unavailable datastream
+writable.
+
+1. Select the widget.
+2. Open Actions or the interaction section.
+3. Choose the action type shown for that widget.
+4. Select the target page, device, datastream, or command value.
+5. Add a condition when needed.
+6. Preview true and false cases.
+7. Test the published dashboard with a permitted user and device.
+
+| Pattern | Suitable widget | Review |
+| --- | --- | --- |
+| Write a boolean | Toggle or Button | Writable datastream and correct mapping. |
+| Write a number | Slider, Number Control, or Button | Range, step, unit, and safe value. |
+| Choose an enum | Select | Options match the device contract. |
+| Navigate | Button or Navigation | Page slug and return path. |
+| Open a surface | Button, Sheet, or Drawer | Close and return behavior. |
+| Send a command draft | Supported controls or Button | Command fields and result state. |
+
+Conditions run an action only when prerequisites are true. Keep them readable
+and test both directions. Visibility changes what a user sees, but it is not an
+access-control boundary. If hiding a child changes layout, decide whether the
+parent should collapse, keep space, or show a replacement message.
+
+Motion should explain a state change or surface transition. Preview enter and
+exit behavior for navigation, sheets, drawers, and status changes. Do not use
+motion to hide an error or make a control difficult to operate.
+
+Before publishing, check that every writable action has a compatible binding,
+the target is correct, failed writes have a visible result, navigation works,
+and hidden content does not remove required setup controls.

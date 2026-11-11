@@ -1,0 +1,75 @@
+---
+title: "Widgets"
+description: "Choose, add, connect, and configure widgets in Studio."
+---
+
+Widgets are the building blocks of a dashboard. Some display data, some accept
+input, and some organize other widgets. Add one from **Widgets**, place it on
+the canvas, then configure content, data, appearance, and behavior in the
+Inspector.
+
+| Category | Widgets | Use it for |
+| --- | --- | --- |
+| Layout | Area, Stack, Grid, Repeater | Grouping content and repeatable structure. |
+| Content | Text, Icon, Image, HTML Widget | Labels, images, icons, and custom presentation. |
+| Data | Gauge, Chart, Table, Alarm list | Current values, history, query results, and alarms. |
+| Input | Toggle, Slider, Color, Countdown, Select, Number, Duration, Text Input, Button | User input and device commands. |
+| Navigation | Navigation | Moving between pages or opening a navigation surface. |
+| Overlay | Sheet, Drawer | Content above the current page. |
+
+| Widget | Good starting point | Common requirement |
+| --- | --- | --- |
+| Gauge | Current numeric or boolean value | A compatible binding and useful range. |
+| Chart | Telemetry over a time range | One or more series and a supported source. |
+| Table | Query results | A saved FlovaQL query and column configuration. |
+| Alarm list | Device alarms and events | Scope and display options. |
+| Text | Title, label, or description | Text content and optional binding. |
+| Image | Product or device imagery | An uploaded asset or supported URL. |
+
+Match input widgets to the datastream. Use Toggle for boolean values, Slider
+or Number Control for numbers, Select for enums, Color for RGB commands,
+Duration for seconds, Text Input for text, and Button when the action matters
+more than a persistent value.
+
+Read and write access are separate. A widget may display a read-only value
+while remaining unable to send a command. Check Console access mode and the
+Studio binding.
+
+## Custom HTML
+
+The HTML Widget accepts sandboxed HTML, CSS, and JavaScript. Parent Studio
+styles do not cascade into it, so keep required styles inside the widget.
+
+Connected values are exposed through window.FlovaBridge. Binding slots are
+indexed as input_0 through input_7.
+
+~~~html
+<script>
+  const bridge = window.FlovaBridge;
+  bridge.setCallbacks({
+    onValueUpdated: (item) => {
+      document.querySelector("#value").textContent = String(item?.value ?? "");
+    },
+  });
+  bridge.getValue(0).then((item) => {
+    document.querySelector("#value").textContent = String(item?.value ?? "");
+  });
+</script>
+~~~
+
+The widget cannot use network requests, storage, forms, external scripts,
+arbitrary stylesheets, or frames. Use `onError` to surface rejected bridge
+calls. `getValues()`, `getTheme()`, and `onThemeUpdated` are available when the
+widget needs all inputs or theme updates.
+
+Keep custom HTML self-contained. Test it in preview with the intended binding,
+then check the published dashboard.
+
+## Add a widget
+
+1. Search Widgets by name or category.
+2. Drag a widget onto the page.
+3. Select it on the canvas or in Layers.
+4. Give it a useful layer name.
+5. Configure content and data before detailed styling.
+6. Test preview and every breakpoint.

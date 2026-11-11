@@ -1,0 +1,72 @@
+---
+title: "FlovaAI"
+description: "Ask questions about workspace data and use supported AI actions in Console."
+---
+
+FlovaAI is the AI workspace in Console. Use it to ask questions about devices,
+datastreams, telemetry, templates, and automations. It can present query
+results as tables or charts and can ask for confirmation before an operation
+changes workspace data or writes a value to a device.
+
+FlovaAI works inside the active workspace and follows the same organization
+permissions and data boundaries as Console.
+
+## Start a conversation
+
+1. Open [Console](https://console.flova.ir/).
+2. Check the active workspace and selected template.
+3. Open FlovaAI or start a new conversation.
+4. Ask one focused question.
+5. Review the query, result, or action shown.
+6. Approve a write or workspace change only after checking its target and value.
+
+Useful questions include:
+
+- Which devices are offline?
+- Show today's energy readings as a table.
+- Compare temperature history for two devices.
+- Which datastreams belong to this template?
+- Explain why this automation did not run.
+
+## Supported work
+
+| Task | Result |
+| --- | --- |
+| Inspect the Flova catalog | Available templates, devices, datastreams, and resources. |
+| Query with FlovaQL | A validated query with rows, a table, or a chart when supported. |
+| Inspect templates | Template and datastream structure in the active workspace. |
+| Read automation context | The current automation draft and its references. |
+| Write a datastream | A prepared device write with confirmation before sending. |
+| Edit supported resources | Supported template, datastream, mapping, or automation changes after confirmation. |
+
+A natural-language answer can be wrong when a question is ambiguous. Open the
+result table or chart, check the time range, and use FlovaQL directly when you
+need a reproducible query.
+
+## Read a result
+
+| Check | Why |
+| --- | --- |
+| Time range | A short range can omit older readings. |
+| Device and template | The same key can exist on different resources. |
+| Units and type | Numeric values and boolean states need different interpretation. |
+| Empty result | The filter may be valid but match no readings. |
+| Query text | Use it in FlovaQL to reproduce or refine the result. |
+
+## Writes and confirmations
+
+A write should show the target device, datastream, and value. A template,
+datastream, mapping, or automation edit should show what will change and ask
+for confirmation when required.
+
+Before approving:
+
+1. Check the workspace.
+2. Check the target resource.
+3. Check the value or edit.
+4. Check the expected effect.
+5. Approve only when it matches your intent.
+
+Do not paste passwords, API keys, activation codes, or other credentials into a
+conversation. FlovaAI usage is counted as AI credit in workspace billing.
+Review remaining credit and plan limits in [Billing](../billing).

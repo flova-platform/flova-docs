@@ -1,0 +1,47 @@
+---
+title: "The Studio editor"
+description: "Understand the canvas, panels, Inspector, preview, and draft workflow."
+---
+
+The Studio editor has a canvas in the middle, an authoring panel on the left,
+and an Inspector on the right. The canvas shows the active page at the
+selected breakpoint. The panels change the dashboard structure. The Inspector
+changes the selected page or widget.
+
+| Area | What it does |
+| --- | --- |
+| Canvas | Select, move, resize, and arrange pages and widgets. |
+| Pages | Open, create, reorder, duplicate, and manage setup-flow pages. |
+| Layers | Inspect nesting and stacking order. |
+| Widgets | Search the library and add widgets. |
+| Data | Review datastreams available to the dashboard. |
+| Assistant | Review supported dashboard proposals. |
+| Inspector | Edit content, design, bindings, actions, visibility, and advanced settings. |
+| Editor bar | Switch design and preview, choose a breakpoint, undo, redo, and publish. |
+
+Select the page background for page settings. Select a widget for widget
+settings. If the Inspector is empty, check that an object is selected and that
+the editor is in design mode.
+
+## A normal editing pass
+
+1. Select the page and breakpoint.
+2. Add or select a widget.
+3. Change one group of settings in the Inspector.
+4. Check the canvas.
+5. Try the behavior in preview mode.
+6. Check the next breakpoint.
+7. Wait for the draft save before leaving.
+
+Design mode exposes handles, drag targets, layout guides, and the Inspector.
+Preview mode hides the editing surface and lets you try the dashboard as a
+user would see it. Preview is not a physical device check.
+
+Container widgets such as Area, Stack, and Grid can own other widgets. Use
+Layers when an item is difficult to select, two widgets overlap, or a child
+does not move with the expected parent. Rename layers with useful names such
+as Room temperature or Pump control.
+
+Studio records dashboard edits in draft history. If another session changes the
+dashboard, read the latest context before applying a later edit. Publishing is
+a separate action. See [Publish](../publish).

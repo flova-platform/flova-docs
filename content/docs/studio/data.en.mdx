@@ -1,0 +1,55 @@
+---
+title: "Data and bindings"
+description: "Connect dashboard widgets to datastreams, device values, and FlovaQL."
+---
+
+A binding tells Studio where a widget gets its value or where it sends a write.
+The dashboard template provides the main datastream list. Some widgets can use
+a specific device source or a saved FlovaQL query.
+
+| Source | Best for | Examples |
+| --- | --- | --- |
+| Template datastream | A dashboard reusable across devices of one template | Gauge, Toggle, Slider, and common controls |
+| Device datastream | A dashboard tied to a particular device | Device-specific status |
+| Saved FlovaQL query | Historical, filtered, grouped, or tabular results | Chart series and Table rows |
+| Runtime or system value | Product-owned context | Current device and setup status |
+
+## Connect a widget
+
+1. Select the widget.
+2. Open its Data, Binding, or value-source section.
+3. Choose the source type.
+4. Select the template, device, datastream, or query.
+5. Choose a slot when the widget has more than one input.
+6. Apply a transform only when the source needs a type or range change.
+7. Test empty, loading, and populated states in preview.
+
+Use the technical key when comparing Studio with firmware or Console. A
+display name can change. The technical key identifies the channel in the
+platform contract.
+
+Transforms can convert a source to a number or boolean, but they do not make
+invalid data meaningful. For numeric controls, check range and unit. For
+boolean controls, check that both states have a clear meaning. For enums, keep
+options aligned with the device template or command draft.
+
+## Charts and tables
+
+Charts can display multiple series. Give each series a clear label and choose a
+time range that fits the screen. If a chart is empty, check stored readings,
+range, selected device, source type, and query results in FlovaQL.
+
+A Table uses a saved FlovaQL query and maps query columns to table columns.
+Check query parameters, output columns, row density, page size, and empty-state
+text. If a query removes or renames a column, review the Table afterward.
+
+Current value and history are different views. A device may have a current
+reported value while the selected history range has no stored readings.
+
+| Symptom | Likely cause | Check |
+| --- | --- | --- |
+| Datastream is missing | Template is unpublished or different | Publish the template and confirm workspace. |
+| Binding is invalid | Source or value type does not match | Choose a compatible source or transform. |
+| Control displays but cannot write | Read-only access | Check Console access mode and action. |
+| Chart is empty | No readings in the range | Check telemetry history and range. |
+| Table has no columns | Query output changed | Run the query and inspect its output schema. |

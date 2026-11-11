@@ -1,0 +1,54 @@
+---
+title: "Pages and setup flows"
+description: "Organize dashboard pages, shared layout, and device setup screens."
+---
+
+Pages give a dashboard its navigation structure. Studio can also keep a shared
+app layout and protected system pages for device setup.
+
+| Page type | Purpose | Editing notes |
+| --- | --- | --- |
+| Regular page | A user-facing page such as Overview or History. | Rename, reorder, duplicate, and remove it when it is not required by a setup flow. |
+| Shared app layout | Navigation or a common shell around regular pages. | A change can affect several pages. |
+| Setup page | A screen used during device setup. | Add it to the setup flow only when its content matches the stage. |
+| Protected system page | A page required by the product flow. | Studio rules protect it from ordinary page operations. |
+
+## Create a regular page
+
+1. Open **Pages**.
+2. Choose **Add page**.
+3. Enter a name and slug.
+4. Add navigation or content widgets.
+5. Reorder the page.
+6. Preview it from the navigation control.
+
+Keep slugs short, stable, and unique. When you duplicate a page, review every
+binding and action because the copy may still point to the original source.
+
+## Shared layout
+
+Use shared app layout for navigation, a device switcher, or content that
+surrounds several pages. Put page-specific content on the regular page. Check
+the shared layout and page together in preview so navigation does not cover
+content.
+
+## Setup-flow pages
+
+A guided setup flow can include stages for Bluetooth, Wi-Fi, provisioning,
+reconnection, success, and error. A page assigned to a setup stage cannot be
+removed while it is assigned. Removing that assignment or deleting the page can
+leave the flow incomplete.
+
+Setup screens need the widgets expected by their stage. A Wi-Fi screen needs
+network inputs and a submit action. A success screen needs a way to continue.
+Follow the roles shown by Studio instead of reusing a setup page for ordinary
+dashboard content.
+
+## Page review
+
+- Every page has a clear name and unique slug.
+- Navigation reaches every user-facing page.
+- Shared layout does not cover content at any breakpoint.
+- Setup pages are assigned to the correct stage.
+- Duplicated pages use the intended bindings and actions.
+- Preview opens on the intended first page.

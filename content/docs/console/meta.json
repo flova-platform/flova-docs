@@ -3,18 +3,5 @@
   "description": "Manage devices and data.",
   "icon": "Settings2",
   "root": true,
-  "pages": [
-    "overview",
-    "quickstart",
-    "templates",
-    "datastreams",
-    "automations",
-    "devices",
-    "monitor",
-    "ota",
-    "workspace",
-    "developers",
-    "billing",
-    "support"
-  ]
+  "pages": ["overview", "quickstart", "templates", "datastreams", "automations", "devices", "monitor", "ota", "workspace", "developers", "flovaai", "billing", "support"]
 }

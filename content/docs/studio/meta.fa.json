@@ -1,6 +1,7 @@
 {
-  "title": "Studio",
+  "title": "استودیو",
   "description": "ساخت داشبورد.",
   "icon": "PanelsTopLeft",
-  "root": true
+  "root": true,
+  "pages": ["overview", "quickstart", "editor", "pages", "widgets", "data", "design", "interactions", "responsive", "assistant", "mcp", "publish", "support"]
 }

@@ -3,7 +3,7 @@ title: "Remote updates (OTA)"
 description: "Publish a firmware release, create a rollout, and handle failed devices safely."
 ---
 
-OTA lets you publish a firmware binary and send it to compatible devices over the network. A release is the uploaded firmware package. A rollout is the operation that selects devices and sends that release.
+OTA sends a published firmware binary to compatible devices over the network. The **release** is the uploaded firmware package. The **rollout** is the operation that selects devices and sends that release.
 
 ## Publish a firmware release
 
@@ -13,7 +13,7 @@ OTA lets you publish a firmware binary and send it to compatible devices over th
 4. Let Console read the version and target from a Flova firmware package, or enable the custom file option and enter the version and target details.
 5. Add release notes if needed and publish the file.
 
-The upload has separate preparation, file upload, and release registration stages. If a stage fails, use the retry action after checking the network and the file. A file that was uploaded to storage is not a rollout until the release registration succeeds.
+The upload has separate preparation, file upload, and release registration stages. If a stage fails, check the network and file, then use the retry action. A file uploaded to storage is not a rollout until release registration succeeds.
 
 ## Create a rollout
 
@@ -49,7 +49,7 @@ Open the rollout row to inspect its devices, current firmware, update result, an
 - **Cancel** stops the remaining work. Devices already updated stay updated.
 - **Retry failed** creates another attempt for devices with a failed result when the rollout allows it.
 
-Use the device list and [Monitor](./monitor) together. The rollout result describes the update operation. Monitor shows whether the device reconnects and reports after the update.
+Use the device list and [Monitor](../monitor) together. The rollout result describes the update operation. Monitor shows whether the device reconnects and reports after the update.
 
 ## Common errors
 
