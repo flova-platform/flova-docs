@@ -119,6 +119,12 @@ Keep a wired upload path available while tuning TLS, memory, or OTA behavior.
 
 ## Universal firmware
 
+`FLOVA_SETUP_PASSWORD` is optional and defaults to `nullptr` (an open setup AP).
+For protected setup, define it before including the SDK, or pass a device-unique
+8–63 character WPA password to the universal constructor. BLE compositions
+require device-unique proof of possession through their constructor or
+`FLOVA_SETUP_PROOF_OF_POSSESSION` (1–64 characters).
+
 Use a universal composition when Flova should own the complete device image:
 
 ```cpp

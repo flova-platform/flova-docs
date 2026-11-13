@@ -49,3 +49,16 @@ Extra usage is not charged automatically. Check the meter and plan before adding
 - **The purchase button is unavailable:** check that you are the workspace owner or have billing management permission.
 
 Use [Notifications](https://console.flova.ir/notifications) for quota and payment messages. Contact [Support](https://console.flova.ir/support) with the workspace and payment status when the billing page shows an error.
+
+## Telemetry requests per device
+
+| Plan | Maximum requests per minute per device |
+| --- | ---: |
+| Free | 1 |
+| Starter | 60 |
+| Pro | 300 |
+| Business | 1,200 |
+
+All datastreams on a device share this request budget. A publish batch counts as one request, while each reading in it still counts toward the workspace's existing billing-period allowance. These are request ceilings, not promised refresh speeds. The server uses one-minute windows; reconnecting does not reset the counter, and retrying an already admitted Device Link message does not consume another request. Plan changes retain the requests already used in the current window.
+
+Device Link asks the SDK to wait until the next window when the budget is exhausted. The SDK keeps the latest pending values. Heartbeats, provisioning, configuration, command acknowledgements, and error reports remain available. Ordinary sensor readings belong in charts and history; operational logs show connection changes, commands, explicit events, meaningful state changes, and failures.

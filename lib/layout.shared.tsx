@@ -18,8 +18,8 @@ export const docsSections = [
   },
   {
     slug: 'sdk',
-    en: { title: 'SDK', description: 'Build Flova firmware.' },
-    fa: { title: 'SDK', description: 'ساخت firmware فلووا.' },
+    en: { title: 'SDK', description: 'Build devices with Flova SDK.' },
+    fa: { title: 'SDK', description: 'ساخت دستگاه با SDK فلووا.' },
   },
   {
     slug: 'app',

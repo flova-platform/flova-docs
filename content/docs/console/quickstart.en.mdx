@@ -31,7 +31,12 @@ Use the technical key `LED` exactly as shown. The dashboard will use this key to
 
 Create a project folder, install the published `FlovaSDK` package, add the universal firmware code, then connect the board over USB and upload it. Choose the instructions for your tool:
 
-See the [Flova Firmware repository](https://github.com/flova-platform/flova-firmware/) for more information and examples.
+See the [Flova SDK repository](https://github.com/flova-platform/flova-sdk/) for more information and examples.
+
+`FLOVA_SETUP_PASSWORD` is optional and defaults to `nullptr` (an open setup AP).
+For protected setup, define it before including the SDK, or pass a device-unique
+8–63 character WPA password to the universal constructor. Use the password
+printed on that device's label; do not ship a shared password.
 
 <Tabs items={['PlatformIO', 'Arduino IDE']} defaultIndex={1}>
   <Tab>

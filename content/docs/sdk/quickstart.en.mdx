@@ -34,6 +34,11 @@ creating a device from it.
 
 ## 2. Install and flash universal firmware
 
+`FLOVA_SETUP_PASSWORD` is optional and defaults to `nullptr` (an open setup AP).
+For protected setup, define it before including the SDK, or pass a device-unique
+8–63 character WPA password to the universal constructor. Print it on that
+device's label; never ship a shared setup password.
+
 The universal composition owns the setup flow, device connection, hardware
 mapping, and normal firmware lifecycle. Choose your tool:
 

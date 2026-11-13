@@ -124,6 +124,13 @@ pio run -t upload
 
 ## Universal Firmware
 
+`FLOVA_SETUP_PASSWORD` اختیاری است و مقدار پیش‌فرض آن `nullptr` است؛ بدون
+رمز، شبکهٔ راه‌اندازی باز خواهد بود. برای محافظت از راه‌اندازی، آن را پیش از
+include کردن SDK تعریف کنید یا رمز WPA اختصاصی هر دستگاه با طول ۸ تا ۶۳
+کاراکتر را به سازندهٔ universal بدهید.
+نسخهٔ BLE به proof of possession اختصاصی هر دستگاه با طول ۱ تا ۶۴ کاراکتر
+نیاز دارد که از طریق سازنده یا `FLOVA_SETUP_PROOF_OF_POSSESSION` تنظیم می‌شود.
+
 وقتی می‌خواهید Flova کل Composition مربوط به Device را مدیریت کند، از
 Universal Firmware استفاده کنید:
 

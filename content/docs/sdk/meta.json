@@ -1,6 +1,6 @@
 {
   "title": "SDK",
-  "description": "Build Flova firmware.",
+  "description": "Build devices with Flova SDK.",
   "icon": "Terminal",
   "root": true,
   "pages": ["overview", "quickstart", "install", "datastreams", "provisioning", "configuration", "transports", "lifecycle", "advanced", "reference"]
