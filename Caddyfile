@@ -1,8 +1,8 @@
 :8080 {
   root * /srv
   encode gzip zstd
-  redir /docs /fa/docs/ 308
-  redir /docs/* /fa{uri} 308
+  redir /docs /en/docs/ 308
+  redir /docs/* /en{uri} 308
   @health path /_health
   respond @health 200
   file_server
