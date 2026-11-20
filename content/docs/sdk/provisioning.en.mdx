@@ -48,9 +48,9 @@ the selected universal composition.
 
 ## Factory reset
 
-Use the SDK's factory reset entry point when the product needs to clear Flova
-identity and wait for another handoff. Resetting Flova state does not silently
-change the application's Wi-Fi, web server, GPIO, or other network state.
+Use [`factoryReset()`](../reference/#provisioning-and-wi-fi) when the product needs
+to clear Flova state and restart. On managed Wi-Fi targets this also clears
+managed network credentials. The application still owns unrelated product data.
 
 After provisioning, verify the device in Console. Check its online status,
 template, firmware target, and first datastream report separately.
@@ -87,8 +87,7 @@ accepted report.
 ## Application-owned web setup
 
 If your application owns Wi-Fi, a web server, or an alternate setup channel,
-compose `FlovaClient` explicitly. The managed facade no longer exposes
-`attachProvisioning()`. The following ESP32 fragments fit into an existing
+compose `FlovaClient` explicitly. The following ESP32 fragments fit into an existing
 application; they are not a standalone web server.
 
 <Tabs items={['Compose the client', 'Receive the handoff']}>
@@ -164,12 +163,10 @@ leaving the installation.
 
 ## Recovery and reset
 
-Use `startProvisioning()` or the facade's factory reset operation when a product
-needs to replace the Flova identity. Define the user action clearly, such as a
-physical button hold or an authenticated maintenance command. A reset should
-clear Flova-private state and return to setup; it should not silently erase
-application data or Wi-Fi credentials unless the product explicitly chooses to
-do that.
+Use `startProvisioning()` to replace the Flova identity, or `factoryReset()`
+when the user intends to reset the device. Define the action clearly, such as a
+physical button hold or an authenticated maintenance command, and tell the user
+which data will be cleared. See the [API reference](../reference/#provisioning-and-wi-fi) for the difference.
 
 If bootstrap fails, check the setup channel, Link URL, token lifetime,
 clock readiness, storage availability, and device claim separately. Keep error

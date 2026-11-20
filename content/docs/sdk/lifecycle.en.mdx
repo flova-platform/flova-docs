@@ -106,7 +106,7 @@ TLS readiness, stored session, and device timeline before retrying the rollout.
 
 ## Power-down and long work
 
-On targets that expose `prepareForPowerDown()`, keep polling from the board
+On targets that expose [`prepareForPowerDown()`](../reference/#firmware-restart-and-power), keep polling from the board
 loop while it drains Link work and flushes deferred stream values. Only sleep
 or cut power when it reports `FlovaPowerDownStatus::Ready`. A `Busy`,
 `Draining`, or `Failed` result is not permission to shut down. The application

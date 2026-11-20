@@ -104,7 +104,7 @@ Provisioning و Configuration را بررسی کنید.
 
 ## Power Down و کار طولانی
 
-در بردهایی که `prepareForPowerDown()` دارند، از حلقهٔ برد پیگیری کنید تا
+در بردهایی که [`prepareForPowerDown()`](../reference/#firmware-restart-and-power) دارند، از حلقهٔ برد پیگیری کنید تا
 کار Link و ذخیرهٔ مقادیر معوق تمام شود. فقط پس از `FlovaPowerDownStatus::Ready`
 دستگاه را به Sleep ببرید یا برق را قطع کنید. `Busy`، `Draining` و `Failed`
 مجوز خاموشی نیستند. سیاست خواب و کنترل برق با برنامه است.

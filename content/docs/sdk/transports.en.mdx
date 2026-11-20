@@ -18,16 +18,15 @@ See [Provisioning](../provisioning/) for first boot and Wi-Fi replacement and
 [Advanced firmware](../advanced/) for custom networks. Keep datastream keys,
 types, and handlers independent of network setup.
 
-## Flova Link and MQTT compatibility
+## Flova Link
 
 Use Flova Link for native SDK integrations. Link handles authentication,
 datastream binding, commands, reports, configuration, and reconnection. The
 managed ESP facade uses MQTT over TLS internally; you do not supply a broker
-client. In `0.5.0`, the old PubSubClient constructors and
-`begin(deviceId, deviceSecret)` examples are no longer supported. Move to
-managed setup or an explicitly composed Link integration. If you supply your own
+client. If you supply your own
 Link implementation, use `FlovaEsp32WithLink` or `FlovaEsp8266WithLink`; the
 injected service must outlive the facade.
+See [runtime status methods](../reference/#status-getters) for checks you can make from firmware.
 
 Do not disable TLS certificate or hostname verification to resolve a connection
 problem. Check network access, clock synchronization, and trust configuration

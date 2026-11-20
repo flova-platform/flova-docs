@@ -8,9 +8,8 @@ FlovaSDK is distributed as an Arduino and PlatformIO library for ESP32 and
 ESP8266. Linux applications use the CMake package. A portable device can use
 the embedded core with its own platform services.
 
-These guides target the `0.5.0` source tree. If your registry only offers an
-older release, [install from source](#install-from-source) rather than using
-its library with the snippets below. For browser builds, use [Flova IDE](../ide/).
+Install FlovaSDK `0.5.0` or a compatible release. You can also [install from
+source](#install-from-source) or build in the browser with [Flova IDE](../ide/).
 
 ## Pick the integration model first
 
@@ -158,8 +157,8 @@ scripts/export_sdk_release.sh "$HOME/FlovaSDK"
 
 - **Arduino IDE:** ZIP the exported `FlovaSDK` folder, then choose **Sketch →
   Include Library → Add .ZIP Library**. Use the exported package, not a ZIP
-  of the whole repository. Remove any older FlovaSDK copy from your sketchbook
-  if the IDE selects it instead.
+  of the whole repository. If Arduino IDE finds multiple copies, check the
+  build output to confirm it selected the exported library.
 - **PlatformIO:** Replace the registry `lib_deps` entry with the path to the
   export, such as `lib_deps = file:///home/you/FlovaSDK`. Use the absolute path
   on your machine and keep the board settings from the matching profile.

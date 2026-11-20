@@ -15,7 +15,7 @@ auto dryCalibration = FLOVA_SETTING(device, int64_t, "dry_adc", 3000);
 ```
 
 The key must match the setting declared in the published device template. The
-default is used until a valid remote value is available.
+default is used until a valid remote value is available. See [`FLOVA_SETTING`](../reference/#flova_setting) for registration and read methods.
 
 Read the setting from the local firmware state and clamp values when the
 hardware has a narrower safe range:
@@ -83,25 +83,19 @@ If a value is outside the application's safe range, keep the previous value and
 return a bounded rejection or diagnostic. A template limit is useful input, but
 it does not replace hardware-level validation.
 
-## Compatibility and rollback
+## Configuration recovery
 
-Configuration storage on managed ESP targets keeps the last active bank while
-installing a candidate. Firmware that writes version-2 bank pointers can read
-legacy version-1 records and migrates the pointer during a configuration
-transfer. Skipped cloud generations do not change which bank is safe to replace.
-
-Before installing firmware that can write version-2 pointers, make a full-flash
-backup. After migration, do not downgrade to firmware that only reads version-1
-pointers unless you restore the compatible backup or explicitly reprovision.
-Firmware rollback alone does not restore the storage layout. The migration
-does not automatically erase or format storage.
+Managed ESP firmware keeps the active configuration bank while installing a
+candidate. Skipping cloud generations does not change which bank can be safely
+replaced. Firmware rollback and configuration recovery are separate; keep and
+test an explicit [recovery path](../lifecycle/#recovery) before a rollout.
 
 ## Resource and capacity planning
 
 Embedded builds reserve fixed capacity for datastreams, parameters, text,
 history, command deduplication, hardware inputs and hardware outputs. Plan those
 capacities before adding many template items. Stream retention does not change
-board capacity, and `Device::resourcePlan()` is no longer available.
+board capacity.
 
 When a build reaches a capacity, the correct fix is usually to reduce the
 declared surface, increase the target's explicit resource budget, or choose a

@@ -76,6 +76,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
+  temperature.mode(flova::Mode::Sample);
   if (!led.tryOnWrite(setLed)) {
     Serial.println("Could not register led handler");
     return;
@@ -101,10 +102,10 @@ void loop() {
 
 | بخش اسکچ | رفتار SDK |
 | --- | --- |
-| `FLOVA_DATASTREAM(...)` | ارجاع نوع‌دار برای کلیدی می‌سازد که به بزرگی و کوچکی حروف حساس است. تعریف سراسری به‌تنهایی اتصال یا دسترسی به Storage ندارد. |
-| `led.tryOnWrite(setLed)` | تابع اجرای فرمان LED را ثبت می‌کند. نتیجه نشان می‌دهد ثبت موفق بوده یا نه. |
-| `device.begin()` و `device.run()` | دستگاه را راه می‌اندازند و Setup، اتصال مجدد و فرمان‌ها را پیش می‌برند. موفقیت `begin()` به معنی آنلاین بودن نیست. |
-| `FLOVA_REPORT(temperature, sample)` | مشاهده را بدون اجرای Handler ثبت می‌کند. `accepted()` پذیرش محلی را نشان می‌دهد؛ برای تحویل، کنسول را بررسی کنید. |
+| [`FLOVA_DATASTREAM(...)`](../reference/#flova_datastream) | Handle کلید حساس به حروف را می‌سازد. پیش از شروع، Handler یا سیاستی مانند `mode(Sample)` را تنظیم کنید تا دیتاستریم ثبت شود. |
+| [`led.tryOnWrite(setLed)`](../reference/#flova_on_write) | تابع اجرای فرمان LED را ثبت می‌کند. نتیجه نشان می‌دهد ثبت موفق بوده یا نه. |
+| [`device.begin()`](../reference/#begin) و [`device.run()`](../reference/#run) | دستگاه را راه می‌اندازند و Setup، اتصال مجدد و فرمان‌ها را پیش می‌برند. موفقیت `begin()` به معنی آنلاین بودن نیست. |
+| [`FLOVA_REPORT(temperature, sample)`](../reference/#flova_report) | مشاهده را بدون اجرای Handler ثبت می‌کند. `accepted()` پذیرش محلی را نشان می‌دهد؛ برای تحویل، کنسول را بررسی کنید. |
 
 بررسی `millis()` هر پنج ثانیه نمونه می‌گیرد، بدون اینکه `run()` را منتظر بگذارد.
 

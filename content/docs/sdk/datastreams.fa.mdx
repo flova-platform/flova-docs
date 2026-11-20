@@ -16,11 +16,14 @@ auto relay = FLOVA_DATASTREAM(device, bool, "relay");
 ```
 
 در هستهٔ قابل‌حمل، از `device.datastream<bool>("relay")` استفاده کنید.
-دیتاستریم‌ها را پیش از `begin()` تعریف کنید؛ SDK هنگام اتصال، کلیدها را
+پیش از `begin()`، Handler یا سیاست ثبت کنید یا Handle نوع‌دار بگیرید؛ SDK هنگام اتصال، کلیدها را
 با قالب منتشرشده پیوند می‌دهد. تعریف در Firmware به‌تنهایی، بدون کلید متناظر
-در قالب، دیتاستریم را در کنسول نمایش نمی‌دهد.
+در قالب، دیتاستریم را در کنسول نمایش نمی‌دهد. تفاوت Handleها را در
+[`FLOVA_DATASTREAM`](../reference/#flova_datastream) ببینید.
 
 ## ماندگاری مقدار و تاریخچهٔ آفلاین
+
+امضای متدها و نتیجه‌ها در [سیاست‌های دیتاستریم](../reference/#stream-policies) آمده‌اند.
 
 در ESP32، ESP8266 و Linux مدیریت‌شده با Flova Link، آخرین مقدار به‌طور
 پیش‌فرض در RAM است (`PersistencePolicy::None`). سیاست آفلاین `KeepLatest`
@@ -89,6 +92,8 @@ bool enabled = FLOVA_READ(relay);      // مقدار Cache محلی
 <code>FLOVA_READ</code> و <code>value()</code> Cache محلی را می‌خوانند و
 درخواست Network نمی‌فرستند. <code>FLOVA_REPORT</code> یک مشاهده را ثبت
 می‌کند و Handler نوشتن را اجرا نمی‌کند.
+برای نمونه‌های بررسی نتیجه، [`FLOVA_REPORT`](../reference/#flova_report) و
+[`FLOVA_WRITE`](../reference/#flova_write) را ببینید.
 
 پیش از خواندن مقداری که ممکن است هنوز Restore یا دریافت نشده باشد،
 <code>FLOVA_HAS_VALUE</code> را بررسی کنید:

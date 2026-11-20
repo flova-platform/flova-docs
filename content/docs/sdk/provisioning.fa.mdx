@@ -93,8 +93,7 @@ Setup را یک State Machine بدانید، نه یک درخواست HTTP من�
 ## Web Setup تحت مالکیت برنامه
 
 اگر برنامه Wi-Fi، Web Server یا کانال راه‌اندازی را مدیریت می‌کند،
-`FlovaClient` را صریحاً با سرویس‌های برنامه ترکیب کنید. کلاس‌های مدیریت‌شده
-دیگر `attachProvisioning()` ندارند. قطعه‌کدهای ESP32 زیر را به برنامهٔ
+`FlovaClient` را صریحاً با سرویس‌های برنامه ترکیب کنید. قطعه‌کدهای ESP32 زیر را به برنامهٔ
 موجود اضافه کنید؛ این کدها یک Web Server مستقل نیستند.
 
 <Tabs items={['ترکیب Client', 'دریافت Handoff']}>
@@ -174,11 +173,12 @@ const auto result = client.provision(
 استفاده کنید. Trigger را روشن تعریف کنید؛ برای نمونه نگه داشتن یک Button
 فیزیکی یا یک Maintenance Command احراز هویت‌شده.
 
-Reset باید State خصوصی Flova را پاک کند و Device را به Setup برگرداند. Wi-Fi،
-Web Server، GPIO یا دادهٔ محصول را بی‌دلیل پاک نکنید، مگر اینکه محصول صریحاً
-چنین رفتاری بخواهد.
+برای عوض کردن هویت از `startProvisioning()` و برای بازنشانی کامل از
+`factoryReset()` استفاده کنید. بازنشانی کامل در Wi-Fi مدیریت‌شده اطلاعات ورود
+شبکه را هم پاک می‌کند. تفاوت را در [مرجع API](../reference/#provisioning-and-wi-fi)
+ببینید و پیش از عمل به کاربر بگویید چه داده‌ای پاک می‌شود.
 
-اگر Bootstrap شکست خورد، Setup Channel، URL از نوع HTTPS یا WSS، زمان سیستم،
+اگر Bootstrap شکست خورد، Setup Channel، نشانی Link، زمان سیستم،
 عمر Token، دسترسی Storage و Device Claim را جدا بررسی کنید. خطا را محدود نگه
 دارید و Token یا Secret را در پیام Diagnostic قرار ندهید.
 

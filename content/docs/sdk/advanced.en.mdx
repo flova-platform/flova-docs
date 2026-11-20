@@ -136,12 +136,13 @@ service only when the product actually owns that boundary.
 
 ## Custom Arduino application boundary
 
-Since `0.5.0`, `FlovaEsp32` and `FlovaEsp8266` manage SoftAP, Wi-Fi, and
+`FlovaEsp32` and `FlovaEsp8266` manage SoftAP, Wi-Fi, and
 restart policy. Your sketch still owns GPIO and sensors. If it must also own
 networking or restart decisions, follow the
 [application-owned setup walkthrough](../provisioning/#application-owned-web-setup).
 It shows how to compose `FlovaClient`, submit a validated handoff, and poll
 `client.run()` alongside the application's server and hardware work.
+See the [portable runtime API](../reference/#portable-runtime-and-adapter-apis) for adapter methods and examples.
 
 Keep the loop cooperative. A handler should update or queue application state,
 not wait for a second network request or perform a long blocking operation.

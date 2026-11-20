@@ -22,8 +22,10 @@ The portable API uses the same types:
 auto relay = device.datastream<bool>("relay");
 ```
 
-Declare streams before `begin()`. The SDK binds the declared keys when the
-device connects to the published template.
+Resolve streams before `begin()` by registering a handler, configuring a
+policy, or requesting a typed handle. The SDK binds the declared keys when the
+device connects to the published template. See [`FLOVA_DATASTREAM`](../reference/#flova_datastream)
+for the distinction between lazy and typed handles.
 
 ## Four directions of state
 
@@ -36,7 +38,8 @@ bool enabled = FLOVA_READ(relay);  // local cached value
 
 `FLOVA_READ` and `value()` read the local cache. They do not make a network
 request. `FLOVA_REPORT` records an observation. It does not call the write
-handler.
+handler. See [`FLOVA_REPORT`](../reference/#flova_report) and
+[`FLOVA_WRITE`](../reference/#flova_write) for examples with result handling.
 
 ## Follow a value through the SDK
 
@@ -95,6 +98,8 @@ bounded by the SDK build configuration, so check the returned value when your
 application accepts user-provided text.
 
 ## Persistence and offline history
+
+For function signatures and return values, see [stream policies](../reference/#stream-policies).
 
 On managed ESP32, ESP8266, and Linux with Flova Link, the latest stream value
 lives in RAM by default (`PersistencePolicy::None`). `KeepLatest` is the

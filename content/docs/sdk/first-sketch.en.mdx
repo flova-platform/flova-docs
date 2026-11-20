@@ -76,6 +76,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
+  temperature.mode(flova::Mode::Sample);
   if (!led.tryOnWrite(setLed)) {
     Serial.println("Could not register led handler");
     return;
@@ -101,10 +102,10 @@ void loop() {
 
 | In the sketch | What the SDK does |
 | --- | --- |
-| `FLOVA_DATASTREAM(...)` | Creates a typed handle to a case-sensitive key in the Device Type. A global declaration alone does not connect or read storage. |
-| `led.tryOnWrite(setLed)` | Registers the function that applies an LED command. The return value tells you whether registration worked. |
-| `device.begin()` and `device.run()` | Start the device, then keep advancing setup, reconnects, and incoming commands. `begin()` success does not mean the device is online. |
-| `FLOVA_REPORT(temperature, sample)` | Submits an observation without running the LED handler. `accepted()` confirms local acceptance; check Console for delivery. |
+| [`FLOVA_DATASTREAM(...)`](../reference/#flova_datastream) | Creates a handle to a case-sensitive key in the Device Type. Register a handler or set a policy, such as `mode(Sample)`, to resolve the stream before startup. |
+| [`led.tryOnWrite(setLed)`](../reference/#flova_on_write) | Registers the function that applies an LED command. The return value tells you whether registration worked. |
+| [`device.begin()`](../reference/#begin) and [`device.run()`](../reference/#run) | Start the device, then keep advancing setup, reconnects, and incoming commands. `begin()` success does not mean the device is online. |
+| [`FLOVA_REPORT(temperature, sample)`](../reference/#flova_report) | Submits an observation without running the LED handler. `accepted()` confirms local acceptance; check Console for delivery. |
 
 The `millis()` check samples every five seconds without making `run()` wait.
 
