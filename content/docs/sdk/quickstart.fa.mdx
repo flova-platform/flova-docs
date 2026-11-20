@@ -40,6 +40,10 @@ Universal Firmware را روی برد می‌ریزید، برد را راه‌�
 
 ## ۲. Universal Firmware را نصب و فلش کنید
 
+این راهنما برای سورس `0.5.0` است. اگر مدیر کتابخانه این نسخه را ندارد،
+روش نصب از سورس را در [راهنمای نصب](../install/) ببینید. برای Build و آپلود
+USB از مرورگر، نمونهٔ Universal ESP32 را در [Flova IDE](../ide/) انتخاب کنید.
+
 ترکیب یونیورسال راه‌اندازی، اتصال دستگاه، نگاشت سخت‌افزار و چرخهٔ معمول
 Firmware را مدیریت می‌کند. ابزار خود را انتخاب کنید:
 
@@ -93,7 +97,7 @@ pio project init --board esp32dev
 platform = espressif32
 board = esp32dev
 framework = arduino
-lib_deps = flova-platform/FlovaSDK@^0.3.12
+lib_deps = flova-platform/FlovaSDK@^0.5.0
 ```
 
 فایل `src/main.cpp` را با این کد جایگزین کنید:
@@ -167,12 +171,12 @@ Console یک QR code و کد فعال‌سازی دستی نشان می‌دهد
 ## رفتن به Custom Firmware
 
 Universal Firmware برای اولین دستگاه و محصولی مناسب است که ترکیب کامل آن
-را Flova مدیریت می‌کند. وقتی برنامه باید مالک Wi-Fi، GPIO، حسگرها، Web Server یا
-کانال راه‌اندازی دیگری باشد، از `FlovaEsp32` استفاده کنید.
+را Flova مدیریت می‌کند. اگر برنامه GPIO و حسگرها را کنترل می‌کند ولی
+راه‌اندازی و Wi-Fi همچنان با Flova است، از `FlovaEsp32` استفاده کنید.
+برای این نمونه، دیتاستریم Boolean قابل‌نوشتن با کلید دقیق `relay` منتشر کنید.
 
 ```cpp
 #include <Arduino.h>
-#include <WiFi.h>
 #include <FlovaSDK.h>
 
 FlovaEsp32 device;
@@ -184,15 +188,23 @@ void setRelay(bool enabled) {
 
 void setup() {
   pinMode(2, OUTPUT);
-  WiFi.begin("your-wifi", "your-password");
   FLOVA_ON_WRITE(relay, setRelay);
   device.begin();
 }
 
 void loop() {
-  device.run(WiFi.status() == WL_CONNECTED);
+  device.run();
 }
 ```
 
-برای ادامه، [Datastreamها](./datastreams)، [Provisioning](./provisioning) و
-[Transportها](./transports) را بخوانید.
+برای ادامه، [Datastreamها](../datastreams/)، [Provisioning](../provisioning/) و
+[Transportها](../transports/) را بخوانید.
+
+دستگاه تازه را با همان فرایند راه‌اندازی Flova در بالا فعال کنید. اگر برنامه
+شبکه یا کانال راه‌اندازی را خودش مدیریت می‌کند، به‌جای این کلاس از ترکیب
+صریح `FlovaClient` در [Firmware پیشرفته](../advanced/) استفاده کنید.
+
+در [مرجع API](../reference/) کاربرد توابع `FLOVA_*`، تفاوت نوشتن و گزارش،
+و روش بررسی نتیجه توضیح داده شده است.
+
+<Card title="گام بعد: اولین اسکچ سفارشی" description="دمای شبیه‌سازی‌شده را گزارش کنید و فرمان LED را در یک پروژهٔ ESP32 پردازش کنید." href="../first-sketch/" />

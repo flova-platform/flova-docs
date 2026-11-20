@@ -12,7 +12,7 @@ FlovaSDK را ببینید. به Classها و Typeهای داخلی که در ا
 
 | Type | کاربرد |
 | --- | --- |
-| <code>FlovaEsp32</code> | برنامهٔ سفارشی ESP32 با Flova Link یا MQTT اختیاری. |
+| <code>FlovaEsp32</code> | برنامهٔ سفارشی ESP32 با Wi-Fi مدیریت‌شده و Flova Link. |
 | <code>FlovaEsp8266</code> | برنامهٔ سفارشی ESP8266 با همان مدل Typeدار Datastream. |
 | <code>FlovaUniversalEsp32</code> | ترکیب کامل ESP32 با Provisioning و رفتار Device تحت مدیریت Flova. |
 | <code>FlovaUniversalEsp8266</code> | ترکیب کامل ESP8266. |
@@ -23,9 +23,11 @@ FlovaSDK را ببینید. به Classها و Typeهای داخلی که در ا
 
 | متد | کاربرد |
 | --- | --- |
-| <code>begin()</code> | Facade انتخاب‌شده را آماده می‌کند و Session را بازیابی یا آغاز می‌کند. |
-| <code>run()</code> | یک گام محدود از Connection، Configuration و پردازش فرمان را انجام می‌دهد. |
+| `begin()` | پس از ثبت Handlerها یک بار هنگام شروع فراخوانی کنید. موفقیت آن به معنی آنلاین شدن دستگاه نیست. |
+| `run()` | حتی آفلاین هم مرتب از حلقهٔ اصلی فراخوانی کنید؛ راه‌اندازی، اتصال مجدد، پیکربندی و فرمان‌ها را پیش می‌برد. |
 | <code>connected()</code> | وضعیت فعلی Connection مربوط به Transport را گزارش می‌کند. |
+| `ready()` | آمادگی دستگاه برای کار عادی را نشان می‌دهد، نه رسیدن یک گزارش خاص به کنسول. |
+| `lastError()` | در کلاس‌هایی که این متد را دارند، پس از خطای شروع آخرین خطا را بررسی کنید. |
 | <code>datastream&lt;T&gt;(key)</code> | یک مرجع Typeدار برای Datastream می‌دهد. |
 | <code>value()</code> | مقدار موجود در Cache محلی را می‌خواند. |
 | <code>write(value)</code> | یک فرمان محلی از طرف برنامه را اعمال می‌کند. |
@@ -34,28 +36,70 @@ FlovaSDK را ببینید. به Classها و Typeهای داخلی که در ا
 
 ## توابع کمکی Arduino
 
-~~~cpp
-FLOVA_DATASTREAM(device, bool, "relay")
-FLOVA_SETTING(device, double, "threshold", 35.0)
-FLOVA_ON_WRITE(relay, setRelay)
-FLOVA_WRITE(relay, true)
-FLOVA_READ(relay)
-FLOVA_REPORT(temperature, 23.4f)
-FLOVA_HAS_VALUE(relay)
-~~~
+این ماکروها شکل کوتاه متدهای نوع‌دار C++ هستند. کلید و نوع داده باید با
+نوع دستگاه منتشرشده یکسان باشند. حروف بزرگ و کوچک در کلید تفاوت دارند.
 
-توابع کمکی را پس از تعریف Device و پیش از <code>begin()</code> استفاده کنید.
-کلید فنی را در یک محل ثابت نگه دارید تا بین Firmware و Template تغییر نکند.
-اگر برنامه به Type یا رفتار مخصوص Target نیاز ندارد، از
-<code>&lt;FlovaSDK.h&gt;</code> شروع کنید.
+| تابع کمکی | متد معادل | کاربرد |
+| --- | --- | --- |
+| `FLOVA_DATASTREAM(device, bool, "relay")` | `device.stream<bool>("relay")` | ارجاع دیتاستریم را بعد از شیء دستگاه تعریف کنید. تعریف سراسری به‌تنهایی دیتاستریم را ثبت نمی‌کند و به حافظهٔ ماندگار دسترسی ندارد. |
+| `FLOVA_SETTING(device, double, "threshold", 35.0)` | `device.setting<double>("threshold", 35.0)` | تنظیم را با مقدار پیش‌فرض تعریف کنید. `threshold.value()` مقدار محلی را بدون درخواست شبکه می‌خواند. |
+| `FLOVA_ON_WRITE(relay, setRelay)` | `relay.onWrite(setRelay)` | پیش از `begin()`، Handler سخت‌افزار را ثبت کنید. برای بررسی موفقیت ثبت، از `relay.tryOnWrite(setRelay)` استفاده کنید. |
+| `FLOVA_WRITE(relay, true)` | `relay.write(true)` | تغییر محلی را از همان Handler فرمان راه دور درخواست کنید. `flova::WriteResult` را بررسی کنید. |
+| `FLOVA_REPORT(temperature, 23.4f)` | `temperature.report(23.4f)` | مشاهده را بدون فراخوانی Handler گزارش کنید. پذیرش محلی به معنی تحویل نیست. |
+| `FLOVA_HAS_VALUE(relay)` | `relay.hasValue()` | وجود مقدار محلی را بررسی کنید؛ مقدار می‌تواند بازیابی‌شده یا قدیمی باشد. |
+| `FLOVA_READ(relay)` | `relay.value()` | مقدار محلی را بدون درخواست شبکه بخوانید. اگر نبود مقدار مهم است، ابتدا `hasValue()` را بررسی کنید. |
+
+برای درخواست عمل از **write** و برای توصیف وضعیت مشاهده‌شده از **report**
+استفاده کنید. `relay.write(false)` درخواست خاموش کردن رله است؛
+`relay.report(false, flova::Origin::PhysicalInput)` گزارش این است که ورودی
+بازخورد، رله را خاموش دیده است. منشأ پیش‌فرض گزارش حسگر `flova::Origin::SensorRead` است.
+
+### ثبت Handler و بررسی شروع
+
+برای دیتاستریم Boolean قابل‌نوشتن با کلید `led` و LED فعال با سطح بالا روی GPIO2:
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaEsp32 device;
+auto led = FLOVA_DATASTREAM(device, bool, "led");
+bool started = false;
+
+flova::WriteResult setLed(bool enabled) {
+  digitalWrite(2, enabled ? HIGH : LOW);
+  return flova::accept();
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(2, OUTPUT);
+  digitalWrite(2, LOW);
+  if (!led.tryOnWrite(setLed)) {
+    Serial.println("Could not register the led handler");
+    return;
+  }
+  started = device.begin();
+  if (!started) Serial.println(device.lastError());
+}
+
+void loop() {
+  if (started) device.run();
+}
+```
+
+اگر سخت‌افزار می‌تواند درخواست را رد کند، پیش از تغییر خروجی آن را بررسی
+کنید و در صورت رد `flova::reject("reason_code")` را برگردانید. Handler را
+کوتاه نگه دارید: فرمان راه دور از `run()` و فرمان محلی در خود `write()` آن
+را فراخوانی می‌کند. سیاست‌های ماندگاری و آفلاین در [دیتاستریم‌ها](../datastreams/) آمده‌اند.
 
 ## نتیجه و وضعیت نوشتن
 
-<code>flova::WriteResult</code> وضعیت‌های <code>Accepted</code>،
-<code>Rejected</code>، <code>NoChange</code> و <code>Failed</code> را گزارش
-می‌کند. وقتی برنامه باید بداند مقدار واقعاً پذیرفته شده است یا نه، نتیجه را
-بررسی کنید. فرمان ردشدهٔ Hardware نباید وضعیت برنامه یا SDK را به‌طور بی‌صدا
-تغییر دهد.
+`flova::WriteResult` شامل `status`، `reason` و `message` است. `accepted()`
+برای `Accepted` و `NoChange` مقدار `true` می‌دهد؛ برای تشخیص تغییر `status`
+را بخوانید. `Rejected` یعنی ورودی یا Handler درخواست را رد کرده است؛
+`Failed` یعنی عملیات کامل نشده است. علت را از `reason` بخوانید و فرض نکنید
+درخواست ردشده سخت‌افزار یا مقدار محلی را تغییر داده است.
 
 Typeهای عمومی مقدار شامل Boolean، <code>int64_t</code>، <code>float</code>،
 <code>double</code> و متن محدود هستند. Enumهای عمومی Lifecycle و Diagnostic
@@ -110,6 +154,14 @@ if (!result.accepted()) {
 <code>run()</code> را اجرا کنید و Latest Value یا History را در Console
 بررسی کنید. در نوشتن Hardware، Accepted باید به معنی پذیرفته شدن وضعیت واقعی
 توسط Handler محصول باشد.
+
+## تغییرات 0.5.0
+
+کلاس‌های استاندارد ESP اکنون راه‌اندازی و Wi-Fi را مدیریت می‌کنند. اگر
+شبکه با برنامه است از `FlovaClient` استفاده کنید، نه سازنده‌های قدیمی
+PubSubClient یا `attachProvisioning()`. برای تعویض Wi-Fi مدیریت‌شده،
+`startWifiSetup()`، `wifiSetupActive()`، `wifiSetupError()` و
+`cancelWifiSetup()` در [راهنمای Provisioning](../provisioning/) توضیح داده شده‌اند.
 
 ## انتخاب Header
 

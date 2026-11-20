@@ -3,6 +3,8 @@ title: "Provisioning and identity"
 description: "Give a device its Flova identity without placing permanent credentials in firmware."
 ---
 
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
 Provisioning connects a physical unit to a Flova device record. It supplies a
 short-lived handoff, then the device receives or creates the runtime identity it
 stores for later boots.
@@ -16,10 +18,15 @@ identity and connect without repeating the first-boot flow.
 
 ## Custom applications
 
-Custom firmware keeps ownership of Wi-Fi, the web server, BLE, Ethernet, or
-another setup channel. The application passes the bounded Flova handoff to the
-SDK. For an application-owned Arduino server, the provisioning adapter can
-register the status and provision routes without replacing that server.
+With `FlovaEsp32` or `FlovaEsp8266`, the SDK manages Wi-Fi and SoftAP setup;
+the sketch owns GPIO and application behavior. Start device setup in Flova,
+join `Flova-Setup-*` when prompted, and open the link supplied by Flova. Opening
+`/setup` directly does not complete first-time provisioning. Once the device
+accepts setup, return to the internet and verify that it comes online.
+
+The setup network is open by default. For production use a device-unique
+8–63-character WPA password. ESP32 BLE variants require a device-unique proof
+of possession; do not enable unauthenticated BLE setup in production.
 
 The handoff contains the deployment's Link URL and a short-lived token. The
 device uses it to bootstrap and stores the resulting session. Do not commit
@@ -79,23 +86,81 @@ accepted report.
 
 ## Application-owned web setup
 
-An Arduino application that already has a web server can attach provisioning to
-that server:
+If your application owns Wi-Fi, a web server, or an alternate setup channel,
+compose `FlovaClient` explicitly. The managed facade no longer exposes
+`attachProvisioning()`. The following ESP32 fragments fit into an existing
+application; they are not a standalone web server.
+
+<Tabs items={['Compose the client', 'Receive the handoff']}>
+  <Tab>
+
+Keep the service objects alive for as long as the client uses them. The
+observed network service checks connectivity without starting Wi-Fi for you.
 
 ```cpp
-WebServer server(80);
-FlovaEsp32 device;
+#include <FlovaSDK.h>
 
-void setup() {
-  device.attachProvisioning(server);
-  server.begin();
-}
+FlovaEsp32Entropy entropy;
+FlovaEsp32Platform platform;
+ArduinoFlovaLink flovaLink(platform, entropy);
+FlovaProvisioningAdapter provisioning;
+FlovaEsp32ObservedNetwork network;
+ArduinoFlovaUtcBootstrap<WiFiUDP> tlsClock;
+FlovaEsp32Identity identity("my_esp32_product");
+FlovaEsp32Storage storage;
+ArduinoFlovaClock clockSource;
+ArduinoFlovaLogger logger;
+ArduinoFlovaManualHardware hardware;
+
+FlovaClient client(flovaLink, provisioning, network, tlsClock, identity, storage,
+                   clockSource, logger, entropy, hardware);
 ```
 
-The SDK registers its bounded status and provisioning handlers. It does not
-start or replace the server, change the application's Wi-Fi mode, or take over
-the application's other routes. Keep the server loop and `device.run()` in the
-same nonblocking application loop.
+In `setup()`, start Wi-Fi using your existing application code and register
+any datastream handlers. Call `client.begin(false)` and check the result. In
+`loop()`, service the web server and call `client.run()` regularly. An
+unprovisioned device can now wait for a handoff on your setup channel.
+
+  </Tab>
+  <Tab>
+
+Require a trusted caller, bound the input size, and validate it before passing
+it to the SDK. From your existing setup handler, submit the validated values:
+
+```cpp
+const auto result = client.provision(
+    flova::ProvisioningHandoff(linkUrl, shortLivedToken));
+```
+
+| Result | What your setup channel should do |
+| --- | --- |
+| `Accepted` | Report that the handoff was received, not that the device is online. Keep polling `client.run()`. |
+| `Invalid` | Reject the request. Check the handoff contents and whether the client is waiting for provisioning. |
+| `StorageFailed` | Report a storage error without echoing the token. Check the backend before retrying. |
+
+  </Tab>
+</Tabs>
+
+<Note title="Check the whole setup flow">
+  Verify the device comes online and reports a value in Console. Reboot and
+  confirm it reconnects without another handoff. Your application still owns
+  Wi-Fi, setup authorization, and restart policy.
+</Note>
+
+## Replace Wi-Fi without resetting identity
+
+On a provisioned managed ESP32 or ESP8266, trigger `startWifiSetup()` from the
+normal board loop and keep calling `run()`. A true return means the request was
+accepted, not that the new network works. Busy configuration, OTA, or command
+processing can reject the request. After setup becomes active, join the setup
+network and open `http://192.168.4.1/setup`. No activation token is needed.
+
+Use `wifiSetupActive()` and `wifiSetupError()` to inspect progress, or
+`cancelWifiSetup()` to return to the previous network. The device tests Wi-Fi
+association for up to 30 seconds; association does not prove internet access.
+Failed candidates leave saved credentials intact. An ordinary outage does not
+open setup or erase credentials. Confirm the device comes back online before
+leaving the installation.
 
 ## Recovery and reset
 
@@ -106,6 +171,6 @@ clear Flova-private state and return to setup; it should not silently erase
 application data or Wi-Fi credentials unless the product explicitly chooses to
 do that.
 
-If bootstrap fails, check the setup channel, HTTPS or WSS URL, token lifetime,
+If bootstrap fails, check the setup channel, Link URL, token lifetime,
 clock readiness, storage availability, and device claim separately. Keep error
 messages bounded and never include the token or secret.

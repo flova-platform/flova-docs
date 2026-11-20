@@ -34,6 +34,10 @@ creating a device from it.
 
 ## 2. Install and flash universal firmware
 
+Use the `0.5.0` source tree for this guide. See [Install](../install/#install-from-source) for the
+source export if your library manager does not list that version. For browser
+build and USB upload, choose the Universal ESP32 sample in [Flova IDE](../ide/).
+
 `FLOVA_SETUP_PASSWORD` is optional and defaults to `nullptr` (an open setup AP).
 For protected setup, define it before including the SDK, or pass a device-unique
 8–63 character WPA password to the universal constructor. Print it on that
@@ -92,7 +96,7 @@ Add this environment to `platformio.ini`:
 platform = espressif32
 board = esp32dev
 framework = arduino
-lib_deps = flova-platform/FlovaSDK@^0.3.12
+lib_deps = flova-platform/FlovaSDK@^0.5.0
 ```
 
 Replace `src/main.cpp` with:
@@ -167,11 +171,11 @@ should follow the command. If it does not:
 
 Universal firmware is useful for the first device and for products where Flova
 owns the complete device composition. Use `FlovaEsp32` when your application
-must own Wi-Fi, GPIO, sensors, a web server, or another setup channel.
+owns GPIO and sensor logic but Flova should still manage setup and Wi-Fi.
+Publish a writable Boolean stream with the exact key `relay` for this sketch.
 
 ```cpp
 #include <Arduino.h>
-#include <WiFi.h>
 #include <FlovaSDK.h>
 
 FlovaEsp32 device;
@@ -183,20 +187,24 @@ void setRelay(bool enabled) {
 
 void setup() {
   pinMode(2, OUTPUT);
-  WiFi.begin("your-wifi", "your-password");
   FLOVA_ON_WRITE(relay, setRelay);
   device.begin();
 }
 
 void loop() {
-  device.run(WiFi.status() == WL_CONNECTED);
+  device.run();
 }
 ```
 
-Continue with [Datastreams](./datastreams), [Provisioning](./provisioning), and
-[Transports](./transports) when you are ready to build an application around
+Continue with [Datastreams](../datastreams/), [Provisioning](../provisioning/), and
+[Transports](../transports/) when you are ready to build an application around
 the SDK.
 
-This sketch shows the datastream and network loop. A custom product must also
-provide its provisioning handoff; see [Provisioning](./provisioning) before
-flashing it to a new device.
+Provision a fresh device through the same Flova setup flow above. For an
+application that owns networking or its setup channel, use the explicit
+`FlovaClient` composition in [Advanced firmware](../advanced/) instead.
+
+The [API reference](../reference/) explains each `FLOVA_*` helper, the
+difference between a write and a report, and how to check their results.
+
+<Card title="Next: build your first custom sketch" description="Report a simulated temperature and handle an LED command in one ESP32 project." href="../first-sketch/" />

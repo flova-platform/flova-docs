@@ -8,24 +8,26 @@ FlovaSDK is distributed as an Arduino and PlatformIO library for ESP32 and
 ESP8266. Linux applications use the CMake package. A portable device can use
 the embedded core with its own platform services.
 
+These guides target the `0.5.0` source tree. If your registry only offers an
+older release, [install from source](#install-from-source) rather than using
+its library with the snippets below. For browser builds, use [Flova IDE](../ide/).
+
 ## Pick the integration model first
 
 | You have | Start with | The application owns |
 | --- | --- | --- |
 | A board and no device application | `FlovaUniversalEsp32` or `FlovaUniversalEsp8266` | Your template and product dashboard |
-| An existing Arduino application | `FlovaEsp32` or `FlovaEsp8266` | Wi-Fi, GPIO, sensors, setup, and the main loop |
+| An existing Arduino application | `FlovaEsp32` or `FlovaEsp8266` | GPIO, sensors, and the main loop; the SDK owns setup and Wi-Fi |
 | A Raspberry Pi or Linux host | `FlovaLinux` | The process, event loop, service supervisor, and hardware |
 | Another C++11 board or gateway | `flova::Device` | Link, storage, clock, logger, and board integration |
 
-Use the [Quick start](./quickstart) if you want a working ESP32 device first.
+Use the [Quick start](../quickstart/) if you want a working ESP32 device first.
 Use this page when you need to select a target or set up a new project.
 
 ## Arduino IDE and PlatformIO
 
 <Tabs items={['Arduino IDE', 'PlatformIO']} defaultIndex={0}>
   <Tab>
-
-### ESP32 and ESP8266
 
 <Tabs items={['ESP32', 'ESP8266']} defaultIndex={0}>
   <Tab>
@@ -70,8 +72,6 @@ recommended by the SDK and keep large buffers out of the sketch.
 </Tab>
 <Tab>
 
-### ESP32 and ESP8266
-
 <Tabs items={['ESP32', 'ESP8266']} defaultIndex={0}>
   <Tab>
 
@@ -82,7 +82,7 @@ Add the library to `platformio.ini`:
 platform = espressif32
 board = esp32dev
 framework = arduino
-lib_deps = flova-platform/FlovaSDK@^0.3.12
+lib_deps = flova-platform/FlovaSDK@^0.5.0
 ```
 
 Build or upload with:
@@ -99,7 +99,7 @@ Use the SDK's packaged ESP8266 PlatformIO profile or set the board and memory
 layout recommended for your target. A normal project still includes:
 
 ```ini
-lib_deps = flova-platform/FlovaSDK@^0.3.12
+lib_deps = flova-platform/FlovaSDK@^0.5.0
 ```
 
 Build or upload with the same commands:
@@ -147,6 +147,23 @@ For ESP8266, use `FlovaUniversalEsp8266`. Universal firmware includes the board
 composition, setup path, hardware mapping, OTA policy, and restart policy
 provided by that target. It is the shortest path for a standard Wi-Fi product.
 
+## Install from source
+
+From a [FlovaSDK checkout](https://github.com/flova-platform/flova-sdk) that
+contains `0.5.0`, create the standalone library:
+
+```sh
+scripts/export_sdk_release.sh "$HOME/FlovaSDK"
+```
+
+- **Arduino IDE:** ZIP the exported `FlovaSDK` folder, then choose **Sketch →
+  Include Library → Add .ZIP Library**. Use the exported package, not a ZIP
+  of the whole repository. Remove any older FlovaSDK copy from your sketchbook
+  if the IDE selects it instead.
+- **PlatformIO:** Replace the registry `lib_deps` entry with the path to the
+  export, such as `lib_deps = file:///home/you/FlovaSDK`. Use the absolute path
+  on your machine and keep the board settings from the matching profile.
+
 ## Linux and Raspberry Pi
 
 Install the native dependencies and build the package from the firmware
@@ -180,8 +197,13 @@ int main() {
 }
 ```
 
-`run()` performs one bounded step. Put it in the application's poll or event
-loop instead of giving the SDK ownership of the process.
+The default constructor reads `FLOVA_LINK_URL`, `FLOVA_DEVICE_ID`, and
+`FLOVA_DEVICE_SECRET` from the process environment. Supply them through your
+service's protected configuration rather than compiling them into the program.
+The process user needs writable access to `FLOVA_STATE_DIRECTORY` (default
+`/var/lib/flova/device`). If `begin()` fails, check `lastError()` before
+starting the loop. In production, call `run()` from your poll or event loop;
+command checkpoints and application handlers run synchronously.
 
 ## Portable boards
 
@@ -190,7 +212,7 @@ requirement in its public include path. A custom port supplies
 `flova::Link`, `flova::Storage`, `flova::Clock`, and `flova::Logger`, then
 constructs `flova::Device`.
 
-Use [Advanced firmware](./advanced) when the target needs a custom network,
+Use [Advanced firmware](../advanced/) when the target needs a custom network,
 gateway, Ethernet chip, or service supervisor.
 
 ## Installation checks
@@ -205,3 +227,31 @@ After installation, check the following before debugging application logic:
 
 If the library is found but the board does not connect, inspect Wi-Fi readiness,
 time or TLS readiness, provisioning state, and the device status separately.
+
+## Arduino IDE: complete walkthrough
+
+Use this path when you want to compile and upload from the Arduino IDE rather
+than PlatformIO.
+
+1. Install the latest Arduino IDE.
+2. Open **Tools → Board → Boards Manager** and install the board package for
+   your target: **esp32 by Espressif Systems** or **esp8266 by ESP8266
+   Community**. If the package does not appear, add the vendor index under
+   **File → Preferences → Additional Boards Manager URLs**:
+   [ESP32](https://espressif.github.io/arduino-esp32/package_esp32_index.json)
+   or [ESP8266](https://arduino.esp8266.com/stable/package_esp8266com_index.json).
+3. Open **Tools → Manage Libraries**, search for **FlovaSDK**, and install
+   version `0.5.0` or the latest compatible release.
+4. Connect the board with a USB data cable. Select the physical board under
+   **Tools → Board** and its serial device under **Tools → Port**.
+5. Open **File → Examples → FlovaSDK → Basic** for managed custom firmware, or
+   use the universal sketch in [Quick start](../quickstart/).
+6. Select **Sketch → Upload**. Open **Tools → Serial Monitor**, set the speed
+   printed by the example (normally `115200`), and complete provisioning from
+   Flova when the setup network appears.
+
+For ESP8266, keep the board's tested **Tools → MMU** setting and avoid adding
+large buffers to the sketch. TLS and OTA can temporarily require a contiguous
+heap block. If no port appears, install the board's USB-serial driver, try a
+data cable, and reconnect the board. If upload fails, close other serial
+monitors and confirm the selected board, port, and boot mode.

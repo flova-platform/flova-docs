@@ -1,0 +1,42 @@
+---
+title: "Flova IDE"
+description: "Edit, build, and upload ESP32 and ESP8266 firmware from Flova Console."
+---
+
+[Flova IDE](https://console.flova.ir/ide) is the browser-based firmware editor
+in Console. Builds run on Flova; USB upload and serial monitoring use the board
+connected to your computer. For local tools, see [Arduino IDE and PlatformIO](../install/).
+
+## Create and build a project
+
+1. Sign in to Console, select your workspace, and open **IDE**. You need project
+   management access to create, edit, or build projects.
+2. Start from a sample for your board. Choose **Universal** for template-driven
+   hardware mappings, or **LED starter** to write your own GPIO handler.
+   Samples copy source and configuration into the project; they do not create
+   or link a Device Type. Publish one with the exact stream keys and types the
+   sample requires.
+3. Check `platformio.ini` before building. It selects the platform, board, and
+   Arduino framework. If you add dependencies, use exact PlatformIO Registry
+   versions (no `^` ranges), including transitive dependencies. Keep the sample's
+   SDK pin unless you are deliberately upgrading it. Extra scripts and external
+   package URLs are not supported.
+4. Choose **Build**. If it fails, open the build output; use **Problems** to jump
+   to source errors. Workspace plan limits apply to projects and builds.
+
+## Upload and check the board
+
+1. Use a desktop browser with Web Serial support, such as Chrome or Edge, and
+   connect the board with a USB data cable. Close any other serial monitor.
+2. Upload the successful build and grant the browser access to the board's port.
+   If the board does not enter its bootloader, follow its manufacturer's USB
+   upload instructions. You can also download the build files for local flashing;
+   use the target's flash offsets rather than guessing from the file order.
+3. Open the serial monitor and set the baud rate used by the firmware
+   (typically `115200`). A successful upload does not mean the board is online.
+   Complete [provisioning](../provisioning/), then check the device and its first
+   accepted datastream value in Console.
+
+Save artifacts you need to keep: IDE build files and logs are temporary and
+normally expire after seven days. A build is not automatically published as an
+[OTA release](../lifecycle/).

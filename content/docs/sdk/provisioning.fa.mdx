@@ -3,6 +3,8 @@ title: "Provisioning و Identity"
 description: "دادن Identity به Device بدون قرار دادن Credential دائمی در Firmware."
 ---
 
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
 Provisioning یک واحد فیزیکی را به یک Device Record در Flova متصل می‌کند.
 در این فرایند، یک Handoff کوتاه‌عمر به Device می‌رسد، Identity زمان اجرا
 ساخته یا دریافت می‌شود و SDK آن را برای Bootهای بعدی در Storage انتخاب‌شده
@@ -26,9 +28,14 @@ Universal Firmware در ESP32 و ESP8266 مسیر Setup را در خود دار�
 
 ## برنامهٔ سفارشی
 
-در Firmware سفارشی، برنامه مالک Wi-Fi، Web Server، BLE، Ethernet یا هر کانال
-Setup دیگری است. برنامه Handoff محدود Flova را به SDK می‌دهد؛ SDK اعتبارسنجی،
-Bootstrap، Commit کردن Session و ادامهٔ Connection را انجام می‌دهد.
+با `FlovaEsp32` یا `FlovaEsp8266`، SDK راه‌اندازی SoftAP و Wi-Fi را
+مدیریت می‌کند. Setup را در فلووا آغاز کنید، در زمان درخواست به
+`Flova-Setup-*` وصل شوید و لینک فلووا را باز کنید. باز کردن مستقیم `/setup`
+برای اولین راه‌اندازی کافی نیست. سپس به اینترنت برگردید و آنلاین شدن را بررسی کنید.
+
+شبکهٔ Setup به‌طور پیش‌فرض باز است. در محصول نهایی، رمز WPA منحصربه‌فرد
+۸ تا ۶۳ نویسه‌ای تعیین کنید. نسخه‌های BLE به Proof of Possession اختصاصی
+نیاز دارند؛ راه‌اندازی بدون احراز هویت را در محصول فعال نکنید.
 
 Handoff شامل Link URL و Token کوتاه‌عمر مربوط به استقرار است:
 
@@ -85,28 +92,80 @@ Setup را یک State Machine بدانید، نه یک درخواست HTTP من�
 
 ## Web Setup تحت مالکیت برنامه
 
-اگر برنامهٔ Arduino از قبل Web Server دارد، Provisioning را به همان Server
-وصل کنید:
+اگر برنامه Wi-Fi، Web Server یا کانال راه‌اندازی را مدیریت می‌کند،
+`FlovaClient` را صریحاً با سرویس‌های برنامه ترکیب کنید. کلاس‌های مدیریت‌شده
+دیگر `attachProvisioning()` ندارند. قطعه‌کدهای ESP32 زیر را به برنامهٔ
+موجود اضافه کنید؛ این کدها یک Web Server مستقل نیستند.
 
-~~~cpp
-WebServer server(80);
-FlovaEsp32 device;
+<Tabs items={['ترکیب Client', 'دریافت Handoff']}>
+  <Tab>
 
-void setup() {
-  device.attachProvisioning(server);
-  server.begin();
-}
+سرویس‌ها باید در تمام عمر Client معتبر بمانند. سرویس شبکهٔ مشاهده‌گر وضعیت
+اتصال را بررسی می‌کند ولی Wi-Fi را شروع نمی‌کند.
 
-void loop() {
-  server.handleClient();
-  device.run();
-}
-~~~
+```cpp
+#include <FlovaSDK.h>
 
-SDK Handlerهای محدود Status و Provisioning را ثبت می‌کند. Server را شروع یا
-جایگزین نمی‌کند، Mode مربوط به Wi-Fi را تغییر نمی‌دهد و Routeهای دیگر برنامه
-را در اختیار نمی‌گیرد. حلقهٔ Server و <code>device.run()</code> را در یک Loop
-غیرمسدودکننده نگه دارید.
+FlovaEsp32Entropy entropy;
+FlovaEsp32Platform platform;
+ArduinoFlovaLink flovaLink(platform, entropy);
+FlovaProvisioningAdapter provisioning;
+FlovaEsp32ObservedNetwork network;
+ArduinoFlovaUtcBootstrap<WiFiUDP> tlsClock;
+FlovaEsp32Identity identity("my_esp32_product");
+FlovaEsp32Storage storage;
+ArduinoFlovaClock clockSource;
+ArduinoFlovaLogger logger;
+ArduinoFlovaManualHardware hardware;
+
+FlovaClient client(flovaLink, provisioning, network, tlsClock, identity, storage,
+                   clockSource, logger, entropy, hardware);
+```
+
+در `setup()`، Wi-Fi را با کد برنامه راه بیندازید و Handlerهای دیتاستریم را
+ثبت کنید. `client.begin(false)` را صدا بزنید و نتیجه را بررسی کنید. در
+`loop()` هم سرور را سرویس دهید و هم `client.run()` را مرتب اجرا کنید.
+دستگاه فعال‌نشده اکنون می‌تواند منتظر Handoff بماند.
+
+  </Tab>
+  <Tab>
+
+فرستندهٔ درخواست باید مورد اعتماد باشد. اندازهٔ ورودی را محدود و محتوای آن
+را اعتبارسنجی کنید، سپس از Handler موجود این مقادیر را به SDK بدهید:
+
+```cpp
+const auto result = client.provision(
+    flova::ProvisioningHandoff(linkUrl, shortLivedToken));
+```
+
+| نتیجه | رفتار کانال راه‌اندازی |
+| --- | --- |
+| `Accepted` | دریافت Handoff را اعلام کنید، نه آنلاین بودن دستگاه. اجرای `client.run()` را ادامه دهید. |
+| `Invalid` | درخواست را رد کنید. محتوا و منتظر بودن Client برای راه‌اندازی را بررسی کنید. |
+| `StorageFailed` | بدون نمایش توکن، خطای ذخیره‌سازی را اعلام و Backend را پیش از تلاش مجدد بررسی کنید. |
+
+  </Tab>
+</Tabs>
+
+<Note title="مسیر کامل راه‌اندازی را بررسی کنید">
+  آنلاین شدن و دریافت اولین مقدار در کنسول را بررسی کنید. دستگاه را دوباره
+  روشن کنید و مطمئن شوید بدون Handoff تازه وصل می‌شود. Wi-Fi، مجوز Setup
+  و سیاست راه‌اندازی مجدد همچنان با برنامه‌اند.
+</Note>
+
+## تغییر Wi-Fi بدون پاک کردن هویت
+
+در ESP32 یا ESP8266 مدیریت‌شده‌ای که قبلاً راه‌اندازی شده، از حلقهٔ برد
+`startWifiSetup()` را فراخوانی کنید و `run()` را ادامه دهید. نتیجهٔ `true`
+فقط پذیرش درخواست را نشان می‌دهد. هنگام پیکربندی، OTA یا پردازش فرمان
+ممکن است درخواست رد شود. پس از فعال شدن Setup، به شبکهٔ دستگاه وصل شوید و
+`http://192.168.4.1/setup` را باز کنید. توکن فعال‌سازی لازم نیست.
+
+وضعیت را با `wifiSetupActive()` و `wifiSetupError()` بررسی کنید یا با
+`cancelWifiSetup()` به شبکهٔ قبلی برگردید. دستگاه اتصال به Wi-Fi را تا
+۳۰ ثانیه آزمایش می‌کند؛ اتصال به Wi-Fi به معنی دسترسی به اینترنت نیست.
+شبکهٔ ناموفق جایگزین اطلاعات ذخیره‌شده نمی‌شود. قطعی عادی شبکه نه Setup را
+باز می‌کند و نه اطلاعات را پاک می‌کند. در پایان آنلاین شدن دستگاه را بررسی کنید.
 
 ## Reset و Recovery
 

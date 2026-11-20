@@ -41,6 +41,10 @@ ESP32 universal images use the target's supported boot layout. ESP8266 OTA
 uses staged copying and has no automatic rollback, so keep wired recovery
 available for a failed post-update boot.
 
+On Linux, the updater verifies and stages an artifact; the external service
+supervisor owns activation, restart, health checks, and confirmation or rollback.
+Keep the OTA directory and active executable on the same filesystem.
+
 An OTA upload, rollout completion, and post-update runtime connection are
 separate checks. After an update, verify the device timeline, current firmware
 metadata, online status, and a fresh datastream report.
@@ -102,10 +106,11 @@ TLS readiness, stored session, and device timeline before retrying the rollout.
 
 ## Power-down and long work
 
-Call the facade's power-down preparation method before a board-owned sleep or
-power cut when the target provides one. Finish or quiesce Link and storage work
-first. The SDK does not decide when your board sleeps and does not replace the
-board's power-management policy.
+On targets that expose `prepareForPowerDown()`, keep polling from the board
+loop while it drains Link work and flushes deferred stream values. Only sleep
+or cut power when it reports `FlovaPowerDownStatus::Ready`. A `Busy`,
+`Draining`, or `Failed` result is not permission to shut down. The application
+still owns the sleep policy and power controls.
 
 ## Logging by environment
 

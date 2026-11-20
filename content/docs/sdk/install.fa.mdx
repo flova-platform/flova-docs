@@ -9,16 +9,20 @@ FlovaSDK برای ESP32 و ESP8266 به‌صورت Library برای Arduino و P
 یک Device قابل انتقال می‌تواند Core تعبیه‌شده را با Serviceهای Platform خودش
 به کار بگیرد.
 
+نمونه‌ها برای سورس `0.5.0` هستند. اگر Registry فقط نسخهٔ قدیمی‌تر دارد،
+به‌جای استفاده از آن با این نمونه‌ها، از بخش نصب از سورس استفاده کنید.
+برای Build در مرورگر، [Flova IDE](../ide/) را ببینید.
+
 ## ابتدا مدل Integration را انتخاب کنید
 
 | چیزی که دارید | از اینجا شروع کنید | مالکیت برنامه |
 | --- | --- | --- |
 | Board بدون برنامهٔ Device | <code>FlovaUniversalEsp32</code> یا <code>FlovaUniversalEsp8266</code> | Template و Dashboard محصول |
-| برنامهٔ موجود Arduino | <code>FlovaEsp32</code> یا <code>FlovaEsp8266</code> | Wi-Fi، GPIO، Sensor، Provisioning و Main Loop |
+| برنامهٔ موجود Arduino | <code>FlovaEsp32</code> یا <code>FlovaEsp8266</code> | GPIO، حسگر و حلقهٔ اصلی با برنامه‌اند؛ Wi-Fi و راه‌اندازی با SDK است. |
 | Raspberry Pi یا Host لینوکسی | <code>FlovaLinux</code> | Process، Event Loop، Service Supervisor و Hardware |
 | Board یا Gateway دیگر با C++11 | <code>flova::Device</code> | Link، Storage، Clock، Logger و اتصال Board |
 
-برای یک Device آمادهٔ ESP32 از [شروع سریع](./quickstart) شروع کنید. این صفحه
+برای یک Device آمادهٔ ESP32 از [شروع سریع](../quickstart/) شروع کنید. این صفحه
 برای انتخاب Target، ساخت Project تازه و شناخت مرز مالکیت هر مدل است.
 
 ## Arduino IDE و PlatformIO
@@ -28,8 +32,6 @@ FlovaSDK برای ESP32 و ESP8266 به‌صورت Library برای Arduino و P
 
 <Tabs items={['Arduino IDE', 'PlatformIO']} defaultIndex={0}>
   <Tab>
-
-### ESP32 و ESP8266
 
 <Tabs items={['ESP32', 'ESP8266']} defaultIndex={0}>
   <Tab>
@@ -75,8 +77,6 @@ Memory Profile توصیه‌شدهٔ SDK را انتخاب کنید و Bufferه�
   </Tab>
   <Tab>
 
-### ESP32 و ESP8266
-
 <Tabs items={['ESP32', 'ESP8266']} defaultIndex={0}>
   <Tab>
 
@@ -87,7 +87,7 @@ Library را به <code>platformio.ini</code> اضافه کنید:
 platform = espressif32
 board = esp32dev
 framework = arduino
-lib_deps = flova-platform/FlovaSDK@^0.3.12
+lib_deps = flova-platform/FlovaSDK@^0.5.0
 ~~~
 
 برای Build و Upload:
@@ -104,7 +104,7 @@ pio run -t upload
 توصیه‌شدهٔ Target را تنظیم کنید. وابستگی پروژه:
 
 ~~~ini
-lib_deps = flova-platform/FlovaSDK@^0.3.12
+lib_deps = flova-platform/FlovaSDK@^0.5.0
 ~~~
 
 Build و Upload با همین دستورها انجام می‌شود:
@@ -155,6 +155,22 @@ Firmware Composition برد، مسیر Provisioning، Hardware Mapping، سیا�
 سیاست Restart مربوط به Target را فراهم می‌کند و برای یک محصول استاندارد
 Wi-Fi کوتاه‌ترین مسیر است.
 
+## نصب از سورس
+
+در یک Checkout از [مخزن FlovaSDK](https://github.com/flova-platform/flova-sdk)
+که نسخهٔ `0.5.0` را دارد، بستهٔ مستقل کتابخانه را بسازید:
+
+```sh
+scripts/export_sdk_release.sh "$HOME/FlovaSDK"
+```
+
+- **Arduino IDE:** پوشهٔ خروجی `FlovaSDK` را ZIP کنید و **Sketch → Include
+  Library → Add .ZIP Library** را بزنید. از بستهٔ خروجی استفاده کنید، نه ZIP
+  کل مخزن. اگر IDE نسخهٔ قدیمی را انتخاب می‌کند، نسخهٔ قدیمی را از Sketchbook بردارید.
+- **PlatformIO:** وابستگی Registry را با مسیر خروجی جایگزین کنید؛ مثلاً
+  `lib_deps = file:///home/you/FlovaSDK`. مسیر مطلق رایانهٔ خودتان و
+  تنظیمات پروفایل همان برد را به‌کار ببرید.
+
 ## Linux و Raspberry Pi
 
 Dependencyهای بومی را از ریشهٔ Repository مربوط به Firmware نصب و Package را
@@ -188,8 +204,12 @@ int main() {
 }
 ~~~
 
-<code>run()</code> یک گام محدود انجام می‌دهد. آن را در Poll یا Event Loop
-برنامه قرار دهید و مالکیت Process را به SDK ندهید.
+سازندهٔ پیش‌فرض `FLOVA_LINK_URL`، `FLOVA_DEVICE_ID` و `FLOVA_DEVICE_SECRET`
+را از محیط فرایند می‌خواند. آن‌ها را از پیکربندی محافظت‌شدهٔ سرویس وارد
+کنید، نه از سورس. کاربر فرایند باید اجازهٔ نوشتن در `FLOVA_STATE_DIRECTORY`
+را داشته باشد (پیش‌فرض: `/var/lib/flova/device`). اگر `begin()` ناموفق بود،
+پیش از شروع حلقه `lastError()` را بررسی کنید. در برنامهٔ نهایی، `run()` را
+از Event Loop فراخوانی کنید؛ ثبت فرمان و Handler برنامه همگام اجرا می‌شوند.
 
 ## Boardهای قابل انتقال
 
@@ -200,7 +220,34 @@ Exception یا RTTI نیاز ندارد. برای Port سفارشی، این Ser
 و <code>flova::Logger</code>؛ سپس <code>flova::Device</code> را بسازید.
 
 اگر Target به Network سفارشی، Gateway، Ethernet Chip یا Service Supervisor
-نیاز دارد، [Firmware پیشرفته](./advanced) را بخوانید.
+نیاز دارد، [Firmware پیشرفته](../advanced/) را بخوانید.
+
+## مراحل کامل در Arduino IDE
+
+۱. Arduino IDE را نصب کنید. در **Tools → Board → Boards Manager** بستهٔ
+**esp32 by Espressif Systems** یا **esp8266 by ESP8266 Community** را انتخاب کنید.
+اگر بسته نمایش داده نشد، نشانی فهرست سازنده را در **File → Preferences →
+Additional Boards Manager URLs** وارد کنید:
+[ESP32](https://espressif.github.io/arduino-esp32/package_esp32_index.json) یا
+[ESP8266](https://arduino.esp8266.com/stable/package_esp8266com_index.json).
+
+۲. در **Tools → Manage Libraries**، کتابخانهٔ **FlovaSDK** نسخهٔ `0.5.0` یا
+نسخهٔ سازگار جدیدتر را نصب کنید.
+
+۳. برد را با کابل USB داده وصل کنید و برد و پورت را در **Tools → Board**
+و **Tools → Port** انتخاب کنید.
+
+۴. برای Firmware سفارشی مدیریت‌شده، **File → Examples → FlovaSDK → Basic**
+را باز کنید یا از اسکچ Universal در [شروع سریع](../quickstart/) استفاده کنید.
+
+۵. **Sketch → Upload** را بزنید. در **Tools → Serial Monitor** سرعت نمونه
+را تنظیم کنید (معمولاً `115200`). پس از ظاهر شدن شبکهٔ Setup، راه‌اندازی را
+از فلووا ادامه دهید.
+
+در ESP8266، تنظیم آزموده‌شدهٔ **Tools → MMU** را حفظ کنید. TLS و OTA ممکن
+است به یک بلوک پیوسته از Heap نیاز داشته باشند. اگر پورت ظاهر نشد، کابل
+داده و درایور USB-Serial را بررسی کنید. هنگام خطای آپلود، سایر مانیتورهای
+سریال را ببندید و برد، پورت و وضعیت Boot را بررسی کنید.
 
 ## بررسی نصب
 

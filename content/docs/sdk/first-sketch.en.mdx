@@ -1,0 +1,136 @@
+---
+title: "Build your first custom sketch"
+description: "Report a simulated temperature and control an ESP32 LED from Flova."
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+Build a device that sends a temperature reading to Flova and accepts a command
+back. By the end, you'll see a changing value in Console and use a dashboard
+toggle to turn an LED on and off. No temperature sensor is required.
+
+**You need:** an ESP32, an LED with a series resistor connected to a suitable
+output pin and ground, a USB data cable, Wi-Fi, and a Flova workspace. The
+sketch uses GPIO2; change `LED_PIN` to match your board and wiring. Use
+[Arduino IDE or PlatformIO](../install/) with SDK `0.5.0`, or start with the
+ESP32 LED starter in [Flova IDE](../ide/) and replace its sketch source.
+
+<Note title="Is this your first Flova device?">
+  The [Universal Firmware quickstart](../quickstart/) covers device activation
+  and dashboard publishing step by step. Here, your sketch owns the GPIO and
+  FlovaSDK still handles Wi-Fi setup and reconnection.
+</Note>
+
+## 1. Publish the device type
+
+In [Console](https://console.flova.ir/templates), create a Wi-Fi Device Type and
+add these two datastreams. The keys are case-sensitive.
+
+| Technical key | Value type | Exchange mode | Connection type |
+| --- | --- | --- | --- |
+| `temperature` | Number (`double`), unit `°C` | Read only | Software state |
+| `led` | On / Off (`bool`) | Read and write | Software command |
+
+Neither stream needs a GPIO mapping in Console. The sketch owns `LED_PIN`.
+Publish the Device Type before creating a device from it.
+
+## 2. Build and upload
+
+<Tabs items={['Arduino IDE', 'PlatformIO', 'Flova IDE']}>
+  <Tab>
+    Create a new sketch and paste the code below. Select the ESP32 board and
+    USB port, choose **Verify**, then **Upload**. Open **Serial Monitor** at `115200`.
+  </Tab>
+  <Tab>
+    Create an Arduino project for your ESP32 using the [installation guide](../install/).
+    Save the code below as `src/main.cpp`, then run:
+
+```sh
+pio run -t upload
+pio device monitor -b 115200
+```
+
+  </Tab>
+  <Tab>
+    Open the ESP32 LED starter, replace the sketch source with the code below,
+    and choose **Build**. Upload the successful build over USB and open the
+    serial monitor. Keep the sample's dependency pins and board settings.
+  </Tab>
+</Tabs>
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+constexpr uint8_t LED_PIN = 2;
+FlovaEsp32 device;
+auto led = FLOVA_DATASTREAM(device, bool, "led");
+auto temperature = FLOVA_DATASTREAM(device, double, "temperature");
+bool started = false;
+
+void setLed(bool on) {
+  digitalWrite(LED_PIN, on ? HIGH : LOW);
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  if (!led.tryOnWrite(setLed)) {
+    Serial.println("Could not register led handler");
+    return;
+  }
+  started = device.begin();
+  if (!started) Serial.println(device.lastError());
+}
+
+void loop() {
+  if (!started) return;
+  device.run();
+
+  static uint32_t lastSampleMs = 0;
+  const uint32_t now = millis();
+  if (!device.ready() || now - lastSampleMs < 5000) return;
+  lastSampleMs = now;
+
+  const double sample = 22.0 + (now / 5000) % 5;
+  const auto result = FLOVA_REPORT(temperature, sample);
+  if (!result.accepted()) Serial.println(result.reason);
+}
+```
+
+| In the sketch | What the SDK does |
+| --- | --- |
+| `FLOVA_DATASTREAM(...)` | Creates a typed handle to a case-sensitive key in the Device Type. A global declaration alone does not connect or read storage. |
+| `led.tryOnWrite(setLed)` | Registers the function that applies an LED command. The return value tells you whether registration worked. |
+| `device.begin()` and `device.run()` | Start the device, then keep advancing setup, reconnects, and incoming commands. `begin()` success does not mean the device is online. |
+| `FLOVA_REPORT(temperature, sample)` | Submits an observation without running the LED handler. `accepted()` confirms local acceptance; check Console for delivery. |
+
+The `millis()` check samples every five seconds without making `run()` wait.
+
+## 3. Connect the device and check both directions
+
+1. Open Serial Monitor at `115200`. Create the device in Console and follow
+   [first-time provisioning](../provisioning/) using the activation code. Join
+   `Flova-Setup-*` when prompted and open the setup link supplied by Flova.
+2. After the device comes online, open Console's **Monitor**. `temperature`
+   should cycle through values from `22` to `26`.
+3. In Studio, add a Toggle bound to `led`, publish the dashboard, and open it
+   for the device. Flip the toggle and watch the LED change. Try both directions.
+
+| If you see this | Check this first |
+| --- | --- |
+| No setup network | Check Serial for startup errors. An already provisioned board may reconnect instead of opening setup. |
+| Device online but no temperature | Verify the published key and Number type, then check the report result in Serial. |
+| Temperature arrives but LED does not change | Check the Toggle binding, `led` access, `LED_PIN`, and LED polarity. |
+
+## 4. Make it your own
+
+- Replace the simulated value with a sensor reading, keeping the same name,
+  type, and unit. Use [Datastreams](../datastreams/) to choose what to keep offline.
+- Add a local button that calls `led.write(false)`. That reuses `setLed()`;
+  `led.report(false)` would only report an observation. See the
+  [API reference](../reference/) for helper and result details.
+- When your application needs to own the network or the setup channel, move
+  on to [Advanced firmware](../advanced/) rather than replacing the managed
+  facade's Wi-Fi loop in this sketch.

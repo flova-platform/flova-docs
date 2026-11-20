@@ -1,0 +1,137 @@
+---
+title: "اولین اسکچ سفارشی خود را بسازید"
+description: "دمای شبیه‌سازی‌شده را گزارش کنید و LED برد ESP32 را از فلووا کنترل کنید."
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+دستگاهی بسازید که دما را به فلووا می‌فرستد و در جهت عکس فرمان می‌گیرد.
+در پایان، تغییر دما را در کنسول می‌بینید و LED را از داشبورد روشن و خاموش
+می‌کنید. حسگر دما لازم نیست.
+
+**وسایل لازم:** برد ESP32، یک LED با مقاومت سری بین پایهٔ خروجی مناسب و
+زمین، کابل USB داده، Wi-Fi و فضای کاری فلووا. اسکچ از GPIO2 استفاده می‌کند؛
+`LED_PIN` را با برد و سیم‌کشی خود هماهنگ کنید. از
+[Arduino IDE یا PlatformIO](../install/) با SDK `0.5.0` استفاده کنید یا
+نمونهٔ LED starter برای ESP32 را در [Flova IDE](../ide/) باز کنید و کد را جایگزین کنید.
+
+<Note title="اولین دستگاه فلووای شماست؟">
+  [شروع سریع Universal Firmware](../quickstart/) فعال‌سازی و انتشار داشبورد
+  را قدم‌به‌قدم نشان می‌دهد. در این آموزش اسکچ GPIO را کنترل می‌کند و SDK
+  همچنان راه‌اندازی Wi-Fi و اتصال مجدد را بر عهده دارد.
+</Note>
+
+## ۱. نوع دستگاه را منتشر کنید
+
+در [کنسول](https://console.flova.ir/templates) یک نوع دستگاه Wi-Fi بسازید و
+دو دیتاستریم زیر را اضافه کنید. بزرگی و کوچکی حروف در کلید مهم است.
+
+| کلید فنی | نوع مقدار | حالت تبادل | نوع اتصال |
+| --- | --- | --- | --- |
+| `temperature` | Number (`double`)، واحد `°C` | فقط خواندنی | Software state |
+| `led` | On / Off (`bool`) | خواندن و نوشتن | Software command |
+
+برای این دو دیتاستریم در کنسول پایه تعیین نکنید. `LED_PIN` در اسکچ کنترل
+می‌شود. پیش از ایجاد دستگاه، نوع دستگاه را منتشر کنید.
+
+## ۲. اسکچ را بسازید و آپلود کنید
+
+<Tabs items={['Arduino IDE', 'PlatformIO', 'Flova IDE']}>
+  <Tab>
+    اسکچ تازه بسازید و کد زیر را در آن بگذارید. برد ESP32 و پورت USB را
+    انتخاب کنید، **Verify** و سپس **Upload** را بزنید. **Serial Monitor** را روی `115200` باز کنید.
+  </Tab>
+  <Tab>
+    طبق [راهنمای نصب](../install/) پروژهٔ Arduino برای ESP32 بسازید. کد را
+    در `src/main.cpp` ذخیره و دستورها را اجرا کنید:
+
+```sh
+pio run -t upload
+pio device monitor -b 115200
+```
+
+  </Tab>
+  <Tab>
+    نمونهٔ LED starter برای ESP32 را باز کنید، کد زیر را جایگزین و **Build**
+    را بزنید. پس از Build موفق، از USB آپلود کنید و مانیتور سریال را باز کنید.
+    نسخهٔ وابستگی‌ها و تنظیمات بردِ نمونه را نگه دارید.
+  </Tab>
+</Tabs>
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+constexpr uint8_t LED_PIN = 2;
+FlovaEsp32 device;
+auto led = FLOVA_DATASTREAM(device, bool, "led");
+auto temperature = FLOVA_DATASTREAM(device, double, "temperature");
+bool started = false;
+
+void setLed(bool on) {
+  digitalWrite(LED_PIN, on ? HIGH : LOW);
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  if (!led.tryOnWrite(setLed)) {
+    Serial.println("Could not register led handler");
+    return;
+  }
+  started = device.begin();
+  if (!started) Serial.println(device.lastError());
+}
+
+void loop() {
+  if (!started) return;
+  device.run();
+
+  static uint32_t lastSampleMs = 0;
+  const uint32_t now = millis();
+  if (!device.ready() || now - lastSampleMs < 5000) return;
+  lastSampleMs = now;
+
+  const double sample = 22.0 + (now / 5000) % 5;
+  const auto result = FLOVA_REPORT(temperature, sample);
+  if (!result.accepted()) Serial.println(result.reason);
+}
+```
+
+| بخش اسکچ | رفتار SDK |
+| --- | --- |
+| `FLOVA_DATASTREAM(...)` | ارجاع نوع‌دار برای کلیدی می‌سازد که به بزرگی و کوچکی حروف حساس است. تعریف سراسری به‌تنهایی اتصال یا دسترسی به Storage ندارد. |
+| `led.tryOnWrite(setLed)` | تابع اجرای فرمان LED را ثبت می‌کند. نتیجه نشان می‌دهد ثبت موفق بوده یا نه. |
+| `device.begin()` و `device.run()` | دستگاه را راه می‌اندازند و Setup، اتصال مجدد و فرمان‌ها را پیش می‌برند. موفقیت `begin()` به معنی آنلاین بودن نیست. |
+| `FLOVA_REPORT(temperature, sample)` | مشاهده را بدون اجرای Handler ثبت می‌کند. `accepted()` پذیرش محلی را نشان می‌دهد؛ برای تحویل، کنسول را بررسی کنید. |
+
+بررسی `millis()` هر پنج ثانیه نمونه می‌گیرد، بدون اینکه `run()` را منتظر بگذارد.
+
+## ۳. دستگاه را وصل کنید و هر دو جهت را بررسی کنید
+
+۱. Serial Monitor را روی `115200` باز کنید. در کنسول دستگاه را بسازید و
+با کد فعال‌سازی [راه‌اندازی اولیه](../provisioning/) را انجام دهید. هنگام
+درخواست به `Flova-Setup-*` وصل شوید و لینک فلووا را باز کنید.
+
+۲. بعد از آنلاین شدن، **Monitor** کنسول را باز کنید. مقدار `temperature`
+باید بین `22` تا `26` تغییر کند.
+
+۳. در استودیو یک Toggle به `led` وصل کنید، داشبورد را منتشر کنید و آن را
+برای دستگاه باز کنید. روشن و خاموش شدن LED را در هر دو حالت بررسی کنید.
+
+| اگر این را دیدید | اول این مورد را بررسی کنید |
+| --- | --- |
+| شبکهٔ Setup ظاهر نمی‌شود | خطای شروع را در Serial بررسی کنید. برد فعال‌شده ممکن است به‌جای Setup دوباره وصل شود. |
+| دستگاه آنلاین است اما دما نمی‌رسد | کلید و نوع Number منتشرشده و سپس نتیجهٔ گزارش در Serial را بررسی کنید. |
+| دما می‌رسد اما LED تغییر نمی‌کند | اتصال Toggle، دسترسی `led`، `LED_PIN` و جهت LED را بررسی کنید. |
+
+## ۴. نمونه را تغییر دهید
+
+- مقدار شبیه‌سازی‌شده را با خوانش حسگر جایگزین کنید و نام، نوع و واحد را
+  ثابت نگه دارید. برای رفتار آفلاین، [دیتاستریم‌ها](../datastreams/) را ببینید.
+- یک دکمهٔ محلی اضافه کنید که `led.write(false)` را صدا بزند. این متد
+  `setLed()` را اجرا می‌کند؛ `led.report(false)` فقط مشاهده را گزارش می‌کند.
+  کاربرد توابع و نتیجه‌ها در [مرجع API](../reference/) آمده است.
+- اگر برنامه باید شبکه یا کانال راه‌اندازی را خودش مدیریت کند، به
+  [Firmware پیشرفته](../advanced/) بروید و حلقهٔ Wi-Fi این اسکچ را جایگزین نکنید.

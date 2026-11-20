@@ -3,5 +3,5 @@
   "description": "ساخت Firmware برای Flova.",
   "icon": "Terminal",
   "root": true,
-  "pages": ["overview", "quickstart", "install", "datastreams", "provisioning", "configuration", "transports", "lifecycle", "advanced", "reference"]
+  "pages": ["overview", "quickstart", "first-sketch", "install", "ide", "datastreams", "scheduling", "provisioning", "configuration", "transports", "lifecycle", "advanced", "reference"]
 }

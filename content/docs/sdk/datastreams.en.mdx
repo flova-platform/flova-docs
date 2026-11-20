@@ -38,6 +38,23 @@ bool enabled = FLOVA_READ(relay);  // local cached value
 request. `FLOVA_REPORT` records an observation. It does not call the write
 handler.
 
+## Follow a value through the SDK
+
+Use the [first sketch](../first-sketch/) to watch these paths separately:
+
+| Try this | What happens in firmware | Where to check |
+| --- | --- | --- |
+| Wait for a temperature sample | `report()` updates local state and submits it for delivery. It does not drive a pin. | Check the report result in firmware, then the latest temperature in Console. |
+| Toggle the LED from the dashboard | `run()` processes the incoming command. The SDK checks the requested value before calling the registered handler. A rejection does not update the cached value. | Watch the LED, then check the command outcome. |
+| Call `led.write(false)` from your application | The local write uses the same validation and handler path. If the value is already applied, the SDK may return `NoChange` without calling the handler. | Check `WriteResult` and read the output or cached value. |
+| Read `led.value()` | The device reads its cache, not the pin or the cloud. | If you need physical confirmation, read a feedback input and report that observation separately. |
+
+<Note title="A value is not a receipt">
+  `accepted()` does not prove a report reached Console, and an online device
+  does not prove a particular stream is working. Check the matching published
+  key and type if only one stream is missing.
+</Note>
+
 Use `FLOVA_HAS_VALUE` before reading a value that may not have been restored or
 received yet:
 
@@ -77,12 +94,32 @@ text values. The C++ type must match the template's value type. Text values are
 bounded by the SDK build configuration, so check the returned value when your
 application accepts user-provided text.
 
-## Offline behavior
+## Persistence and offline history
 
-The local cache lets hardware continue using the latest accepted value while
-the network is unavailable. The exact offline policy belongs to the stream and
-firmware configuration. After reconnecting, the SDK synchronizes the state that
-the selected policy keeps.
+On managed ESP32, ESP8266, and Linux with Flova Link, the latest stream value
+lives in RAM by default (`PersistencePolicy::None`). `KeepLatest` is the
+default offline policy; it does not retain every sample or survive power loss
+on its own. To preserve a value across reboot or retain offline samples, opt in
+per stream before `begin()`:
+
+```cpp
+relay.persist(flova::PersistencePolicy::OnChange);
+temperature.persist(flova::PersistencePolicy::Deferred, 30000);
+
+flova::HistoryRetentionPolicy history;
+history.minimumIntervalMs = 60000;
+history.maximumRecords = 4;
+history.maximumAgeSeconds = 3600;
+temperature.offline(flova::OfflinePolicy::StoreHistory).retention(history);
+```
+
+`OnChange` skips unchanged storage writes without suppressing reports.
+`Persistent` (also called `Immediate`) writes each accepted update. `Deferred`
+starts its deadline at the first unsaved update; keep calling `run()` even
+offline. A power loss can discard pending values. Before an application-driven
+reset, call `stream.flush()` and check its result. History is independent of
+value persistence and bounded by the target's fixed storage capacity. These
+options do not turn off storage for provisioning, configuration, or commands.
 
 If a report is rejected, check the connection, the exact technical key, the
 value type, and the published template version. Presence alone does not prove
@@ -161,11 +198,25 @@ driver, or power controller refuses a request.
 Embedded builds use bounded storage for datastreams, text, command results, and
 history. Set the build capacities for the board and product instead of adding
 unbounded containers. If the device reports queue overflow, dropped history, or
-storage failures, inspect the resource plan and the frequency of reports.
+storage failures, inspect configured capacities and the frequency of reports.
 
 Do not report a sensor on every loop iteration. Sample at the rate the sensor
 needs, report meaningful changes, and keep the main loop available for network
 and hardware work.
+
+## Command delivery and retries
+
+Flova Link records intent in writable storage and verifies it before calling
+hardware. If the command ledger is full or unavailable, the SDK returns
+`command_storage_unavailable` without applying the command. Retained results,
+including rejections, are returned on retries even after a reboot. If power
+fails after intent is saved but before the result is durably recorded, a retry
+returns `command_outcome_unknown` without executing the command again.
+
+This is not an exactly-once guarantee: old delivered results can be evicted
+from the bounded ledger. Use expiring commands and idempotent handlers. When
+the outcome is unknown, read back the physical state before retrying manually.
+For scheduled commands, see [Cloud schedules](../scheduling/).
 
 ## Debugging a missing value
 

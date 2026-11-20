@@ -1,6 +1,6 @@
 ---
 title: "Public API reference"
-description: "A compact reference for the public FlovaSDK classes, helpers, and result types."
+description: "What each FlovaSDK helper does, when to call it, and how to check its result."
 ---
 
 This page lists the public application surface used by the guides. For exact
@@ -11,7 +11,7 @@ FlovaSDK release.
 
 | Type | Use |
 | --- | --- |
-| `FlovaEsp32` | Custom ESP32 application using Flova Link or optional MQTT. |
+| `FlovaEsp32` | Custom ESP32 application with managed Wi-Fi and Flova Link. |
 | `FlovaEsp8266` | Custom ESP8266 application using the same typed datastream model. |
 | `FlovaUniversalEsp32` | Complete ESP32 composition with Flova-owned setup and device behavior. |
 | `FlovaUniversalEsp8266` | Complete ESP8266 composition. |
@@ -22,9 +22,11 @@ FlovaSDK release.
 
 | Method | Meaning |
 | --- | --- |
-| `begin()` | Initialize the selected device composition and restore or start its session. |
-| `run()` | Perform one bounded connection, configuration, and command-processing step. |
+| `begin()` | Call once during startup after configuring handlers. Check the result; success means startup succeeded, not that the device is online. |
+| `run()` | Call often from the main loop, even when offline. It advances setup, reconnects, configuration, and remote command handling. |
 | `connected()` | Report the current transport connection state. |
+| `ready()` | Check whether the device is ready for normal runtime work. This does not prove that a particular report reached Console. |
+| `lastError()` | On facades that expose it, inspect the latest diagnostic after a failed startup. |
 | `datastream<T>(key)` | Return a typed datastream handle in the portable API. |
 | `value()` | Read the local cached value. |
 | `write(value)` | Apply a local application command. |
@@ -33,25 +35,71 @@ FlovaSDK release.
 
 ## Arduino helpers
 
+These macros are shorthand for typed C++ methods; use either form. Match
+keys and types to the published Device Type. Keys are case-sensitive.
+
+| Helper | Equivalent | When to use it |
+| --- | --- | --- |
+| `FLOVA_DATASTREAM(device, bool, "relay")` | `device.stream<bool>("relay")` | Declare a handle after the device object. Declaring it at file scope does not register the stream or access storage. |
+| `FLOVA_SETTING(device, double, "threshold", 35.0)` | `device.setting<double>("threshold", 35.0)` | Declare a setting with a fallback. Read `threshold.value()` for the current local setting; it does not fetch from Flova. |
+| `FLOVA_ON_WRITE(relay, setRelay)` | `relay.onWrite(setRelay)` | Register the hardware handler during setup, before `begin()`. To check registration, use `relay.tryOnWrite(setRelay)` instead. |
+| `FLOVA_WRITE(relay, true)` | `relay.write(true)` | Request a local change and run the same write handler used for remote commands. Check the returned `flova::WriteResult`. |
+| `FLOVA_REPORT(temperature, 23.4f)` | `temperature.report(23.4f)` | Report an observation without calling the write handler. Check the result; local acceptance is not proof of delivery. |
+| `FLOVA_HAS_VALUE(relay)` | `relay.hasValue()` | Check whether a local value exists. A value may be restored or stale, so this is not a freshness check. |
+| `FLOVA_READ(relay)` | `relay.value()` | Read the cached value without a network request. Check `hasValue()` first if absence matters. |
+
+Use **write** to request an action and **report** to describe what already
+happened. For example, a local rule calls `relay.write(false)` to turn the
+relay off; a feedback input calls `relay.report(false, flova::Origin::PhysicalInput)`
+to say it observed the relay off. Use `flova::Origin::SensorRead` (the default)
+for sensor readings.
+
+### Register a handler and check startup
+
+For a writable Boolean stream named `led` and an active-high LED on GPIO2:
+
 ```cpp
-FLOVA_DATASTREAM(device, bool, "relay")
-FLOVA_SETTING(device, double, "threshold", 35.0)
-FLOVA_ON_WRITE(relay, setRelay)
-FLOVA_WRITE(relay, true)
-FLOVA_READ(relay)
-FLOVA_REPORT(temperature, 23.4f)
-FLOVA_HAS_VALUE(relay)
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaEsp32 device;
+auto led = FLOVA_DATASTREAM(device, bool, "led");
+bool started = false;
+
+flova::WriteResult setLed(bool enabled) {
+  digitalWrite(2, enabled ? HIGH : LOW);
+  return flova::accept();
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(2, OUTPUT);
+  digitalWrite(2, LOW);
+  if (!led.tryOnWrite(setLed)) {
+    Serial.println("Could not register the led handler");
+    return;
+  }
+  started = device.begin();
+  if (!started) Serial.println(device.lastError());
+}
+
+void loop() {
+  if (started) device.run();
+}
 ```
 
-Use the helpers only after declaring the device and before calling `begin()`.
-Keep the technical key in one place so it cannot drift from the template.
+For hardware that can refuse a request, check before changing the output and
+return `flova::reject("reason_code")` on rejection. Keep the handler short:
+remote commands call it from `run()`; local `write()` calls it as part of the
+write. See [Datastreams](../datastreams/) for persistence and offline policies.
 
 ## Results and state
 
-`flova::WriteResult` reports `Accepted`, `Rejected`, `NoChange`, or `Failed`.
-Use `accepted()` when the application needs to know whether the value may be
-treated as applied. A rejected hardware command must leave the application and
-SDK state unchanged.
+`flova::WriteResult` contains `status`, `reason`, and `message`. `accepted()`
+is true for `Accepted` and `NoChange`; check `status` if you need to know
+whether a change was made. `Rejected` means an input or handler refused the
+operation; `Failed` means it could not complete. Check `reason` for details
+and do not assume a rejected request changed the hardware or local value.
 
 The public value types are Boolean, `int64_t`, `float`, `double`, and bounded
 text. Public lifecycle and diagnostic enums are defined in the exported SDK
@@ -102,10 +150,18 @@ if (!result.accepted()) {
 }
 ```
 
-An accepted result means the SDK accepted the operation at its boundary. For
-MQTT, continue calling `run()` and verify the resulting latest value or history
+An accepted result means the SDK accepted the operation at its boundary.
+Continue calling `run()` and verify the resulting latest value or history
 in Console. For a hardware write, acceptance should mean that the handler
 accepted the requested state.
+
+## Changes in 0.5.0
+
+The standard ESP facades now manage setup and Wi-Fi. For application-owned
+networking use `FlovaClient`; do not use the old PubSubClient constructors or
+`attachProvisioning()`. For managed Wi-Fi replacement, use `startWifiSetup()`,
+`wifiSetupActive()`, `wifiSetupError()`, and `cancelWifiSetup()` as described
+in [Provisioning](../provisioning/).
 
 ## Header selection
 

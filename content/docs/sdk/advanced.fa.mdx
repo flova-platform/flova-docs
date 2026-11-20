@@ -9,41 +9,89 @@ description: "گسترش Flova برای Linux، Ethernet، Bluetooth، برده�
 SDK قرارداد Flova و Connection را اجرا کند و Adapter فقط همان بخش مورد نیاز را
 به هم متصل کند.
 
+| نیاز محصول | انتخاب | مسئولیت برنامه |
+| --- | --- | --- |
+| فرایند Linux با ناظر سرویس | `FlovaLinux` | فرایند، حلقهٔ اجرا و سخت‌افزار |
+| شبکهٔ سیمی ESP32 با LAN8720 | `FlovaEsp32Ethernet` | تنظیم PHY و Handlerها |
+| Wi-Fi و کانال راه‌اندازی اختصاصی | `FlovaClient` | شبکه، اعتبارسنجی ورودی راه‌اندازی و سیاست Restart |
+| بردی خارج از هدف‌های آماده | `flova::Device` | Link، Storage، ساعت، گزارش و سخت‌افزار |
+
 ## Linux
 
-برنامه‌های Linux از <code>FlovaLinux</code> و بستهٔ CMake استفاده می‌کنند:
+اول یک خروجی نرم‌افزاری بسازید تا پیش از اتصال سخت‌افزار، نتیجه را ببینید.
+[بستهٔ Linux](../install/) را نصب کنید و نوع دستگاهی با فرمان نرم‌افزاری
+Boolean قابل‌نوشتن به نام `relay` بسازید. اطلاعات اتصال دستگاه را طبق
+راهنمای نصب در محیط فرایند قرار دهید. این کد را در `main.cpp` ذخیره کنید:
 
 ~~~cpp
 #include <FlovaLinux.h>
+#include <cstdio>
+#include <unistd.h>
 
-FlovaLinux device;
-auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+void applyRelay(bool on) {
+  std::puts(on ? "relay=on" : "relay=off");
+  std::fflush(stdout);
+}
 
 int main() {
-  FLOVA_ON_WRITE(relay, applyRelay);
-  if (!device.begin()) return 1;
-  for (;;) device.run();
+  FlovaLinux device;
+  auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+  if (!relay.tryOnWrite(applyRelay)) return 1;
+  if (!device.begin()) {
+    std::fprintf(stderr, "Flova startup failed: %s\n", device.lastError());
+    return 1;
+  }
+  while (device.running()) {
+    device.run();
+    usleep(10000);
+  }
 }
 ~~~
 
-برنامه مالک Process، Event Loop و اتصال Hardware است. Service Supervisor شروع
-Process، Restart و فعال‌سازی بستهٔ OTA مرحله‌بندی‌شده را مدیریت می‌کند. اگر
-برنامه در Linux به خواب یا Restart می‌رود، پیش از آن کارهای Link و Storage را
-تمام کند و سپس سیاست خودش را اجرا کند.
+برای Build این `CMakeLists.txt` را بسازید:
+
+```cmake
+cmake_minimum_required(VERSION 3.10)
+project(flova_relay LANGUAGES CXX)
+find_package(FlovaLinux CONFIG REQUIRED)
+add_executable(flova_relay main.cpp)
+target_link_libraries(flova_relay PRIVATE Flova::Linux)
+```
+
+```sh
+cmake -S . -B build
+cmake --build build
+./build/flova_relay
+```
+
+`relay` را از داشبورد تغییر دهید. فرایند باید `relay=on` یا `relay=off`
+چاپ کند. بعد از دیدن نتیجه، `applyRelay()` را با کد سخت‌افزار جایگزین کنید.
+در سرویس نهایی، `run()` را از حلقهٔ معمول برنامه فراخوانی کنید. آغاز فرایند،
+Restart و فعال‌سازی نسخهٔ OTA آماده‌شده با ناظر سرویس است.
 
 ## بردهای سفارشی و هستهٔ قابل انتقال
 
 هستهٔ قابل انتقال چهار مرز سرویس دارد:
 
 ~~~cpp
-flova::Device device(link, storage, clock, logger);
+flova::Device device(flovaLink, storage, clockSource, logger);
 auto relay = device.datastream<bool>("relay");
 ~~~
 
-برای برد یا Gateway، <code>flova::Link</code>، <code>flova::Storage</code>،
-<code>flova::Clock</code> و <code>flova::Logger</code> را پیاده‌سازی کنید.
-<code>Device::run()</code> نقطه‌ای است که پیام‌های صف‌شده را به Context برنامه
-و Hardware می‌رساند.
+قطعه‌کد بالا فرض می‌کند برنامه چهار سرویس را فراهم کرده است. با یک
+دیتاستریم Boolean شروع کنید و هر سرویس را متناسب با برد بسازید:
+
+| سرویس | مسئولیت |
+| --- | --- |
+| `flova::Link` | کلیدها را به شناسه‌های دریافتی از Link وصل کنید. ورودی محدود را در صف بگذارید و از `poll()` تحویل دهید؛ در Callback شبکه GPIO را تغییر ندهید. |
+| `flova::Storage` | نتیجهٔ واقعی خواندن، نوشتن و حذف را برگردانید. برای قابلیت ماندگار، باقی ماندن مقدار پس از Restart را بررسی کنید. |
+| `flova::Clock` | زمان یکنواخت را به میلی‌ثانیه گزارش دهید. UTC را فقط پس از همگام‌سازی معتبر اعلام کنید. |
+| `flova::Logger` | گزارش کوتاه بدهید و اطلاعات محرمانه را چاپ نکنید. |
+
+Handler مربوط به `relay` را پیش از `device.begin()` ثبت کنید. ابتدا
+`relay.write(true)` را محلی و سپس همان فرمان را از Link آزمایش کنید. بررسی
+کنید `device.run()` همان Handler را اجرا می‌کند تا خطای سخت‌افزار از خطای
+اتصال یا اتصال کلید به شناسه جدا شود.
 
 Transport می‌تواند Network، Serial، CAN، BLE یا یک Carrier محدود دیگر باشد.
 Carrier را از منطق Datastream و Hardware جدا نگه دارید. Adapter نباید منطق
@@ -62,6 +110,23 @@ DHCP و Clock مربوط به PHY بررسی کنید. سپس این موارد 
 Link فیزیکی، دریافت IP، آماده بودن TLS، برقرار شدن Connection، پیوند Template
 و پذیرفته شدن فرمان Hardware. کامپایل موفق هیچ‌کدام از این مراحل را ثابت
 نمی‌کند.
+
+در [اولین اسکچ](../first-sketch/)، Include و تعریف دستگاه را با کد زیر
+جایگزین کنید. پایهٔ خروجی نباید از پایه‌های رزروشدهٔ RMII باشد:
+
+```cpp
+#include <FlovaEsp32Ethernet.h>
+
+FlovaEsp32Ethernet device;  // Defaults; check them against the board schematic.
+```
+
+در کنسول دستگاه Ethernet مستقیم بسازید. شناسهٔ قالب، توکن کارخانهٔ مختص
+دستگاه و نشانی Link را در تنظیمات Build خصوصی وارد کنید:
+`FLOVA_DEVICE_TEMPLATE_ID`، `FLOVA_DEVICE_PROVISION_TOKEN` و
+`FLOVA_DEVICE_LINK_URL`. توکن در فایل Firmware قرار می‌گیرد؛ آن را به‌عنوان
+نسخهٔ عمومی توزیع نکنید. بررسی `begin()` و حلقهٔ `run()` را نگه دارید.
+دستگاه را به شبکهٔ دارای DHCP وصل و با کد آن فعال کنید. به‌ترتیب اتصال
+سیمی، نشانی IP، آنلاین شدن و دریافت نخستین گزارش را بررسی کنید.
 
 ## Bluetooth و مسیرهای دیگر Provisioning
 
@@ -84,22 +149,8 @@ Handoff محدود Flova را به آن اضافه کند. برنامه مسئو
 حفاظت از Route و نگه‌داری Wi-Fi یا Ethernet است. SDK نباید Web Server شما را
 جایگزین کند یا بدون درخواست برنامه SoftAP راه بیندازد.
 
-در برنامهٔ Arduino، ساختار معمول چنین است:
-
-~~~cpp
-WebServer server(80);
-FlovaEsp32 device;
-
-void setup() {
-  device.attachProvisioning(server);
-  server.begin();
-}
-
-void loop() {
-  server.handleClient();
-  device.run();
-}
-~~~
+در [آموزش راه‌اندازی سفارشی](../provisioning/#web-setup-تحت-مالکیت-برنامه)،
+ترکیب `FlovaClient`، دریافت Handoff معتبر و اجرای حلقهٔ برنامه را ببینید.
 
 Provisioning را با درخواست فرم یکی نگیرید. پس از ارسال فرم باید Session
 Commit شود، Connection احراز هویت شود، Template پیوند بخورد و نخستین Report
@@ -107,26 +158,11 @@ Commit شود، Connection احراز هویت شود، Template پیوند بخ
 
 ## مرز برنامهٔ سفارشی Arduino
 
-Facade سفارشی Passive است. خودش SoftAP شروع نمی‌کند، Web Server را جایگزین
-نمی‌کند، GPIO را کنترل نمی‌کند و بدون تصمیم برنامه Device را Restart نمی‌کند.
-برنامه انتخاب می‌کند چه زمانی Wi-Fi یا Ethernet شروع شود، کدام Pinها استفاده
-شوند و خطای Hardware چگونه بازیابی شود.
-
-~~~cpp
-FlovaEsp32 device;
-auto sensor = FLOVA_DATASTREAM(device, float, "temperature");
-
-void setup() {
-  startApplicationNetwork();
-  attachHardwareHandlers();
-  device.begin();
-}
-
-void loop() {
-  serviceApplicationHardware();
-  device.run(applicationNetworkReady());
-}
-~~~
+از `0.5.0` به بعد، `FlovaEsp32` و `FlovaEsp8266` راه‌اندازی SoftAP،
+Wi-Fi و سیاست Restart را مدیریت می‌کنند. GPIO و حسگرها با برنامه‌اند.
+اگر برنامه باید شبکه یا Restart را هم مدیریت کند، `FlovaClient` را صریحاً
+با سرویس‌های برد ترکیب کنید و `client.run()` را در کنار سرور و سخت‌افزار
+برنامه اجرا کنید.
 
 حلقه را همکارانه نگه دارید. Handler باید وضعیت برنامه را تغییر دهد یا کاری را
 در صف قرار دهد و نباید برای درخواست Network دوم، File یا عملیات طولانی منتظر
@@ -154,14 +190,18 @@ Hardware، Limitها، شرایط Power و سیاست Emergency را بررسی 
 فرمان را نپذیرفت، همان وضعیت واقعی را Report کنید و نتیجهٔ رد شدن را پنهان
 نکنید.
 
-## مرور پیش از تحویل
+## یکپارچه‌سازی را روی برد بررسی کنید
 
-پیش از تحویل یک Integration سفارشی، مدل Universal یا Custom را صریح انتخاب
-کنید، Datastream و Settingها را پیش از <code>begin()</code> تعریف کنید و
-Storageای فراهم کنید که با Reset مورد انتظار محصول باقی بماند. سپس
-<code>run()</code> را در حلقهٔ همکارانه اجرا کنید و Handlerها را کوتاه و
-آگاه از Hardware نگه دارید.
+Build موفق فقط نخستین بررسی است. کار را روی برد توسعه و یک نوع دستگاه
+آزمایشی انجام دهید، نه روی دستگاه عملیاتی.
 
-در نهایت Provisioning، Connection دوباره، Template Binding، فرمان، Report،
-MQTT یا Flova Link، OTA و مسیر Recovery سیمی را جداگانه بررسی کنید. برای
-اولین Image و Update ناموفق همیشه یک مسیر بازیابی قابل اتکا نگه دارید.
+| تمرین | نتیجهٔ مورد انتظار |
+| --- | --- |
+| راه‌اندازی اولیه و سپس روشن کردن مجدد | برد بدون درخواست کد فعال‌سازی تازه دوباره وصل می‌شود. |
+| قطع و برقراری دوبارهٔ شبکه | کنترل محلی ایمن می‌ماند. دستگاه دوباره وصل می‌شود و دادهٔ باقی‌مانده تابع [سیاست آفلاین](../datastreams/) است. |
+| ارسال فرمان خارج از محدوده یا ناامن | سخت‌افزار و مقدار محلی تغییر نمی‌کنند و فرستنده نتیجهٔ رد را می‌بیند. |
+| قطع به‌روزرسانی آزمایشی یا جلوگیری از اتصال نسخهٔ تازه | [مسیر بازیابی](../lifecycle/) روی همان هدف کار می‌کند؛ اگر بازگشت خودکار وجود ندارد، بازیابی سیمی را بررسی کنید. |
+
+وضعیت واقعی خروجی را جدا از اتصال و نتیجهٔ فرمان ثبت کنید. در ESP8266،
+وقفهٔ حلقه و Heap آزاد پیوسته را هنگام اتصال مجدد TLS و OTA هم اندازه
+بگیرید؛ Build موفق این محدودیت‌ها را ثابت نمی‌کند.

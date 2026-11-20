@@ -1,0 +1,45 @@
+---
+title: "Cloud schedules and local timers"
+description: "Choose between Console schedules and timers that run on the device."
+---
+
+## Cloud schedules
+
+Flova runs cloud schedules and sends an ordinary write command when an
+occurrence is due. The device must be online. Missed occurrences are skipped;
+commands expire 60 seconds after the occurrence. Firmware safety checks still
+apply. No schedule is downloaded to the device.
+
+Custom firmware must opt in per writable stream before `begin()`:
+
+```cpp
+relay.scheduling(flova::Scheduling::CloudOnly);
+```
+
+The default is `flova::Scheduling::Disabled`. Console cannot enable a stream
+that firmware has not opted in. Universal firmware opts in configured digital
+and PWM outputs, not inputs. See [Console Automations](../../console/automations/).
+
+## Local timers
+
+Use `flova::Scheduler` for an action that must run without a network connection.
+The application provides a synchronized `flova::WallClock` and timezone
+conversion. Given an application-owned `wallClock` and a declared `relay`:
+
+```cpp
+#include <FlovaScheduler.h>
+
+flova::Scheduler timers(wallClock);
+void turnOff() { relay.write(false); }
+
+// In setup():
+// timers.daily(20, 0, "IRST-3:30", turnOff);
+// In loop(), alongside device.run():
+// timers.run();
+```
+
+Timers require a valid clock and run only in the due minute. Up to eight
+entries and their execution state live in RAM; register them again after
+reboot. A reboot during the due minute can repeat an action. Use idempotent
+handlers, route writes through the datastream API, and avoid scheduling the
+same action both in Console and on-device unless that is intentional.

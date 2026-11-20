@@ -10,15 +10,15 @@ Identity، Datastreamهای نوع‌دار، فرمان‌های راه دور�
 
 SDK روی ESP32، ESP8266، Linux و بردهای C++11 قابل انتقال کار می‌کند. کد
 Datastream در این مدل‌ها ثابت می‌ماند و فقط Transport تغییر می‌کند: در حالت
-معمول از **Flova Link** استفاده کنید و اگر محصول از قبل زیرساخت MQTT دارد،
-MQTT را به‌عنوان Transport انتخاب کنید.
+معمول از **Flova Link** استفاده کنید، چه با کلاس‌های مدیریت‌شده و چه با
+ترکیب صریح سرویس‌های برنامه.
 
 ## از کجا شروع کنیم؟
 
-اگر اولین دستگاه را می‌سازید، [شروع سریع](./quickstart) یک نمونهٔ ESP32 را از
+اگر اولین دستگاه را می‌سازید، [شروع سریع](../quickstart/) یک نمونهٔ ESP32 را از
 ساخت Template تا مشاهدهٔ اولین مقدار در Console پیش می‌برد. پس از آن،
-[Datastreamها](./datastreams) قرارداد میان Firmware و Template را توضیح
-می‌دهد و [Provisioning](./provisioning) هویت و راه‌اندازی نخستین دستگاه را
+[Datastreamها](../datastreams/) قرارداد میان Firmware و Template را توضیح
+می‌دهد و [Provisioning](../provisioning/) هویت و راه‌اندازی نخستین دستگاه را
 پوشش می‌دهد.
 
 برای پروژهٔ موجود، ابتدا ببینید کدام بخش در اختیار برنامه است:
@@ -26,7 +26,8 @@ MQTT را به‌عنوان Transport انتخاب کنید.
 | مدل | انتخاب مناسب | برنامه مالک چیست؟ |
 | --- | --- | --- |
 | Universal Firmware | `FlovaUniversalEsp32` یا `FlovaUniversalEsp8266` | Template، راه‌اندازی اولیه، نگاشت Hardware و سیاست OTA را خود SDK مدیریت می‌کند. |
-| برنامهٔ سفارشی Arduino | `FlovaEsp32` یا `FlovaEsp8266` | Wi-Fi، GPIO، حسگرها، Web Server، Provisioning و حلقهٔ اصلی را برنامه مدیریت می‌کند. |
+| برنامهٔ سفارشی Arduino | `FlovaEsp32` یا `FlovaEsp8266` | GPIO، حسگرها و حلقهٔ اصلی با برنامه‌اند؛ راه‌اندازی و Wi-Fi با SDK است. |
+| شبکه تحت مالکیت برنامه | ترکیب صریح `FlovaClient` | شبکه، سرور و کانال راه‌اندازی با برنامه‌اند. |
 | دستگاهٔ Linux | `FlovaLinux` | Process، Event Loop، Hardware و Service Supervisor با برنامه است. |
 | برد یا Gateway سفارشی | `flova::Device` | Link، Storage، Clock، Logger و اتصال Hardware را Port فراهم می‌کند. |
 
@@ -37,15 +38,12 @@ Flova Link را تا حدی که آن Target پشتیبانی می‌کند آم
 دستگاهی مناسب است که می‌خواهید رفتار عمومی آن از روی Template و Console
 مدیریت شود.
 
-در برنامهٔ سفارشی، شما Wi-Fi یا Ethernet را شروع می‌کنید، زمان آماده شدن
-شبکه را تشخیص می‌دهید و سپس SDK را وارد حلقهٔ برنامه می‌کنید. می‌توانید از
-Flova Link استفاده کنید یا یک MQTT Client موجود را به SDK بدهید. در هر دو
-حالت، تعریف Datastream، Handler فرمان و گزارش مقدار یکسان می‌ماند.
+برای ویرایش، Build و آپلود از کنسول، [Flova IDE](../ide/) را ببینید. برای
+Arduino IDE، PlatformIO یا Linux محلی، [راهنمای نصب](../install/) را دنبال کنید.
 
 Bluetooth، Serial، Ethernet و حتی یک Gateway می‌توانند برای رساندن اطلاعات
 Provisioning به دستگاه به کار بروند. این مسیر موقت است؛ پس از پذیرفته شدن
-دادهٔ تحویل و ذخیره شدن Session، دستگاه باید برای کار عادی از Flova Link یا
-MQTT استفاده کند.
+دادهٔ تحویل و ذخیره شدن Session، دستگاه برای کار عادی از Flova Link استفاده می‌کند.
 
 ## سطح عمومی SDK
 
@@ -100,16 +98,16 @@ SDK به‌تنهایی یک پروژهٔ GPIO را به محصول تبدیل �
 Report را ثابت نمی‌کند؛ نتیجهٔ Report، Latest Value و History را در Console
 بررسی کنید.
 
-## ترتیب پیشنهادی مطالعه
+## با ساختن یاد بگیرید
 
-۱. [شروع سریع](./quickstart) برای ساخت اولین Device و Dashboard.
-۲. [Datastreamها](./datastreams) برای مقدار، فرمان، Report و قرارداد Template.
-۳. [Provisioning](./provisioning) برای Identity، Session و مسیرهای Wi-Fi، BLE و Web.
-۴. [Configuration](./configuration) برای Settingهای نوع‌دار و مرز ایمنی Hardware.
-۵. [Transportها](./transports) برای Flova Link، MQTT، Connection و Adapter سفارشی.
-۶. [چرخهٔ Firmware](./lifecycle) برای Logging، OTA، Release و Recovery.
-۷. [Firmware پیشرفته](./advanced) برای Linux، Ethernet، Bluetooth و بردهای سفارشی.
+<Cards>
+  <Card title="۱. اولین دستگاه را وصل کنید" description="Universal Firmware را فلش کنید، ESP32 را فعال کنید و بدون نوشتن برنامه LED را کنترل کنید." href="../quickstart/" />
+  <Card title="۲. اولین اسکچ را بنویسید" description="دمای شبیه‌سازی‌شده را به کنسول بفرستید و فرمان LED را در کد C++ خودتان پردازش کنید." href="../first-sketch/" />
+  <Card title="۳. قطعی و راه‌اندازی مجدد را مدیریت کنید" description="انتخاب کنید چه داده‌ای آفلاین نگه داشته شود، پس از روشن شدن بازگردد و با تکرار فرمان چه کنید." href="../datastreams/" />
+  <Card title="۴. یکپارچه‌سازی پیشرفته بسازید" description="سرویس‌های برنامه را انتخاب کنید و یکپارچه‌سازی Linux، Ethernet یا برد سفارشی را بررسی کنید." href="../advanced/" />
+</Cards>
 
-برای نام کلاس‌ها، توابع عمومی و متدهای وضعیت از [مرجع API](./reference)
-استفاده کنید. این مرجع سطح عمومی SDK را پوشش می‌دهد و به جزئیات خصوصی
-پیاده‌سازی وابسته نیست.
+هنگام نوشتن کد، [مرجع API](../reference/) را ببینید. برای قابلیت‌های مشخص
+از [راه‌اندازی](../provisioning/)، [پیکربندی](../configuration/)،
+[زمان‌بندی](../scheduling/)، [عیب‌یابی اتصال](../transports/) یا
+[OTA و بازیابی](../lifecycle/) شروع کنید.

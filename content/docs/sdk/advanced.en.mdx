@@ -6,38 +6,90 @@ description: "Extend Flova to Linux, Ethernet, custom boards, and application-ow
 Use the advanced paths when the standard ESP32 or ESP8266 composition does not
 match the product's hardware or service model.
 
+| If your product needs… | Use | Your application owns |
+| --- | --- | --- |
+| A supervised Linux process | `FlovaLinux` | Process, event loop, and hardware |
+| Wired ESP32 with LAN8720 | `FlovaEsp32Ethernet` | PHY setup parameters and handlers |
+| Its own Wi-Fi and setup channel | `FlovaClient` | Networking, validated setup input, and restart policy |
+| A board outside the supported targets | `flova::Device` | Link, storage, clock, logger, and hardware |
+
 ## Linux
 
-Linux applications use `FlovaLinux` with a CMake package:
+Start with a software output: before wiring GPIO or another peripheral, make
+the process print the requested state. [Install the Linux package](../install/)
+and create a Device Type with a writable Boolean software command named `relay`.
+Set up the device and supply its Link settings in the process environment as
+described in the install guide. Save this as `main.cpp`:
 
 ```cpp
 #include <FlovaLinux.h>
+#include <cstdio>
+#include <unistd.h>
 
-FlovaLinux device;
-auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+void applyRelay(bool on) {
+  std::puts(on ? "relay=on" : "relay=off");
+  std::fflush(stdout);
+}
 
 int main() {
-  FLOVA_ON_WRITE(relay, applyRelay);
-  if (!device.begin()) return 1;
-  for (;;) device.run();
+  FlovaLinux device;
+  auto relay = FLOVA_DATASTREAM(device, bool, "relay");
+  if (!relay.tryOnWrite(applyRelay)) return 1;
+  if (!device.begin()) {
+    std::fprintf(stderr, "Flova startup failed: %s\n", device.lastError());
+    return 1;
+  }
+  while (device.running()) {
+    device.run();
+    usleep(10000);
+  }
 }
 ```
 
-The application owns the event loop and hardware integration. A service
-supervisor owns process startup, restart, and activation of a staged OTA image.
+Build it with this `CMakeLists.txt`:
+
+```cmake
+cmake_minimum_required(VERSION 3.10)
+project(flova_relay LANGUAGES CXX)
+find_package(FlovaLinux CONFIG REQUIRED)
+add_executable(flova_relay main.cpp)
+target_link_libraries(flova_relay PRIVATE Flova::Linux)
+```
+
+```sh
+cmake -S . -B build
+cmake --build build
+./build/flova_relay
+```
+
+Toggle `relay` from a dashboard. The process should print `relay=on` or
+`relay=off`. Only then replace `applyRelay()` with the actual hardware adapter.
+In a service, call `run()` from your normal event loop. Let the supervisor
+manage process startup, restarts, and activation of a staged OTA image.
 
 ## Custom boards
 
 The portable core has four service boundaries:
 
 ```cpp
-flova::Device device(link, storage, clock, logger);
+flova::Device device(flovaLink, storage, clockSource, logger);
 auto relay = device.datastream<bool>("relay");
 ```
 
-Implement `flova::Link`, `flova::Storage`, `flova::Clock`, and `flova::Logger`
-for the board or gateway. `Device::run()` remains the point where queued
-messages reach application hardware.
+The snippet assumes four application-owned service objects. Start with one
+Boolean stream and implement each service against your board:
+
+| Service | What the implementation must do |
+| --- | --- |
+| `flova::Link` | Bind declared keys to the IDs supplied by the Link endpoint. Queue bounded input and deliver it from `poll()`; never drive GPIO from a transport callback. |
+| `flova::Storage` | Report real read/write/remove outcomes. For durable features, verify saved data survives reboot; a stub that returns success is not durable storage. |
+| `flova::Clock` | Return monotonic milliseconds for elapsed time. Report UTC valid only after synchronization if you supply UTC. |
+| `flova::Logger` | Send short diagnostics to a board-owned sink without printing secrets. |
+
+Register a handler on `relay` before `device.begin()`. First verify a local
+`relay.write(true)`, then send the same command over your Link and verify that
+`device.run()` invokes the same handler. This separates a hardware adapter
+problem from a transport or binding problem.
 
 The transport can be a network connection or a gateway such as serial, CAN,
 BLE, or another bounded carrier. Keep the carrier adapter separate from the
@@ -54,6 +106,24 @@ Check the board schematic for boot pins, RMII reservations, power, DHCP, and
 certificate setup. A successful compile does not prove physical link, TLS, or
 hardware command acceptance.
 
+In the [first sketch](../first-sketch/), replace the SDK include and device
+declaration with the following. Use a free output pin, not an RMII pin:
+
+```cpp
+#include <FlovaEsp32Ethernet.h>
+
+FlovaEsp32Ethernet device;  // Defaults; check them against the board schematic.
+```
+
+Create a direct Ethernet device in Console. Supply the template ID, per-device
+factory token, and deployment Link URL as private build definitions
+(`FLOVA_DEVICE_TEMPLATE_ID`, `FLOVA_DEVICE_PROVISION_TOKEN`, and
+`FLOVA_DEVICE_LINK_URL`). These are build inputs, not shared constants; the
+token is in the resulting image, so do not distribute it as generic firmware.
+Keep the existing `begin()` check and `run()` loop. Connect to a DHCP network,
+claim the device with its activation code, and check in order: physical link,
+IP address, Flova online status, then the first datastream report.
+
 ## Application-owned provisioning
 
 An existing web server can keep its routes and network mode while the SDK adds
@@ -66,28 +136,12 @@ service only when the product actually owns that boundary.
 
 ## Custom Arduino application boundary
 
-The custom board facade is passive. It does not start a SoftAP, replace your
-web server, control GPIO, or reboot the board on its own. Your application
-chooses when to start Wi-Fi, which pins to use, and how to recover from a
-hardware fault.
-
-The normal structure is:
-
-```cpp
-FlovaEsp32 device;
-auto sensor = FLOVA_DATASTREAM(device, float, "temperature");
-
-void setup() {
-  startApplicationNetwork();
-  attachHardwareHandlers();
-  device.begin();
-}
-
-void loop() {
-  serviceApplicationHardware();
-  device.run(applicationNetworkReady());
-}
-```
+Since `0.5.0`, `FlovaEsp32` and `FlovaEsp8266` manage SoftAP, Wi-Fi, and
+restart policy. Your sketch still owns GPIO and sensors. If it must also own
+networking or restart decisions, follow the
+[application-owned setup walkthrough](../provisioning/#application-owned-web-setup).
+It shows how to compose `FlovaClient`, submit a validated handoff, and poll
+`client.run()` alongside the application's server and hardware work.
 
 Keep the loop cooperative. A handler should update or queue application state,
 not wait for a second network request or perform a long blocking operation.
@@ -112,7 +166,7 @@ session.
 
 Keep the setup channel separate from normal telemetry. Once the handoff is
 durably accepted, release temporary setup resources before starting normal Link
-or MQTT work.
+work.
 
 ## Hardware ownership
 
@@ -125,14 +179,18 @@ Never assume that a valid cloud command is safe to apply directly. Check the
 current hardware state, limits, power conditions, and emergency policy before
 changing an output.
 
-## Custom integration checklist
+## Verify an integration on the target
 
-- Choose universal or custom composition explicitly.
-- Keep the public umbrella include in simple examples.
-- Declare datastreams and settings before `begin()`.
-- Provide storage that survives the reset behavior the product expects.
-- Call `run()` from the normal cooperative loop.
-- Keep callbacks bounded and hardware-aware.
-- Verify provisioning, reconnect, template binding, command, report, and OTA
-  separately.
-- Keep wired recovery for the first image and failed updates.
+A successful build is the first check, not the last. Use a development board
+and a test Device Type before testing production behavior.
+
+| Exercise | Expected result |
+| --- | --- |
+| Provision, then reboot | The board reconnects without asking for a new activation code. |
+| Disconnect networking, then restore it | Local control remains safe. The device reconnects; retained telemetry follows the configured [offline policy](../datastreams/). |
+| Send an out-of-range or otherwise unsafe command | Hardware and cached state stay unchanged; the requester sees the rejection. |
+| Interrupt a test update or prevent the new image from reconnecting | The product's documented [recovery path](../lifecycle/) works on that target, including wired recovery where automatic rollback is unavailable. |
+
+Record what happened to the physical output separately from connection and
+command status. On ESP8266, also measure loop stalls and contiguous free heap
+during TLS reconnect and OTA; a passing USB build does not establish those limits.
