@@ -26,6 +26,7 @@ The editor has these node types:
 | Stream update                  | Starts when a datastream updates. Choose any change, rising, or falling. |
 | Schedule                       | Starts once, daily, or weekly at a selected time.                        |
 | Device status (Workspace)      | Starts when a selected device goes online or offline.                    |
+| Device event (Workspace)       | Creates a warning when a selected device logs a matching event code.     |
 | Webhook trigger (Workspace)    | Starts when an external service posts to the trigger URL.                |
 | Condition                      | Compares a channel with a value.                                         |
 | Combine conditions (Workspace) | Joins two or more conditions with AND or OR.                             |
@@ -55,6 +56,7 @@ Match the condition to the channel type. A numeric comparison cannot evaluate te
 For **Set value**, choose a writable channel and either set a value or toggle the current value. The published channel definition must allow writes. A read-only channel makes the automation invalid.
 
 For **Create warning**, enter a title and message. Console shows the warning in its notification center.
+To start with firmware instead of a datastream, connect **Device event** directly to **Create warning**. See [Turn a device event into a warning](../../sdk/event-alerts/).
 
 ## Receive a webhook
 

@@ -5,8 +5,8 @@ description: "Send a custom event from an ESP32 or ESP8266 sketch and find it in
 
 Use `logEvent()` for things that happen once in a while: a sensor fails, a door
 opens, or a reading crosses a threshold. Use a [datastream](../datastreams/) for
-regular measurements or values you want to chart. A custom log event does not
-create a datastream or trigger an automation.
+regular measurements or values you want to chart. Logging alone does not send a
+warning. To get one, [connect the event to a workspace automation](../event-alerts/).
 
 ## 1. Prepare the device
 

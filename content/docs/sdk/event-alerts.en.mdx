@@ -1,0 +1,41 @@
+---
+title: "Turn a device event into a warning"
+description: "Connect a firmware logEvent code to a workspace warning in Flova Console."
+---
+
+Use a **Device event** trigger when an operator or device owner needs to know
+about a firmware event without watching Monitor. In this tutorial, an ESP32 or
+ESP8266 sketch sends `application_started`, and Console creates a warning.
+
+## 1. Connect a device
+
+Follow [Log a custom device event](../log-event/) and confirm that
+`application_started` appears in **Monitor → Custom events**. You can use the
+same sketch for this tutorial. If you already log a different event, substitute
+its exact code in the next step.
+
+## 2. Create the warning automation
+
+1. Open [Console Automations](https://console.flova.ir/automations) from the
+   workspace sidebar and create an automation. Use the workspace editor, not
+   the Device Type editor.
+2. Add **Device event**. Select the device you connected and enter
+   `application_started` in **Event code**.
+3. Add **Create warning** and connect it directly to **Device event**. Enter
+   a title such as `Device started`, a message, and a severity. Set the repeat
+   interval to control how often the same warning can appear for this device.
+4. Save and deploy. Logs accepted before deployment are not replayed.
+
+## 3. Send a new event and check the result
+
+Restart the test board so the example sketch sends a fresh event. Once the
+board reconnects, check **Warnings** in Console. The warning uses the title
+and message you entered in the automation; the optional text sent by the
+sketch remains in Monitor. Active device owners can also receive the warning
+as a push notification if push is enabled and their app is registered for it.
+
+If the event appears in Monitor but you don't see a warning, check that the
+automation is deployed, the selected device and event code match, and the
+repeat interval has elapsed. The automation's run history can show a warning
+as skipped when the repeat interval is still active. Retries of the same log
+do not create a second warning.
