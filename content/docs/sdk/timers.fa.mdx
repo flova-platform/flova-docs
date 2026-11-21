@@ -1,0 +1,85 @@
+---
+title: "اجرای کار با تایمر"
+description: "در اسکچ ESP32 یا ESP8266 بدون متوقف کردن حلقهٔ دستگاه، اندازه‌گیری را در فاصله‌های ثابت گزارش کنید."
+---
+
+با تایمر فریم‌ور می‌توانید هر چند ثانیه یک خوانش بگیرید یا کاری را پس از یک
+تأخیر فقط یک‌بار انجام دهید. برخلاف `delay()`، تایمر اجازه می‌دهد بین اجراها
+فراخوانی `device.run()` ادامه پیدا کند. این تایمرها آفلاین کار می‌کنند و به
+همگام‌سازی ساعت یا تنظیم در کنسول نیاز ندارند.
+
+## ۱. دیتاستریم را آماده کنید
+
+از برد ESP32 یا ESP8266 و نسخه‌ای از FlovaSDK استفاده کنید که `FlovaTimer.h`
+را دارد. در نوع دستگاه، `temperature` را به‌صورت دیتاستریم فقط‌خواندنی Number
+(`double`) از نوع Software state منتشر کنید. اگر
+[آموزش اولین اسکچ](../first-sketch/) را انجام داده‌اید، از همان دیتاستریم
+`temperature` استفاده کنید. برای این نمونه حسگر دما لازم نیست.
+
+## ۲. هر پنج ثانیه یک خوانش گزارش کنید
+
+اسکچ را با [Arduino IDE یا PlatformIO](../install/) بسازید و آپلود کنید.
+روی برد ESP8266 به‌جای `FlovaEsp32` از `FlovaEsp8266` استفاده کنید.
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaEsp32 device;
+flova::Timer<2> timers;
+auto temperature = FLOVA_DATASTREAM(device, double, "temperature");
+bool started = false;
+
+void reportTemperature() {
+  if (!device.ready()) return;
+  const double sample = 22.0 + (millis() / 5000) % 5;
+  const auto result = FLOVA_REPORT(temperature, sample);
+  if (!result.accepted()) Serial.println(result.reason);
+}
+
+void setup() {
+  Serial.begin(115200);
+  temperature.mode(flova::Mode::Sample);
+  if (!FLOVA_INTERVAL(timers, 5000, reportTemperature)) {
+    Serial.println("Could not register the sampling timer");
+    return;
+  }
+  started = device.begin();
+  if (!started) Serial.println(device.lastError());
+}
+
+void loop() {
+  if (!started) return;
+  device.run();
+  timers.run(millis());
+}
+```
+
+فاصلهٔ پنج‌ثانیه‌ای از اولین فراخوانی `timers.run(millis())` آغاز می‌شود.
+`reportTemperature` را بدون پرانتز بدهید تا تایمر بعداً آن را اجرا کند. اگر
+حلقه دیر اجرا شود، تایمر تابع را فقط یک‌بار فراخوانی می‌کند و نوبت‌های
+ازدست‌رفته را پشت سر هم اجرا نمی‌کند. تابع‌ها را کوتاه نگه دارید تا دور بعدی
+حلقه به تأخیر نیفتد.
+
+## ۳. خوانش را در کنسول بررسی کنید
+
+اگر برد تازه است، آن را طبق [راهنمای راه‌اندازی دستگاه](../provisioning/) وصل
+کنید. پس از آماده شدن دستگاه، آن و دیتاستریم `temperature` را در
+[پایش](../../console/monitor/) انتخاب کنید. باید تقریباً هر پنج ثانیه یک خوانش
+جدید ببینید. تایمر در زمان قطع اتصال هم اجرا می‌شود، اما این نمونه تا زمانی
+که `device.ready()` دوباره `true` نشود، گزارشی نمی‌فرستد.
+
+## ۴. یک تایمر یک‌باره امتحان کنید
+
+کد زیر را به `setup()` اضافه کنید تا جایگاه دوم تایمر فقط یک‌بار، دو ثانیه پس از
+شروع، یک پیام سریال چاپ کند:
+
+```cpp
+if (!FLOVA_TIMEOUT(timers, 2000, [] { Serial.println("Timer loop is running"); })) {
+  Serial.println("Could not register the one-shot timer");
+}
+```
+
+ظرفیت تایمر، مقادیر برگشتی و روش لغو یک تایمر در
+[مرجع API تایمر](../reference/#interval-timer-api) آمده است. برای اجرای کار در
+ساعت مشخصی از روز، [زمان‌بندی ابری و تایمر محلی](../scheduling/) را ببینید.

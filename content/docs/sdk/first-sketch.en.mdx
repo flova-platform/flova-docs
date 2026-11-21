@@ -108,6 +108,8 @@ void loop() {
 | [`FLOVA_REPORT(temperature, sample)`](../reference/#flova_report)               | Submits an observation without running the LED handler. `accepted()` confirms local acceptance; check Console for delivery.                                    |
 
 The `millis()` check samples every five seconds without making `run()` wait.
+To run multiple periodic tasks without writing a separate time check for each,
+see the [firmware timer tutorial](../timers/).
 
 ## 3. Connect the device and check both directions
 

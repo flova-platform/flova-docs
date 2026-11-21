@@ -1,0 +1,84 @@
+---
+title: "Run work on a timer"
+description: "Report a measurement at a fixed interval in an ESP32 or ESP8266 sketch without blocking the device loop."
+---
+
+Use a firmware timer to take a reading every few seconds or do something once
+after a delay. Unlike `delay()`, a timer lets the sketch keep calling
+`device.run()` between callbacks. These timers work offline and do not need a
+synced clock or anything configured in Console.
+
+## 1. Prepare a datastream
+
+Use an ESP32 or ESP8266 with a FlovaSDK build that includes `FlovaTimer.h`. In
+the device's Device Type, publish `temperature` as a read-only Number (`double`)
+software state datastream. If you already followed the
+[first-sketch tutorial](../first-sketch/), reuse its `temperature` stream.
+No temperature sensor is needed for this example.
+
+## 2. Report every five seconds
+
+Build and upload the sketch with [Arduino IDE or PlatformIO](../install/).
+Replace `FlovaEsp32` with `FlovaEsp8266` for that board.
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaEsp32 device;
+flova::Timer<2> timers;
+auto temperature = FLOVA_DATASTREAM(device, double, "temperature");
+bool started = false;
+
+void reportTemperature() {
+  if (!device.ready()) return;
+  const double sample = 22.0 + (millis() / 5000) % 5;
+  const auto result = FLOVA_REPORT(temperature, sample);
+  if (!result.accepted()) Serial.println(result.reason);
+}
+
+void setup() {
+  Serial.begin(115200);
+  temperature.mode(flova::Mode::Sample);
+  if (!FLOVA_INTERVAL(timers, 5000, reportTemperature)) {
+    Serial.println("Could not register the sampling timer");
+    return;
+  }
+  started = device.begin();
+  if (!started) Serial.println(device.lastError());
+}
+
+void loop() {
+  if (!started) return;
+  device.run();
+  timers.run(millis());
+}
+```
+
+The first `timers.run(millis())` starts the five-second interval. Pass
+`reportTemperature` without parentheses so the timer can call it later. If the
+loop runs late, the timer calls the function once, not once per missed tick.
+Keep callbacks short so they don't delay the next pass through the loop.
+
+## 3. Check the reading in Console
+
+If the board is new, follow [device provisioning](../provisioning/) to connect
+it. Once the device is ready, select it and its `temperature` datastream in
+[Monitor](../../console/monitor/). You should see a new reading about every five
+seconds. The timer still runs during a disconnect, but this example deliberately
+skips reports until `device.ready()` is true again.
+
+## 4. Try a one-shot timer
+
+Add this to `setup()` to use the second slot for a serial message that appears
+once, two seconds after the timer starts:
+
+```cpp
+if (!FLOVA_TIMEOUT(timers, 2000, [] { Serial.println("Timer loop is running"); })) {
+  Serial.println("Could not register the one-shot timer");
+}
+```
+
+See the [timer API reference](../reference/#interval-timer-api) for capacity,
+return values, and how to cancel a pending timer. For actions at a particular
+time of day, see [Cloud schedules and local timers](../scheduling/).

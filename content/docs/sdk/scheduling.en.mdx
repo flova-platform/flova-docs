@@ -22,6 +22,10 @@ and PWM outputs, not inputs. See [Console Automations](../../console/automations
 
 ## Local timers
 
+For elapsed-time work such as sampling every five seconds or running once after
+a delay, follow the [interval timer tutorial](../timers/). For a specific time of
+day, use the wall-clock scheduler below.
+
 Use [`flova::Scheduler`](../reference/#local-timer-api) for an action that must run without a network connection.
 The application provides a synchronized `flova::WallClock` and timezone
 conversion. Given an application-owned `wallClock` and a declared `relay`:

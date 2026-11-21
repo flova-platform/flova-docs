@@ -388,7 +388,42 @@ binding.handler.result = setRelay;
 
 The [advanced guide](../advanced/) shows how to supply the Link, Storage, Clock, Logger, and hardware services. Consumer code should not depend on private board adapters or generated codecs.
 
+## Interval timer API
+
+Include `<FlovaTimer.h>`, or `<FlovaSDK.h>` in an Arduino sketch. `flova::Timer<>`
+has 16 slots by default. Use `flova::Timer<Capacity>` with 1–16 slots to reserve
+only the space your sketch needs.
+
+| Call                                         | Behavior                                                                                                                                                |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FLOVA_INTERVAL(timers, periodMs, callback)` | Calls `timers.setInterval(periodMs, callback)` to schedule repeating work.                                                                              |
+| `FLOVA_TIMEOUT(timers, delayMs, callback)`   | Calls `timers.setTimeout(delayMs, callback)` to run once, then frees the slot.                                                                          |
+| `timers.run(nowMs)`                          | Advances timers and calls any due callbacks synchronously. Pass Arduino `millis()` or a wrapping 32-bit monotonic millisecond count on other platforms. |
+| `timers.cancel(id)`                          | Removes a pending or repeating timer and returns `true`. Returns `false` if the ID is no longer active on this instance.                                |
+
+Both registration helpers return a nonzero timer ID on success, or `0` if
+registration fails (for example, the table is full or the delay is invalid).
+Pass a plain `void()` function or a lambda without captures. Periods and delays
+must be between 1 and 2,147,483,647 milliseconds.
+
+```cpp
+const auto id = FLOVA_INTERVAL(timers, 5000, reportTemperature);
+// To stop this interval later, call timers.cancel(id).
+```
+
+The delay starts at the first `run()` after registration. Call `run()` regularly
+from one application loop, not an interrupt or another thread. A late interval
+fires once and stays on its original cadence; it does not replay missed ticks.
+Callbacks can register or cancel timers. New timers registered in a callback
+start on the next `run()`. Timers work offline and are lost on reboot; they do
+not use a wall clock or device storage.
+
+See the [interval timer tutorial](../timers/) for a complete sketch.
+
 ## Local timer API
+
+Use this wall-clock API for a particular time of day. For elapsed delays and
+periodic work, use the [interval timer API](#interval-timer-api).
 
 Include `<FlovaScheduler.h>`. `flova::Scheduler(wallClock)` borrows an application `WallClock`, whose `synchronized()` reports whether time can be used and whose `localTime(timezone, output)` fills a `flova::LocalTime` or returns false. `daily(hour, minute, timezone, handler[, weekdays])` returns false for invalid input or a full table (eight entries). The optional mask uses bit 0 for Sunday through bit 6 for Saturday; default is every day. Keep the timezone string alive. `run()` calls handlers during the due minute, at most once per date per entry in RAM, with no replay of missed minutes. Re-register after reboot.
 
