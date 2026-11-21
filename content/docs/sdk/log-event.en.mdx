@@ -1,0 +1,73 @@
+---
+title: "Log a custom device event"
+description: "Send a custom event from an ESP32 or ESP8266 sketch and find it in Flova Console."
+---
+
+Use `logEvent()` for things that happen once in a while: a sensor fails, a door
+opens, or a reading crosses a threshold. Use a [datastream](../datastreams/) for
+regular measurements or values you want to chart. A custom log event does not
+create a datastream or trigger an automation.
+
+## 1. Prepare the device
+
+Use an ESP32 or ESP8266 with Arduino firmware and a FlovaSDK build that includes
+`logEvent()`. For a self-hosted deployment, update Engine and Console before
+uploading the sketch. Firmware sends this event without checking whether Engine
+supports it.
+
+Use an existing published Device Type and follow [device provisioning](../provisioning/)
+if the board is not already connected. You do not need to register an event code
+or add a datastream to the Device Type. No sensor or other wiring is required.
+
+## 2. Upload a sketch that logs once
+
+Upload this sketch with [Arduino IDE or PlatformIO](../install/). On an ESP8266,
+replace `FlovaEsp32` with `FlovaEsp8266`. If you are adding the example to an
+existing sketch, keep your current `begin()` and `run()` calls.
+
+```cpp
+#include <Arduino.h>
+#include <FlovaSDK.h>
+
+FlovaEsp32 device;
+bool started = false;
+
+void setup() {
+  Serial.begin(115200);
+  started = device.begin();
+  if (!started) {
+    Serial.println(device.lastError());
+    return;
+  }
+
+  if (!FLOVA_LOG_EVENT(device, "application_started", "Custom sketch started")) {
+    Serial.println("Could not queue application_started");
+  }
+}
+
+void loop() {
+  if (started) device.run();
+}
+```
+
+The helper calls `device.logEvent()` and queues the event before the network is
+ready. Keep calling `device.run()` so the SDK can connect and send it. This sketch
+queues one event per boot. To send a code without a message, use
+`device.logEvent("application_started")` instead.
+
+## 3. Find the event in Console
+
+1. Open the device's Device Type in Console and go to [Monitor](../../console/monitor/).
+2. In the event list, set **Event type** to **Custom events** and select your
+   device. Use **Live** or a history range that includes the device's connection.
+3. Look for `application_started: Custom sketch started`. Open the row to see
+   the event details.
+
+If nothing appears, check that the device is online, the time range covers the
+event, and Serial Monitor at `115200` shows no startup or queueing error. If
+you add more events to your sketch, check the return value: the SDK only holds
+one pending custom event at a time. Log state changes rather than calling the
+helper on every pass through `loop()`.
+
+See the [API reference](../reference/#flova_log_event) for input limits and what
+happens when the device disconnects or reboots.

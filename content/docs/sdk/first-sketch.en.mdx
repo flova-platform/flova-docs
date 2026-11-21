@@ -3,7 +3,7 @@ title: "Build your first custom sketch"
 description: "Report a simulated temperature and control an ESP32 LED from Flova."
 ---
 
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 Build a device that sends a temperature reading to Flova and accepts a command
 back. By the end, you'll see a changing value in Console and use a dashboard
@@ -26,10 +26,10 @@ ESP32 LED starter in [Flova IDE](../ide/) and replace its sketch source.
 In [Console](https://console.flova.ir/templates), create a Wi-Fi Device Type and
 add these two datastreams. The keys are case-sensitive.
 
-| Technical key | Value type | Exchange mode | Connection type |
-| --- | --- | --- | --- |
-| `temperature` | Number (`double`), unit `°C` | Read only | Software state |
-| `led` | On / Off (`bool`) | Read and write | Software command |
+| Technical key | Value type                   | Exchange mode  | Connection type  |
+| ------------- | ---------------------------- | -------------- | ---------------- |
+| `temperature` | Number (`double`), unit `°C` | Read only      | Software state   |
+| `led`         | On / Off (`bool`)            | Read and write | Software command |
 
 Neither stream needs a GPIO mapping in Console. The sketch owns `LED_PIN`.
 Publish the Device Type before creating a device from it.
@@ -100,12 +100,12 @@ void loop() {
 }
 ```
 
-| In the sketch | What the SDK does |
-| --- | --- |
-| [`FLOVA_DATASTREAM(...)`](../reference/#flova_datastream) | Creates a handle to a case-sensitive key in the Device Type. Register a handler or set a policy, such as `mode(Sample)`, to resolve the stream before startup. |
-| [`led.tryOnWrite(setLed)`](../reference/#flova_on_write) | Registers the function that applies an LED command. The return value tells you whether registration worked. |
-| [`device.begin()`](../reference/#begin) and [`device.run()`](../reference/#run) | Start the device, then keep advancing setup, reconnects, and incoming commands. `begin()` success does not mean the device is online. |
-| [`FLOVA_REPORT(temperature, sample)`](../reference/#flova_report) | Submits an observation without running the LED handler. `accepted()` confirms local acceptance; check Console for delivery. |
+| In the sketch                                                                   | What the SDK does                                                                                                                                              |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`FLOVA_DATASTREAM(...)`](../reference/#flova_datastream)                       | Creates a handle to a case-sensitive key in the Device Type. Register a handler or set a policy, such as `mode(Sample)`, to resolve the stream before startup. |
+| [`led.tryOnWrite(setLed)`](../reference/#flova_on_write)                        | Registers the function that applies an LED command. The return value tells you whether registration worked.                                                    |
+| [`device.begin()`](../reference/#begin) and [`device.run()`](../reference/#run) | Start the device, then keep advancing setup, reconnects, and incoming commands. `begin()` success does not mean the device is online.                          |
+| [`FLOVA_REPORT(temperature, sample)`](../reference/#flova_report)               | Submits an observation without running the LED handler. `accepted()` confirms local acceptance; check Console for delivery.                                    |
 
 The `millis()` check samples every five seconds without making `run()` wait.
 
@@ -119,11 +119,11 @@ The `millis()` check samples every five seconds without making `run()` wait.
 3. In Studio, add a Toggle bound to `led`, publish the dashboard, and open it
    for the device. Flip the toggle and watch the LED change. Try both directions.
 
-| If you see this | Check this first |
-| --- | --- |
-| No setup network | Check Serial for startup errors. An already provisioned board may reconnect instead of opening setup. |
-| Device online but no temperature | Verify the published key and Number type, then check the report result in Serial. |
-| Temperature arrives but LED does not change | Check the Toggle binding, `led` access, `LED_PIN`, and LED polarity. |
+| If you see this                             | Check this first                                                                                      |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| No setup network                            | Check Serial for startup errors. An already provisioned board may reconnect instead of opening setup. |
+| Device online but no temperature            | Verify the published key and Number type, then check the report result in Serial.                     |
+| Temperature arrives but LED does not change | Check the Toggle binding, `led` access, `LED_PIN`, and LED polarity.                                  |
 
 ## 4. Make it your own
 
@@ -132,6 +132,8 @@ The `millis()` check samples every five seconds without making `run()` wait.
 - Add a local button that calls `led.write(false)`. That reuses `setLed()`;
   `led.report(false)` would only report an observation. See the
   [API reference](../reference/) for helper and result details.
+- [Log a custom event](../log-event/) when the temperature crosses a threshold
+  instead of logging every reading.
 - When your application needs to own the network or the setup channel, move
   on to [Advanced firmware](../advanced/) rather than replacing the managed
   facade's Wi-Fi loop in this sketch.

@@ -35,6 +35,8 @@ The numeric chart and event list use the selected time range. History differs fr
 
 The event list includes presence changes, provisioning, administrative actions, channel updates, Console writes, app writes, automation writes, device acknowledgements, applied values, and device errors. Filter by category or severity and open an event to see its structured details.
 
+To see events sent by firmware with `logEvent()`, set **Event type** to **Custom events**. Each row shows the firmware's event code and optional message. See [Log a custom device event](../../sdk/log-event/) for a working sketch.
+
 The device timeline is also available from the device detail page. It groups repeated telemetry events that are close together so a busy channel is easier to scan. Load older events when you need more history.
 
 ## Troubleshoot a missing value

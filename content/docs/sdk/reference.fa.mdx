@@ -7,17 +7,17 @@ description: "امضای متدها، هدف‌های پشتیبانی‌شده�
 
 ## انتخاب نوع دستگاه [#choose-a-device-type]
 
-| Header | نمونهٔ سازنده | مسئولیت |
-| --- | --- | --- |
-| `<FlovaSDK.h>` روی ESP | `FlovaEsp32 device;` یا `FlovaEsp8266 device;` | راه‌اندازی SoftAP، Wi-Fi و Link؛ حسگر و خروجی با برنامه است. سازنده رمز اختیاری و یکتای دستگاه را می‌پذیرد. |
-| `<FlovaSDK.h>` روی ESP | `FlovaUniversalEsp32 device;` یا `FlovaUniversalEsp8266 device;` | راه‌اندازی، Wi-Fi، Link، نگاشت سخت‌افزار، OTA و Restart؛ رمز اختیاری SoftAP را هم می‌پذیرد. |
-| `<FlovaEsp32Ble.h>` | `FlovaEsp32Ble device(deviceProof);` | راه‌اندازی BLE و شبکهٔ اجرا؛ سخت‌افزار با برنامه است. |
-| `<FlovaUniversalEsp32Ble.h>` | `FlovaUniversalEsp32Ble device(deviceProof);` | راه‌اندازی BLE با نگاشت‌ها و سیاست Restart عمومی. برای دیتاستریم و تنظیمات از `device.device()` استفاده کنید. |
-| `<FlovaEsp32Ethernet.h>` | `FlovaEsp32Ethernet device(0, -1, 23, 18, ETH_CLOCK_GPIO0_IN);` | راه‌اندازی LAN8720 و Link؛ آدرس PHY، پایه‌های Power، MDC و MDIO و ساعت را با برد تطبیق دهید و [تنظیمات خصوصی Build](../advanced/#ethernet) را فراهم کنید. |
-| `<FlovaEsp32.h>` یا `<FlovaEsp8266.h>` | `FlovaEsp32WithLink device(link);` یا `FlovaEsp8266WithLink device(link);` | راه‌اندازی و Wi-Fi مدیریت‌شده با `FlovaClientLink` قرض‌گرفته‌شده. آرگومان دوم، رمز اختیاری SoftAP است. |
-| `<FlovaLinux.h>` | `FlovaLinux device;` یا `FlovaLinux device(FlovaLinux::Config{url, id, secret, stateDir});` | نشست Link؛ شبکه و ناظر فرایند با برنامه است. سازندهٔ پیش‌فرض [متغیرهای محیط](../install/#linux-و-raspberry-pi) را می‌خواند. |
-| `<FlovaDevice.h>` | `flova::Device device(link, storage, clock, logger);` | هستهٔ قابل‌حمل روی سرویس‌های برد شما. [راهنمای پیشرفته](../advanced/) را ببینید. |
-| `<FlovaSDK.h>` روی ESP | `FlovaClient client(link, setup, network, tlsClock, identity, storage, clock, logger, entropy, hardware);` | ترکیب صریح Arduino؛ [تعریف همهٔ سرویس‌ها](../provisioning/#web-setup-تحت-مالکیت-برنامه) را ببینید. |
+| Header                                 | نمونهٔ سازنده                                                                                               | مسئولیت                                                                                                                                                   |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<FlovaSDK.h>` روی ESP                 | `FlovaEsp32 device;` یا `FlovaEsp8266 device;`                                                             | راه‌اندازی SoftAP، Wi-Fi و Link؛ حسگر و خروجی با برنامه است. سازنده رمز اختیاری و یکتای دستگاه را می‌پذیرد.                                               |
+| `<FlovaSDK.h>` روی ESP                 | `FlovaUniversalEsp32 device;` یا `FlovaUniversalEsp8266 device;`                                           | راه‌اندازی، Wi-Fi، Link، نگاشت سخت‌افزار، OTA و Restart؛ رمز اختیاری SoftAP را هم می‌پذیرد.                                                               |
+| `<FlovaEsp32Ble.h>`                    | `FlovaEsp32Ble device(deviceProof);`                                                                       | راه‌اندازی BLE و شبکهٔ اجرا؛ سخت‌افزار با برنامه است.                                                                                                      |
+| `<FlovaUniversalEsp32Ble.h>`           | `FlovaUniversalEsp32Ble device(deviceProof);`                                                              | راه‌اندازی BLE با نگاشت‌ها و سیاست Restart عمومی. برای دیتاستریم و تنظیمات از `device.device()` استفاده کنید.                                             |
+| `<FlovaEsp32Ethernet.h>`               | `FlovaEsp32Ethernet device(0, -1, 23, 18, ETH_CLOCK_GPIO0_IN);`                                            | راه‌اندازی LAN8720 و Link؛ آدرس PHY، پایه‌های Power، MDC و MDIO و ساعت را با برد تطبیق دهید و [تنظیمات خصوصی Build](../advanced/#ethernet) را فراهم کنید. |
+| `<FlovaEsp32.h>` یا `<FlovaEsp8266.h>` | `FlovaEsp32WithLink device(link);` یا `FlovaEsp8266WithLink device(link);`                                 | راه‌اندازی و Wi-Fi مدیریت‌شده با `FlovaClientLink` قرض‌گرفته‌شده. آرگومان دوم، رمز اختیاری SoftAP است.                                                    |
+| `<FlovaLinux.h>`                       | `FlovaLinux device;` یا `FlovaLinux device(FlovaLinux::Config{url, id, secret, stateDir});`                | نشست Link؛ شبکه و ناظر فرایند با برنامه است. سازندهٔ پیش‌فرض [متغیرهای محیط](../install/#linux-و-raspberry-pi) را می‌خواند.                                |
+| `<FlovaDevice.h>`                      | `flova::Device device(link, storage, clock, logger);`                                                      | هستهٔ قابل‌حمل روی سرویس‌های برد شما. [راهنمای پیشرفته](../advanced/) را ببینید.                                                                           |
+| `<FlovaSDK.h>` روی ESP                 | `FlovaClient client(link, setup, network, tlsClock, identity, storage, clock, logger, entropy, hardware);` | ترکیب صریح Arduino؛ [تعریف همهٔ سرویس‌ها](../provisioning/#web-setup-تحت-مالکیت-برنامه) را ببینید.                                                         |
 
 رمز SoftAP بین ۸ تا ۶۳ نویسه و Proof of Possession برای BLE بین ۱ تا ۶۴ نویسه است. برای هر دستگاه مقدار یکتا در نظر بگیرید و اطلاعات محرمانه را در سورس یا Log نگذارید.
 
@@ -151,29 +151,64 @@ if (threshold.valid() && threshold.hasValue()) Serial.println(threshold.value())
 
 پیش از استفادهٔ مقدار در سخت‌افزار، [راهنمای پیکربندی](../configuration/) را ببینید.
 
+## رخدادهای سفارشی [#custom-log-events]
+
+### `FLOVA_LOG_EVENT`
+
+```cpp
+bool logEvent(const char* code, const char* message = "");
+```
+
+`FLOVA_LOG_EVENT(device, code[, message])` همان `device.logEvent()` را فراخوانی
+می‌کند و نتیجهٔ `bool` آن را برمی‌گرداند. این API روی `FlovaEsp32`، `FlovaEsp8266`،
+`FlovaEsp32Ble`، `FlovaEsp32Ethernet` یا `FlovaClient` با Link سازگار در دسترس است.
+`FlovaLinux` و هستهٔ قابل‌حمل `flova::Device` این API را ندارند.
+
+- **کد:** ۱ تا ۳۲ بایت ASCII. با حرف کوچک انگلیسی شروع شود و در ادامه فقط حرف
+  کوچک، رقم یا زیرخط داشته باشد. کد نیازی به ثبت قبلی ندارد.
+- **پیام:** اختیاری، حداکثر ۹۶ **بایت** UTF-8، نه ۹۶ نویسه. رمز، توکن یا دادهٔ
+  حساس را در پیام نگذارید.
+- **نتیجه:** `true` یعنی SDK رخداد را در صف تک‌ظرفیتی RAM کپی کرده، نه اینکه
+  Engine آن را ذخیره کرده باشد. `false` یعنی ورودی نامعتبر است، دستگاه هنوز
+  راه نیفتاده یا در وضعیت خطاست، یا صف پر است. پس از موفقیت `begin()` و از کد
+  عادی برنامه فراخوانی کنید، نه از تابع رسیدگی به وقفه.
+
+حتی هنگام قطع اتصال هم `run()` را مرتب اجرا کنید. SDK تا دریافت تأیید یا رد
+از Engine دوباره برای ارسال رخداد تلاش می‌کند. ارسال مجدد نسخهٔ تکراری نمی‌سازد.
+با راه‌اندازی مجدد، رخداد در انتظار از دست می‌رود؛ در حافظهٔ دائمی دستگاه ذخیره
+نمی‌شود. اگر `false` گرفتید، حلقهٔ دستگاه را ادامه دهید و تصمیم بگیرید که بعداً
+دوباره تلاش کنید یا از آن رخداد بگذرید.
+
+```cpp
+device.logEvent("sensor_fault");
+FLOVA_LOG_EVENT(device, "temperature_high", "Temperature exceeded 80 C");
+```
+
+برای بررسی تحویل رخداد در کنسول، [آموزش ثبت رخداد](../log-event/) را دنبال کنید.
+
 ## بررسی Handle نوع‌دار [#typed-handle-inspection]
 
 سه متد اول روی `flova::Datastream<T>` و `key()` روی `FlovaDatastream<T, Client>` هستند.
 
-| متد | نمونه | نتیجه |
-| --- | --- | --- |
-| `valid()` | `if (!relayHandle.valid()) return;` | وجود Slot معتبر؛ کلید نامعتبر، تضاد نوع یا ظرفیت پر می‌تواند مانع ثبت شود. |
-| `bound()` | `if (!relayHandle.bound()) return;` | Handle شناسهٔ Runtime دارد؛ اتصال فعال را ثابت نمی‌کند. |
+| متد          | نمونه                                        | نتیجه                                                                                                                                                             |
+| ------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `valid()`    | `if (!relayHandle.valid()) return;`          | وجود Slot معتبر؛ کلید نامعتبر، تضاد نوع یا ظرفیت پر می‌تواند مانع ثبت شود.                                                                                        |
+| `bound()`    | `if (!relayHandle.bound()) return;`          | Handle شناسهٔ Runtime دارد؛ اتصال فعال را ثابت نمی‌کند.                                                                                                            |
 | `snapshot()` | `const auto state = relayHandle.snapshot();` | کپی `value`، `hasValue`، `updatedAt` (میلی‌ثانیهٔ ساعت دستگاه)، `origin`، `quality`، `dirty` (وضعیت در انتظار ارسال) و `revision`. ابتدا `hasValue` را بررسی کنید. |
-| `key()` | `Serial.println(relay.key());` | کلید قرض‌گرفته‌شدهٔ Helper، حتی پیش از ثبت. |
+| `key()`      | `Serial.println(relay.key());`               | کلید قرض‌گرفته‌شدهٔ Helper، حتی پیش از ثبت.                                                                                                                        |
 
 ## سیاست‌های دیتاستریم [#stream-policies]
 
 پیش از شروع تنظیم کنید. متدهای زنجیره‌ای Handle را برمی‌گردانند؛ متدهای `try*` روی Handle نوع‌دار موفقیت یا شکست را گزارش می‌کنند. شکست `retention`، `persist` یا `scheduling` می‌تواند Handle نوع‌دار را نامعتبر کند. Helper تنبل ممکن است دوباره آن را Resolve کند؛ برای بررسی دقیق از Handle نوع‌دار استفاده کنید. در جدول `typed` یک Handle نوع‌دار دماست.
 
-| متد | نمونه | رفتار |
-| --- | --- | --- |
-| `mode(Mode)` / `tryMode(Mode)` | `temperature.mode(flova::Mode::Sample);` / `const bool ok = typed.tryMode(flova::Mode::Sample);` | `State` (پیش‌فرض)، `Sample` (اندازه‌گیری)، `Command` (فرمان) یا `Event` (رخداد). Sample و Event صرفاً گزارش می‌پذیرند. |
-| `offline(policy)` / `tryOffline(policy)` | `temperature.offline(flova::OfflinePolicy::StoreHistory);` / `const bool ok = typed.tryOffline(flova::OfflinePolicy::StoreHistory);` | `KeepLatest` (پیش‌فرض)، `StoreHistory` (تاریخچهٔ محدود)، `Drop` (بدون ارسال آفلاین)، یا `Reject` (رد عملیات آفلاین). |
-| `scheduling(Scheduling)` | `relayHandle.scheduling(flova::Scheduling::CloudOnly);` | فعال کردن زمان‌بندی Console برای دیتاستریم قابل‌نوشتن. پیش‌فرض `Disabled` است. پیش از `begin()` تنظیم و سپس `relayHandle.valid()` را بررسی کنید. |
-| `retention(policy)` / `tryRetention(policy)` | `temperature.retention(history);` / `const bool ok = typed.tryRetention(history);` | محدود کردن تاریخچهٔ آفلاین با `HistoryRetentionPolicy`؛ ظرفیت فیزیکی را افزایش نمی‌دهد. |
+| متد                                                 | نمونه                                                                                                                                 | رفتار                                                                                                                                                                                           |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode(Mode)` / `tryMode(Mode)`                      | `temperature.mode(flova::Mode::Sample);` / `const bool ok = typed.tryMode(flova::Mode::Sample);`                                      | `State` (پیش‌فرض)، `Sample` (اندازه‌گیری)، `Command` (فرمان) یا `Event` (رخداد). Sample و Event صرفاً گزارش می‌پذیرند.                                                                           |
+| `offline(policy)` / `tryOffline(policy)`            | `temperature.offline(flova::OfflinePolicy::StoreHistory);` / `const bool ok = typed.tryOffline(flova::OfflinePolicy::StoreHistory);`  | `KeepLatest` (پیش‌فرض)، `StoreHistory` (تاریخچهٔ محدود)، `Drop` (بدون ارسال آفلاین)، یا `Reject` (رد عملیات آفلاین).                                                                             |
+| `scheduling(Scheduling)`                            | `relayHandle.scheduling(flova::Scheduling::CloudOnly);`                                                                               | فعال کردن زمان‌بندی Console برای دیتاستریم قابل‌نوشتن. پیش‌فرض `Disabled` است. پیش از `begin()` تنظیم و سپس `relayHandle.valid()` را بررسی کنید.                                                |
+| `retention(policy)` / `tryRetention(policy)`        | `temperature.retention(history);` / `const bool ok = typed.tryRetention(history);`                                                    | محدود کردن تاریخچهٔ آفلاین با `HistoryRetentionPolicy`؛ ظرفیت فیزیکی را افزایش نمی‌دهد.                                                                                                          |
 | `persist(policy[, intervalMs])` / `tryPersist(...)` | `relay.persist(flova::PersistencePolicy::OnChange);` / `const bool ok = typed.tryPersist(flova::PersistencePolicy::Deferred, 30000);` | `None` (پیش‌فرض)، `Persistent`/`Immediate` (ذخیرهٔ هر به‌روزرسانی)، `OnChange` (حذف ذخیرهٔ تکراری) یا `Deferred` (مهلت از اولین تغییر ذخیره‌نشده؛ پیش‌فرض ۱۰۰۰ میلی‌ثانیه). Storage باید کار کند. |
-| `flush()` | `if (!relay.flush()) Serial.println("State not saved");` | تلاش برای ذخیرهٔ فوری مقدار منتظر این دیتاستریم. نتیجهٔ موفق می‌تواند به‌معنی نبود مقدار ذخیره‌نشده باشد؛ این متد Link را تخلیه نمی‌کند. |
+| `flush()`                                           | `if (!relay.flush()) Serial.println("State not saved");`                                                                              | تلاش برای ذخیرهٔ فوری مقدار منتظر این دیتاستریم. نتیجهٔ موفق می‌تواند به‌معنی نبود مقدار ذخیره‌نشده باشد؛ این متد Link را تخلیه نمی‌کند.                                                          |
 
 ```cpp
 flova::HistoryRetentionPolicy history;
@@ -191,13 +226,13 @@ temperature.offline(flova::OfflinePolicy::StoreHistory).retention(history);
 
 متدهای `write()` و `report()` نتیجهٔ `flova::WriteResult { status, reason, message }` می‌دهند. `accepted()` برای `Accepted` و `NoChange` درست است. `Rejected` یعنی ورودی، سیاست یا Handler عملیات را رد کرده؛ `Failed` یعنی عملیات کامل نشد. از کد دلیل کوتاه و ثابت استفاده کنید؛ اشاره‌گر رشتهٔ محلی برنگردانید.
 
-| تابع | کاربرد | نمونه |
-| --- | --- | --- |
-| `flova::accept()` / `WriteResult::accept()` | فرمان پذیرفته شد. | `return flova::accept();` |
-| `flova::unchanged()` / `WriteResult::noChange()` | نیازی به تغییر سخت‌افزار نبود. | `return flova::unchanged();` |
-| `flova::reject(reason[, message])` / `WriteResult::reject(...)` | مثلاً قفل ایمنی فرمان را رد کرد. | `return flova::reject("interlock", "Output is locked");` |
-| `WriteResult::failure(reason[, message])` | عملیات کامل نشد. | `return flova::WriteResult::failure("driver_unavailable");` |
-| `accepted()` | بررسی هر دو وضعیت موفق. | `if (!result.accepted()) Serial.println(result.reason);` |
+| تابع                                                            | کاربرد                          | نمونه                                                       |
+| --------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------- |
+| `flova::accept()` / `WriteResult::accept()`                     | فرمان پذیرفته شد.               | `return flova::accept();`                                   |
+| `flova::unchanged()` / `WriteResult::noChange()`                | نیازی به تغییر سخت‌افزار نبود.  | `return flova::unchanged();`                                |
+| `flova::reject(reason[, message])` / `WriteResult::reject(...)` | مثلاً قفل ایمنی فرمان را رد کرد. | `return flova::reject("interlock", "Output is locked");`    |
+| `WriteResult::failure(reason[, message])`                       | عملیات کامل نشد.                | `return flova::WriteResult::failure("driver_unavailable");` |
+| `accepted()`                                                    | بررسی هر دو وضعیت موفق.         | `if (!result.accepted()) Serial.println(result.reason);`    |
 
 ### متن و رنگ [#text-and-color-helpers]
 
@@ -235,19 +270,19 @@ void loop() {
 
 ### خواندن وضعیت [#status-getters]
 
-| متد | هدف‌ها | نمونه و معنی |
-| --- | --- | --- |
-| `connected()` | Facadeهای ESP، `FlovaClient` و Linux | `const bool linkUp = device.connected();` — وضعیت Link، نه آمادگی دیتاستریم. |
-| `ready()` | همهٔ Runtimeها | `if (device.ready()) Serial.println("Runtime ready");` — شروع، پیوند دیتاستریم و اتصال Link کامل شده‌اند. |
-| `networkConnected()` | ESP مدیریت‌شده، Universal (از جمله BLE)، BLE سفارشی و `FlovaClient` | `const bool networkUp = device.networkConnected();` — اتصال Adapter شبکه. |
-| `tlsReady()` | همان هدف‌های `networkConnected()` | `const bool clockReady = device.tlsReady();` — آماده بودن ساعت TLS، نه پایان Handshake. |
-| `runtimeReady()` | همان هدف‌های `networkConnected()` | `const bool inRuntime = device.runtimeReady();` — چرخهٔ اجرا در `Runtime` است، حتی اگر Link آماده نباشد. |
-| `lifecycle()` | Facadeهای ESP و `FlovaClient` | `if (device.lifecycle() == FlovaLifecycle::Failed) Serial.println(device.lastError());` — مرحلهٔ فعلی راه‌اندازی یا اجرا. |
-| `provisioning()` | همان هدف‌های `networkConnected()` | `const bool inSetup = device.provisioning();` — انتظار برای راه‌اندازی یا پردازش Handoff. |
-| `lastError()` | Facadeهای ESP، `FlovaClient` و Linux | `Serial.println(device.lastError());` در Arduino یا `std::puts(device.lastError());` در Linux — پیام محدود؛ پیش از فراخوانی بعدی SDK آن را بخوانید یا کپی کنید. |
-| `running()` | Linux | `while (device.running()) { device.run(); usleep(10000); }` — شروع کامل شده، نه لزوماً اتصال. |
-| `diagnostics()` | هستهٔ قابل‌حمل، ESP مدیریت‌شده، BLE سفارشی و `FlovaClient` | `const auto counters = device.diagnostics();` — شمارنده‌هایی مانند `storageFailures`، `queueOverflow` و `duplicateCommands`. |
-| `device()` | ESP مدیریت‌شده، Universal (از جمله BLE)، BLE سفارشی و `FlovaClient` | `auto& core = device.device();` — مرجع قرض‌گرفته‌شده به هسته؛ مستقل از Facade آن را شروع یا Poll نکنید. |
+| متد                  | هدف‌ها                                                              | نمونه و معنی                                                                                                                                                    |
+| -------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `connected()`        | Facadeهای ESP، `FlovaClient` و Linux                                | `const bool linkUp = device.connected();` — وضعیت Link، نه آمادگی دیتاستریم.                                                                                    |
+| `ready()`            | همهٔ Runtimeها                                                       | `if (device.ready()) Serial.println("Runtime ready");` — شروع، پیوند دیتاستریم و اتصال Link کامل شده‌اند.                                                       |
+| `networkConnected()` | ESP مدیریت‌شده، Universal (از جمله BLE)، BLE سفارشی و `FlovaClient` | `const bool networkUp = device.networkConnected();` — اتصال Adapter شبکه.                                                                                       |
+| `tlsReady()`         | همان هدف‌های `networkConnected()`                                   | `const bool clockReady = device.tlsReady();` — آماده بودن ساعت TLS، نه پایان Handshake.                                                                         |
+| `runtimeReady()`     | همان هدف‌های `networkConnected()`                                   | `const bool inRuntime = device.runtimeReady();` — چرخهٔ اجرا در `Runtime` است، حتی اگر Link آماده نباشد.                                                         |
+| `lifecycle()`        | Facadeهای ESP و `FlovaClient`                                       | `if (device.lifecycle() == FlovaLifecycle::Failed) Serial.println(device.lastError());` — مرحلهٔ فعلی راه‌اندازی یا اجرا.                                        |
+| `provisioning()`     | همان هدف‌های `networkConnected()`                                   | `const bool inSetup = device.provisioning();` — انتظار برای راه‌اندازی یا پردازش Handoff.                                                                       |
+| `lastError()`        | Facadeهای ESP، `FlovaClient` و Linux                                | `Serial.println(device.lastError());` در Arduino یا `std::puts(device.lastError());` در Linux — پیام محدود؛ پیش از فراخوانی بعدی SDK آن را بخوانید یا کپی کنید. |
+| `running()`          | Linux                                                               | `while (device.running()) { device.run(); usleep(10000); }` — شروع کامل شده، نه لزوماً اتصال.                                                                    |
+| `diagnostics()`      | هستهٔ قابل‌حمل، ESP مدیریت‌شده، BLE سفارشی و `FlovaClient`           | `const auto counters = device.diagnostics();` — شمارنده‌هایی مانند `storageFailures`، `queueOverflow` و `duplicateCommands`.                                    |
+| `device()`           | ESP مدیریت‌شده، Universal (از جمله BLE)، BLE سفارشی و `FlovaClient` | `auto& core = device.device();` — مرجع قرض‌گرفته‌شده به هسته؛ مستقل از Facade آن را شروع یا Poll نکنید.                                                         |
 
 ### `status()` و `setStatusListener()` [#status-and-setstatuslistener]
 
@@ -265,29 +300,29 @@ device.setStatusListener([](void*, const FlovaStatusEvent& event) {
 
 ## Provisioning و Wi-Fi [#provisioning-and-wi-fi]
 
-| متد | هدف‌ها | نمونه و رفتار |
-| --- | --- | --- |
-| `provision(handoff)` | ESP مدیریت‌شده و `FlovaClient` | `const auto result = client.provision(flova::ProvisioningHandoff(linkUrl, token));` — Handoff معتبر و محدود را هنگام راه‌اندازی تحویل دهید. `Accepted` یعنی قبول برای پردازش، `Invalid` یعنی ورودی یا مرحله نامعتبر و `StorageFailed` یعنی ذخیره ناموفق بود. `run()` را ادامه دهید. |
-| `startProvisioning()` | ESP مدیریت‌شده و `FlovaClient` | `if (!device.startProvisioning()) Serial.println(device.lastError());` — Link را قطع و رکوردهای نشست و پیکربندی Flova را حذف می‌کند، سپس وارد Setup می‌شود یا Recovery درخواست می‌کند. فقط با درخواست مجاز کاربر اجرا کنید. |
-| `factoryReset()` | ESP مدیریت‌شده، Universal مبتنی بر SoftAP و `FlovaClient` | `if (resetConfirmed && !device.factoryReset()) Serial.println("Reset failed");` — شبکه را متوقف می‌کند، از Adapter می‌خواهد اطلاعات ورود شبکه را پاک کند، سخت‌افزار را ایمن و Storage فلووا را پاک می‌کند و Restart درخواست می‌دهد. رمز Wi-Fi مدیریت‌شده ممکن است پاک شود؛ فایل‌های مستقل برنامه در این محدوده نیستند. |
-| `startWifiSetup()` | ESP مدیریت‌شده | `if (!device.startWifiSetup()) Serial.println("Wi-Fi setup unavailable");` — درخواست تعویض شبکه بدون پاک کردن هویت؛ موفقیت به معنی اتصال به شبکهٔ تازه نیست. |
-| `wifiSetupActive()` | ESP مدیریت‌شده | `if (device.wifiSetupActive()) Serial.println("Wi-Fi setup in progress");` — از جمله مرحلهٔ قبل از باز شدن Portal. |
-| `wifiSetupError()` | ESP مدیریت‌شده | `Serial.println(device.wifiSetupError());` — خطای Setup یا پیام تشخیصی Facade. |
-| `cancelWifiSetup()` | ESP مدیریت‌شده | `if (device.wifiSetupActive() && cancelRequested) device.cancelWifiSetup();` — درخواست لغو؛ `false` اگر اکنون ممکن نباشد. |
-| `beginNetworkSetup()`، `networkSetupReady()`، `networkSetupActive()` و `endNetworkSetup()` | `FlovaClient` صریح | `if (client.beginNetworkSetup()) replacing = true;` — درخواست توقف کارهای مرتبط؛ Poll را ادامه دهید. `if (client.networkSetupActive() && client.networkSetupReady()) serviceSetup();` — پس از تخلیه، تعویض شبکه را در برنامه انجام دهید. در پایان یا لغو، `client.endNetworkSetup();` را فراخوانی کنید. |
+| متد                                                                                        | هدف‌ها                                                    | نمونه و رفتار                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------ | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `provision(handoff)`                                                                       | ESP مدیریت‌شده و `FlovaClient`                            | `const auto result = client.provision(flova::ProvisioningHandoff(linkUrl, token));` — Handoff معتبر و محدود را هنگام راه‌اندازی تحویل دهید. `Accepted` یعنی قبول برای پردازش، `Invalid` یعنی ورودی یا مرحله نامعتبر و `StorageFailed` یعنی ذخیره ناموفق بود. `run()` را ادامه دهید.                                    |
+| `startProvisioning()`                                                                      | ESP مدیریت‌شده و `FlovaClient`                            | `if (!device.startProvisioning()) Serial.println(device.lastError());` — Link را قطع و رکوردهای نشست و پیکربندی Flova را حذف می‌کند، سپس وارد Setup می‌شود یا Recovery درخواست می‌کند. فقط با درخواست مجاز کاربر اجرا کنید.                                                                                            |
+| `factoryReset()`                                                                           | ESP مدیریت‌شده، Universal مبتنی بر SoftAP و `FlovaClient` | `if (resetConfirmed && !device.factoryReset()) Serial.println("Reset failed");` — شبکه را متوقف می‌کند، از Adapter می‌خواهد اطلاعات ورود شبکه را پاک کند، سخت‌افزار را ایمن و Storage فلووا را پاک می‌کند و Restart درخواست می‌دهد. رمز Wi-Fi مدیریت‌شده ممکن است پاک شود؛ فایل‌های مستقل برنامه در این محدوده نیستند. |
+| `startWifiSetup()`                                                                         | ESP مدیریت‌شده                                            | `if (!device.startWifiSetup()) Serial.println("Wi-Fi setup unavailable");` — درخواست تعویض شبکه بدون پاک کردن هویت؛ موفقیت به معنی اتصال به شبکهٔ تازه نیست.                                                                                                                                                            |
+| `wifiSetupActive()`                                                                        | ESP مدیریت‌شده                                            | `if (device.wifiSetupActive()) Serial.println("Wi-Fi setup in progress");` — از جمله مرحلهٔ قبل از باز شدن Portal.                                                                                                                                                                                                      |
+| `wifiSetupError()`                                                                         | ESP مدیریت‌شده                                            | `Serial.println(device.wifiSetupError());` — خطای Setup یا پیام تشخیصی Facade.                                                                                                                                                                                                                                         |
+| `cancelWifiSetup()`                                                                        | ESP مدیریت‌شده                                            | `if (device.wifiSetupActive() && cancelRequested) device.cancelWifiSetup();` — درخواست لغو؛ `false` اگر اکنون ممکن نباشد.                                                                                                                                                                                              |
+| `beginNetworkSetup()`، `networkSetupReady()`، `networkSetupActive()` و `endNetworkSetup()` | `FlovaClient` صریح                                        | `if (client.beginNetworkSetup()) replacing = true;` — درخواست توقف کارهای مرتبط؛ Poll را ادامه دهید. `if (client.networkSetupActive() && client.networkSetupReady()) serviceSetup();` — پس از تخلیه، تعویض شبکه را در برنامه انجام دهید. در پایان یا لغو، `client.endNetworkSetup();` را فراخوانی کنید.                |
 
 [راهنمای Provisioning](../provisioning/) شیوهٔ اعتبارسنجی Handoff و تعویض شبکه را توضیح می‌دهد.
 
 ## Firmware، Restart و توان [#firmware-restart-and-power]
 
-| متد | هدف‌ها | نمونه و رفتار |
-| --- | --- | --- |
-| `setFirmwareTarget(target)` | ESP مدیریت‌شده، BLE سفارشی و `FlovaClient` | `if (!device.setFirmwareTarget("relay_esp32")) return;` — پیش از `begin()` هدف را تنظیم کنید؛ نام یا مرحلهٔ نامعتبر `false` می‌دهد. |
-| `enableOta([enabled])` / `setOtaEnabled(enabled)` | ESP مدیریت‌شده و BLE سفارشی / `FlovaClient` | `device.enableOta(false);` یا `client.setOtaEnabled(false);` — غیرفعال کردن OTA. `enableOta()` آن را فعال می‌کند، نه اینکه Boot Layout ناسازگار را اصلاح کند. |
-| `setOtaProfile(strategy, bootLayoutVersion[, rollbackCapable])` | ESP مدیریت‌شده، BLE سفارشی و `FlovaClient` | `device.setOtaProfile(FlovaOtaStrategy::Ab, "esp32-ab", true);` — فقط اگر تصویر واقعاً همان چیدمان و قابلیت بازگشت را دارد. |
-| `setRestartHandler(handler[, context])` | ESP مدیریت‌شده، BLE سفارشی و `FlovaClient` | `device.setRestartHandler(markRestart, &pendingRestart);` — Callback سیاست Restart را به برنامه بسپارید. |
-| `restartRequired()` و `restartReason()` | ESP مدیریت‌شده، BLE سفارشی و `FlovaClient` | `if (device.restartRequired()) { const auto reason = device.restartReason(); /* record reason */ }` — نیاز به Restart، یا زمان‌بندی شدن آن، و دلیل درخواست. |
-| `prepareForPowerDown()` | ESP مدیریت‌شده، Universal (از جمله BLE)، BLE سفارشی و `FlovaClient` | `if (sleepRequested && device.prepareForPowerDown() == FlovaPowerDownStatus::Ready) enterSleep();` — همراه `run()` بررسی کنید. `Busy` یعنی هنوز نمی‌تواند شروع کند؛ `Draining` یعنی در حال تخلیه؛ `Failed` یعنی تخلیه یا ذخیره ناموفق بود. تنها با `Ready` ادامه دهید؛ خاموش کردن وظیفهٔ برنامه است. |
+| متد                                                             | هدف‌ها                                                              | نمونه و رفتار                                                                                                                                                                                                                                                                                       |
+| --------------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setFirmwareTarget(target)`                                     | ESP مدیریت‌شده، BLE سفارشی و `FlovaClient`                          | `if (!device.setFirmwareTarget("relay_esp32")) return;` — پیش از `begin()` هدف را تنظیم کنید؛ نام یا مرحلهٔ نامعتبر `false` می‌دهد.                                                                                                                                                                  |
+| `enableOta([enabled])` / `setOtaEnabled(enabled)`               | ESP مدیریت‌شده و BLE سفارشی / `FlovaClient`                         | `device.enableOta(false);` یا `client.setOtaEnabled(false);` — غیرفعال کردن OTA. `enableOta()` آن را فعال می‌کند، نه اینکه Boot Layout ناسازگار را اصلاح کند.                                                                                                                                       |
+| `setOtaProfile(strategy, bootLayoutVersion[, rollbackCapable])` | ESP مدیریت‌شده، BLE سفارشی و `FlovaClient`                          | `device.setOtaProfile(FlovaOtaStrategy::Ab, "esp32-ab", true);` — فقط اگر تصویر واقعاً همان چیدمان و قابلیت بازگشت را دارد.                                                                                                                                                                          |
+| `setRestartHandler(handler[, context])`                         | ESP مدیریت‌شده، BLE سفارشی و `FlovaClient`                          | `device.setRestartHandler(markRestart, &pendingRestart);` — Callback سیاست Restart را به برنامه بسپارید.                                                                                                                                                                                            |
+| `restartRequired()` و `restartReason()`                         | ESP مدیریت‌شده، BLE سفارشی و `FlovaClient`                          | `if (device.restartRequired()) { const auto reason = device.restartReason(); /* record reason */ }` — نیاز به Restart، یا زمان‌بندی شدن آن، و دلیل درخواست.                                                                                                                                         |
+| `prepareForPowerDown()`                                         | ESP مدیریت‌شده، Universal (از جمله BLE)، BLE سفارشی و `FlovaClient` | `if (sleepRequested && device.prepareForPowerDown() == FlovaPowerDownStatus::Ready) enterSleep();` — همراه `run()` بررسی کنید. `Busy` یعنی هنوز نمی‌تواند شروع کند؛ `Draining` یعنی در حال تخلیه؛ `Failed` یعنی تخلیه یا ذخیره ناموفق بود. تنها با `Ready` ادامه دهید؛ خاموش کردن وظیفهٔ برنامه است. |
 
 ```cpp
 bool pendingRestart = false;
@@ -304,42 +339,42 @@ void markRestart(void* context, FlovaRestartReason) {
 
 `flova_linux::OtaUpdater(root, activePath)` از `<FlovaLinux.h>` روی فایل‌ها کار می‌کند. هر دو مسیر را روی یک فایل‌سیستم نگه دارید. اعتبار منبع فایل، Restart و بررسی سلامت با ناظر سرویس است؛ به‌روزرسان فرایند در حال اجرا را جایگزین نمی‌کند.
 
-| متد | نمونه | رفتار |
-| --- | --- | --- |
-| سازنده | `flova_linux::OtaUpdater updater("/var/lib/flova/ota", "/var/lib/flova/bin/device");` | مسیر فایل‌های آمادهٔ نصب و فایل اجرایی فعال را مشخص می‌کند. |
+| متد                                                         | نمونه                                                                                                     | رفتار                                                                                                                                       |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| سازنده                                                      | `flova_linux::OtaUpdater updater("/var/lib/flova/ota", "/var/lib/flova/bin/device");`                     | مسیر فایل‌های آمادهٔ نصب و فایل اجرایی فعال را مشخص می‌کند.                                                                                  |
 | `stage(sourcePath, version, expectedBytes, expectedSha256)` | `if (updater.stage(downloadPath, version, bytes, sha256) != flova_linux::OtaStageResult::Staged) return;` | نسخه و پیشنهاد به‌روزرسانی را اعتبارسنجی می‌کند؛ اندازه و SHA-256 فایل را با دادهٔ معتبر تطبیق می‌دهد و فایل را بدون فعال‌سازی آماده می‌کند. |
-| `activate(version)` | `if (!updater.activate(version)) return;` | فایل آماده را فعال و فایل جایگزین‌شده را نگه می‌دارد. ناظر باید نسخهٔ تازه را اجرا و آزمایش کند. |
-| `confirm(version)` | `if (healthy && !updater.confirm(version)) logConfirmationFailure();` | پس از بررسی سلامت توسط ناظر، نسخه را ثبت می‌کند؛ خودش سلامت را نمی‌سنجد. |
-| `rollback()` | `if (!healthy && updater.rollback()) restartService();` | فایل نگه‌داشته‌شده را برمی‌گرداند؛ Restart با ناظر است. در صورت شکست، خطا را جداگانه رسیدگی کنید. |
+| `activate(version)`                                         | `if (!updater.activate(version)) return;`                                                                 | فایل آماده را فعال و فایل جایگزین‌شده را نگه می‌دارد. ناظر باید نسخهٔ تازه را اجرا و آزمایش کند.                                             |
+| `confirm(version)`                                          | `if (healthy && !updater.confirm(version)) logConfirmationFailure();`                                     | پس از بررسی سلامت توسط ناظر، نسخه را ثبت می‌کند؛ خودش سلامت را نمی‌سنجد.                                                                    |
+| `rollback()`                                                | `if (!healthy && updater.rollback()) restartService();`                                                   | فایل نگه‌داشته‌شده را برمی‌گرداند؛ Restart با ناظر است. در صورت شکست، خطا را جداگانه رسیدگی کنید.                                           |
 
 ## API هستهٔ قابل‌حمل و Adapter [#portable-runtime-and-adapter-apis]
 
 در نمونه‌ها `core` از نوع `flova::Device` است. در کد عادی Handle نوع‌دار را ترجیح دهید؛ Adapter دارای شناسهٔ پیوندخورده می‌تواند مستقیماً از API مبتنی بر شناسه استفاده کند.
 
-| متد | نمونه | رفتار |
-| --- | --- | --- |
-| `datastreamCount()` | `const auto slots = core.datastreamCount();` | شمار Slotهای تخصیص‌یافته، نه استریم‌های متصل به Cloud. |
-| `storageInfo([refresh])` | `const auto info = core.storageInfo(true);` | اطلاعاتی مثل فضای آزاد و ماندگاری؛ `true` ممکن است پرهزینه باشد و قابلیت Storage را فعال نمی‌کند. |
-| `flushPersistence()` | `if (!core.flushPersistence()) return;` | ذخیرهٔ همهٔ مقادیر ذخیره‌نشده؛ نتیجهٔ موفق یعنی همهٔ ذخیره‌ها انجام شدند. |
-| `allowCloudSchedulingForOutputs(enabled)` | `if (!core.allowCloudSchedulingForOutputs(true)) return;` | زمان‌بندی خروجی‌های دیجیتال و PWM نگاشت‌شده را پیش از شروع فعال کنید. |
-| `scheduling(id)` | `const auto schedule = core.scheduling(id);` | سیاست زمان‌بندی شناسه؛ شناسهٔ ناشناخته `Disabled` می‌دهد. |
-| `originateMessageId()` | `const auto messageId = core.originateMessageId();` | شناسهٔ پیام خروجی از دنبالهٔ Runtime که از Nonce لینک شروع می‌شود. |
-| `commandResultsPending()` / `commandResultPending(id)` | `const bool pending = core.commandResultsPending();` / `const bool awaitingAck = core.commandResultPending(commandId);` | انتظار نتایج فرمان برای تحویل، کلی یا برای یک شناسه. بررسی یک شناسه ممکن است Storage را بخواند و در خطای خواندن محافظه‌کارانه `true` بدهد. |
-| `write(id, value[, origin])` / `report(id, value[, origin])` | `auto command = core.write(id, flova::Value::from(true));` / `auto sample = core.report(id, flova::Value::from(false), flova::Origin::PhysicalInput);` | همان تفاوت فرمان و مشاهده؛ شناسهٔ ناشناخته خطاست. `Value::from` مقدار برچسب‌دار می‌سازد و `flova::validValue(value)` بازنمایی را، نه سیاست دیتاستریم را، بررسی می‌کند. |
-| `setWriteHandler(id, callback, context)` / `clearWriteHandler(...)` | `if (!core.setWriteHandler(id, applyValue, context)) return;` / `const bool cleared = core.clearWriteHandler(id, applyValue, context);` | ثبت Handler از نوع `WriteResult(void*, const Value&)`؛ حذف به همان Callback و Context نیاز دارد. برای Handle نوع‌دار، `tryOnWrite` را ترجیح دهید. |
-| `setFactoryResetHandler(handler, context)` | `core.setFactoryResetHandler(resetFromCommand, context);` | Handler از نوع `WriteResult(void*, const char*)` برای فرمان Reset مجاز که شناسهٔ فرمان را دریافت می‌کند. |
-| `validateConfigurationUnit(unit)` / `applyConfigurationUnit(unit)` | `if (core.validateConfigurationUnit(unit)) { const bool applied = core.applyConfigurationUnit(unit); /* handle failure */ }` | اعتبارسنجی و اعمال یک واحد Decode‌شده. این دو جایگزین چرخهٔ کامل و تراکنشی پیکربندی نیستند. |
-| `detachLink()` | `core.detachLink();` | ابتدا Poll برنامه را متوقف و سپس Callbackهای Link قرض‌گرفته‌شده را جدا کنید. Destructor هم این کار را انجام می‌دهد. |
+| متد                                                                 | نمونه                                                                                                                                                  | رفتار                                                                                                                                                                 |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `datastreamCount()`                                                 | `const auto slots = core.datastreamCount();`                                                                                                           | شمار Slotهای تخصیص‌یافته، نه استریم‌های متصل به Cloud.                                                                                                                |
+| `storageInfo([refresh])`                                            | `const auto info = core.storageInfo(true);`                                                                                                            | اطلاعاتی مثل فضای آزاد و ماندگاری؛ `true` ممکن است پرهزینه باشد و قابلیت Storage را فعال نمی‌کند.                                                                     |
+| `flushPersistence()`                                                | `if (!core.flushPersistence()) return;`                                                                                                                | ذخیرهٔ همهٔ مقادیر ذخیره‌نشده؛ نتیجهٔ موفق یعنی همهٔ ذخیره‌ها انجام شدند.                                                                                                 |
+| `allowCloudSchedulingForOutputs(enabled)`                           | `if (!core.allowCloudSchedulingForOutputs(true)) return;`                                                                                              | زمان‌بندی خروجی‌های دیجیتال و PWM نگاشت‌شده را پیش از شروع فعال کنید.                                                                                                 |
+| `scheduling(id)`                                                    | `const auto schedule = core.scheduling(id);`                                                                                                           | سیاست زمان‌بندی شناسه؛ شناسهٔ ناشناخته `Disabled` می‌دهد.                                                                                                              |
+| `originateMessageId()`                                              | `const auto messageId = core.originateMessageId();`                                                                                                    | شناسهٔ پیام خروجی از دنبالهٔ Runtime که از Nonce لینک شروع می‌شود.                                                                                                      |
+| `commandResultsPending()` / `commandResultPending(id)`              | `const bool pending = core.commandResultsPending();` / `const bool awaitingAck = core.commandResultPending(commandId);`                                | انتظار نتایج فرمان برای تحویل، کلی یا برای یک شناسه. بررسی یک شناسه ممکن است Storage را بخواند و در خطای خواندن محافظه‌کارانه `true` بدهد.                            |
+| `write(id, value[, origin])` / `report(id, value[, origin])`        | `auto command = core.write(id, flova::Value::from(true));` / `auto sample = core.report(id, flova::Value::from(false), flova::Origin::PhysicalInput);` | همان تفاوت فرمان و مشاهده؛ شناسهٔ ناشناخته خطاست. `Value::from` مقدار برچسب‌دار می‌سازد و `flova::validValue(value)` بازنمایی را، نه سیاست دیتاستریم را، بررسی می‌کند. |
+| `setWriteHandler(id, callback, context)` / `clearWriteHandler(...)` | `if (!core.setWriteHandler(id, applyValue, context)) return;` / `const bool cleared = core.clearWriteHandler(id, applyValue, context);`                | ثبت Handler از نوع `WriteResult(void*, const Value&)`؛ حذف به همان Callback و Context نیاز دارد. برای Handle نوع‌دار، `tryOnWrite` را ترجیح دهید.                     |
+| `setFactoryResetHandler(handler, context)`                          | `core.setFactoryResetHandler(resetFromCommand, context);`                                                                                              | Handler از نوع `WriteResult(void*, const char*)` برای فرمان Reset مجاز که شناسهٔ فرمان را دریافت می‌کند.                                                               |
+| `validateConfigurationUnit(unit)` / `applyConfigurationUnit(unit)`  | `if (core.validateConfigurationUnit(unit)) { const bool applied = core.applyConfigurationUnit(unit); /* handle failure */ }`                           | اعتبارسنجی و اعمال یک واحد Decode‌شده. این دو جایگزین چرخهٔ کامل و تراکنشی پیکربندی نیستند.                                                                            |
+| `detachLink()`                                                      | `core.detachLink();`                                                                                                                                   | ابتدا Poll برنامه را متوقف و سپس Callbackهای Link قرض‌گرفته‌شده را جدا کنید. Destructor هم این کار را انجام می‌دهد.                                                   |
 
 متدهای مبتنی بر کلید برای پیاده‌سازی قرارداد Wrapper مناسب‌اند. در برنامه از Handle نوع‌دار استفاده کنید.
 
-| متد | نمونه | معادل |
-| --- | --- | --- |
-| `report(key, value)` | `const bool ok = device.report("temperature", 23.4);` | `device.flovaReport("temperature", 23.4).accepted()`؛ فقط ESP مدیریت‌شده. |
-| `flovaDatastream<T>`، `flovaWrite` و `flovaReport` | `auto stream = device.flovaDatastream<bool>("relay");` / `auto write = device.flovaWrite("relay", true);` / `auto report = device.flovaReport("relay", false);` | Handle نوع‌دار، فرمان و گزارش؛ گزارش مبدأ اختیاری هم می‌پذیرد. |
-| `flovaHasValue<T>` و `flovaValue<T>` | `if (device.flovaHasValue<bool>("relay")) Serial.println(device.flovaValue<bool>("relay"));` | بررسی وجود و خواندن Cache از طریق کلید. |
-| `flovaOnWrite` | `const bool ok = device.flovaOnWrite("relay", flova::ValueType::Boolean, binding);` | ثبت `FlovaDatastreamBinding<T>`؛ در اسکچ عادی از `relay.tryOnWrite(setRelay)` استفاده کنید. |
-| `flovaMode<T>`، `flovaOffline<T>`، `flovaRetention<T>` و `flovaPersist<T>` | `device.flovaMode<double>("temperature", flova::Mode::Sample);` / `device.flovaOffline<double>("temperature", flova::OfflinePolicy::StoreHistory);` / `device.flovaRetention<double>("temperature", history);` / `device.flovaPersist<double>("temperature", flova::PersistencePolicy::Deferred, 30000);` | نتیجهٔ متد نوع‌دار `try*` متناظر؛ فقط ESP مدیریت‌شده. |
+| متد                                                                        | نمونه                                                                                                                                                                                                                                                                                                     | معادل                                                                                       |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `report(key, value)`                                                       | `const bool ok = device.report("temperature", 23.4);`                                                                                                                                                                                                                                                     | `device.flovaReport("temperature", 23.4).accepted()`؛ فقط ESP مدیریت‌شده.                   |
+| `flovaDatastream<T>`، `flovaWrite` و `flovaReport`                         | `auto stream = device.flovaDatastream<bool>("relay");` / `auto write = device.flovaWrite("relay", true);` / `auto report = device.flovaReport("relay", false);`                                                                                                                                           | Handle نوع‌دار، فرمان و گزارش؛ گزارش مبدأ اختیاری هم می‌پذیرد.                              |
+| `flovaHasValue<T>` و `flovaValue<T>`                                       | `if (device.flovaHasValue<bool>("relay")) Serial.println(device.flovaValue<bool>("relay"));`                                                                                                                                                                                                              | بررسی وجود و خواندن Cache از طریق کلید.                                                     |
+| `flovaOnWrite`                                                             | `const bool ok = device.flovaOnWrite("relay", flova::ValueType::Boolean, binding);`                                                                                                                                                                                                                       | ثبت `FlovaDatastreamBinding<T>`؛ در اسکچ عادی از `relay.tryOnWrite(setRelay)` استفاده کنید. |
+| `flovaMode<T>`، `flovaOffline<T>`، `flovaRetention<T>` و `flovaPersist<T>` | `device.flovaMode<double>("temperature", flova::Mode::Sample);` / `device.flovaOffline<double>("temperature", flova::OfflinePolicy::StoreHistory);` / `device.flovaRetention<double>("temperature", history);` / `device.flovaPersist<double>("temperature", flova::PersistencePolicy::Deferred, 30000);` | نتیجهٔ متد نوع‌دار `try*` متناظر؛ فقط ESP مدیریت‌شده.                                        |
 
 ```cpp
 FlovaDatastreamBinding<bool> binding;

@@ -7,17 +7,17 @@ Use this reference for device firmware and Linux applications. Examples are C++1
 
 ## Choose a device type
 
-| Entry point | Constructor example | What it owns |
-| --- | --- | --- |
-| `<FlovaSDK.h>` on ESP32 or ESP8266 | `FlovaEsp32 device;` or `FlovaEsp8266 device;` | SoftAP setup, Wi-Fi, and Link. Your code owns sensors and outputs. An optional constructor argument supplies a device-unique setup password. |
-| `<FlovaSDK.h>` on ESP32 or ESP8266 | `FlovaUniversalEsp32 device;` or `FlovaUniversalEsp8266 device;` | Setup, Wi-Fi, Link, template mappings, OTA and restart policy. Also accepts an optional setup password. |
-| `<FlovaEsp32Ble.h>` | `FlovaEsp32Ble device(deviceProof);` | BLE setup and runtime networking; your code owns hardware. |
-| `<FlovaUniversalEsp32Ble.h>` | `FlovaUniversalEsp32Ble device(deviceProof);` | BLE setup with the universal hardware and restart policy; use `device.device()` to access typed streams and settings. |
-| `<FlovaEsp32Ethernet.h>` | `FlovaEsp32Ethernet device(0, -1, 23, 18, ETH_CLOCK_GPIO0_IN);` | LAN8720 startup and Link. Check the PHY address, power, MDC, MDIO and clock against your board and supply the [private build settings](../advanced/#ethernet). |
-| `<FlovaEsp32.h>` or `<FlovaEsp8266.h>` | `FlovaEsp32WithLink device(link);` or `FlovaEsp8266WithLink device(link);` | Managed Wi-Fi and setup with a borrowed `FlovaClientLink`. Each accepts an optional setup password after `link`. |
-| `<FlovaLinux.h>` | `FlovaLinux device;` or `FlovaLinux device(FlovaLinux::Config{url, id, secret, stateDir});` | The Link session; your process owns networking and supervision. The default constructor reads [environment configuration](../install/#linux-and-raspberry-pi). |
-| `<FlovaDevice.h>` | `flova::Device device(link, storage, clock, logger);` | The portable runtime over your board services. See [portable integration](../advanced/#custom-boards). |
-| `<FlovaSDK.h>` on ESP | `FlovaClient client(link, setup, network, tlsClock, identity, storage, clock, logger, entropy, hardware);` | Explicit Arduino composition. See the [complete service declarations](../provisioning/#application-owned-web-setup). |
+| Entry point                            | Constructor example                                                                                        | What it owns                                                                                                                                                   |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<FlovaSDK.h>` on ESP32 or ESP8266     | `FlovaEsp32 device;` or `FlovaEsp8266 device;`                                                             | SoftAP setup, Wi-Fi, and Link. Your code owns sensors and outputs. An optional constructor argument supplies a device-unique setup password.                   |
+| `<FlovaSDK.h>` on ESP32 or ESP8266     | `FlovaUniversalEsp32 device;` or `FlovaUniversalEsp8266 device;`                                           | Setup, Wi-Fi, Link, template mappings, OTA and restart policy. Also accepts an optional setup password.                                                        |
+| `<FlovaEsp32Ble.h>`                    | `FlovaEsp32Ble device(deviceProof);`                                                                       | BLE setup and runtime networking; your code owns hardware.                                                                                                     |
+| `<FlovaUniversalEsp32Ble.h>`           | `FlovaUniversalEsp32Ble device(deviceProof);`                                                              | BLE setup with the universal hardware and restart policy; use `device.device()` to access typed streams and settings.                                          |
+| `<FlovaEsp32Ethernet.h>`               | `FlovaEsp32Ethernet device(0, -1, 23, 18, ETH_CLOCK_GPIO0_IN);`                                            | LAN8720 startup and Link. Check the PHY address, power, MDC, MDIO and clock against your board and supply the [private build settings](../advanced/#ethernet). |
+| `<FlovaEsp32.h>` or `<FlovaEsp8266.h>` | `FlovaEsp32WithLink device(link);` or `FlovaEsp8266WithLink device(link);`                                 | Managed Wi-Fi and setup with a borrowed `FlovaClientLink`. Each accepts an optional setup password after `link`.                                               |
+| `<FlovaLinux.h>`                       | `FlovaLinux device;` or `FlovaLinux device(FlovaLinux::Config{url, id, secret, stateDir});`                | The Link session; your process owns networking and supervision. The default constructor reads [environment configuration](../install/#linux-and-raspberry-pi). |
+| `<FlovaDevice.h>`                      | `flova::Device device(link, storage, clock, logger);`                                                      | The portable runtime over your board services. See [portable integration](../advanced/#custom-boards).                                                         |
+| `<FlovaSDK.h>` on ESP                  | `FlovaClient client(link, setup, network, tlsClock, identity, storage, clock, logger, entropy, hardware);` | Explicit Arduino composition. See the [complete service declarations](../provisioning/#application-owned-web-setup).                                           |
 
 SoftAP passwords are 8–63 characters; BLE proof of possession is 1–64 characters. Supply unique values per device and keep credentials out of source and logs.
 
@@ -151,29 +151,64 @@ if (threshold.valid() && threshold.hasValue()) Serial.println(threshold.value())
 
 See [Configuration and settings](../configuration/) for validating values before applying them to hardware.
 
+## Custom log events
+
+### `FLOVA_LOG_EVENT`
+
+```cpp
+bool logEvent(const char* code, const char* message = "");
+```
+
+`FLOVA_LOG_EVENT(device, code[, message])` forwards to `device.logEvent()` and
+returns the same `bool`. Use it on `FlovaEsp32`, `FlovaEsp8266`, `FlovaEsp32Ble`,
+`FlovaEsp32Ethernet`, or `FlovaClient` with a Link that implements log event
+delivery. It is not part of `FlovaLinux` or the portable `flova::Device` API.
+
+- **Code:** 1–32 ASCII bytes. Start with a lowercase letter; use only lowercase
+  letters, digits, and underscores after it. Codes need no registration.
+- **Message:** optional, up to 96 UTF-8 **bytes**, not characters. Do not include
+  credentials, secrets, or other sensitive data.
+- **Result:** `true` means the SDK copied the event into its one-entry RAM queue,
+  not that Engine stored it. `false` means invalid input, the client has not
+  started or has failed, or the queue is full. Call from application code after
+  `begin()` succeeds, never from an interrupt handler.
+
+Continue calling `run()` even when disconnected. The SDK retries the pending event
+until Engine acknowledges or rejects it. Engine deduplicates retries. A reboot
+discards the pending event; it is not written to device storage. If your code
+receives `false`, keep running the device loop and decide whether to retry later
+or skip that event.
+
+```cpp
+device.logEvent("sensor_fault");
+FLOVA_LOG_EVENT(device, "temperature_high", "Temperature exceeded 80 C");
+```
+
+Follow the [Log Event tutorial](../log-event/) to verify delivery in Console.
+
 ## Typed handle inspection
 
 `valid()`, `bound()`, and `snapshot()` belong to `flova::Datastream<T>`, not the lazy `FlovaDatastream<T, Client>` wrapper. `key()` belongs to the lazy wrapper.
 
-| Method | Example | What it returns |
-| --- | --- | --- |
-| `valid()` | `if (!relayHandle.valid()) return;` | A usable local slot exists. Invalid keys, type conflicts, or exhausted capacity can prevent registration. |
-| `bound()` | `if (!relayHandle.bound()) return;` | The slot has a runtime ID; it does not prove an active connection. |
-| `snapshot()` | `const auto state = relayHandle.snapshot();` | A copy of `value`, `hasValue`, `updatedAt` (device clock milliseconds), `origin`, `quality`, `dirty` (pending outbound state) and `revision`. Check `hasValue` before using the value. |
-| `key()` (lazy wrapper only) | `Serial.println(relay.key());` | The borrowed declaration key, even before registration. |
+| Method                      | Example                                      | What it returns                                                                                                                                                                        |
+| --------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `valid()`                   | `if (!relayHandle.valid()) return;`          | A usable local slot exists. Invalid keys, type conflicts, or exhausted capacity can prevent registration.                                                                              |
+| `bound()`                   | `if (!relayHandle.bound()) return;`          | The slot has a runtime ID; it does not prove an active connection.                                                                                                                     |
+| `snapshot()`                | `const auto state = relayHandle.snapshot();` | A copy of `value`, `hasValue`, `updatedAt` (device clock milliseconds), `origin`, `quality`, `dirty` (pending outbound state) and `revision`. Check `hasValue` before using the value. |
+| `key()` (lazy wrapper only) | `Serial.println(relay.key());`               | The borrowed declaration key, even before registration.                                                                                                                                |
 
 ## Stream policies
 
 Configure these before startup. Fluent methods return the handle. For `mode`, `offline`, `retention`, and `persist`, the typed handle also offers the Boolean `try*` variants below; use these when you need to detect configuration failure. `retention`, `persist`, and `scheduling` can invalidate a typed handle on failure; the lazy wrapper can resolve it again, so prefer a typed handle for registration checks.
 
-| Method | Example | Behavior |
-| --- | --- | --- |
-| `mode(Mode)` / `tryMode(Mode)` | `temperature.mode(flova::Mode::Sample);` / `const bool ok = typed.tryMode(flova::Mode::Sample);` | Choose `State` (default), `Sample` (measurement), `Command` (action) or `Event` (occurrence). Sample and Event are report-only. Here `typed` is a typed temperature handle. |
-| `offline(OfflinePolicy)` / `tryOffline(OfflinePolicy)` | `temperature.offline(flova::OfflinePolicy::StoreHistory);` / `const bool ok = typed.tryOffline(flova::OfflinePolicy::StoreHistory);` | Use `KeepLatest` (default), `StoreHistory` (bounded history), `Drop` (no offline delivery), or `Reject` (refuse the operation offline). |
-| `scheduling(Scheduling)` | `relayHandle.scheduling(flova::Scheduling::CloudOnly);` | Opt a writable stream into Console scheduling. Default `Disabled`; call before `begin()` and check `relayHandle.valid()`. |
-| `retention(policy)` / `tryRetention(policy)` | `temperature.retention(history);` / `const bool ok = typed.tryRetention(history);` | Limit offline history using `HistoryRetentionPolicy`; see the example below. This does not increase physical capacity. |
-| `persist(policy[, intervalMs])` / `tryPersist(...)` | `relay.persist(flova::PersistencePolicy::OnChange);` / `const bool ok = typed.tryPersist(flova::PersistencePolicy::Deferred, 30000);` | `None` (default), `Persistent`/`Immediate` (save every update), `OnChange` (skip redundant saves), or `Deferred` (save after an interval starting at the first unsaved update; defaults to 1000 ms). Requires working storage. |
-| `flush()` | `if (!relay.flush()) Serial.println("State not saved");` | Try to save that stream's pending value immediately. True also means there was nothing pending. Not a Link flush. |
+| Method                                                 | Example                                                                                                                               | Behavior                                                                                                                                                                                                                       |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `mode(Mode)` / `tryMode(Mode)`                         | `temperature.mode(flova::Mode::Sample);` / `const bool ok = typed.tryMode(flova::Mode::Sample);`                                      | Choose `State` (default), `Sample` (measurement), `Command` (action) or `Event` (occurrence). Sample and Event are report-only. Here `typed` is a typed temperature handle.                                                    |
+| `offline(OfflinePolicy)` / `tryOffline(OfflinePolicy)` | `temperature.offline(flova::OfflinePolicy::StoreHistory);` / `const bool ok = typed.tryOffline(flova::OfflinePolicy::StoreHistory);`  | Use `KeepLatest` (default), `StoreHistory` (bounded history), `Drop` (no offline delivery), or `Reject` (refuse the operation offline).                                                                                        |
+| `scheduling(Scheduling)`                               | `relayHandle.scheduling(flova::Scheduling::CloudOnly);`                                                                               | Opt a writable stream into Console scheduling. Default `Disabled`; call before `begin()` and check `relayHandle.valid()`.                                                                                                      |
+| `retention(policy)` / `tryRetention(policy)`           | `temperature.retention(history);` / `const bool ok = typed.tryRetention(history);`                                                    | Limit offline history using `HistoryRetentionPolicy`; see the example below. This does not increase physical capacity.                                                                                                         |
+| `persist(policy[, intervalMs])` / `tryPersist(...)`    | `relay.persist(flova::PersistencePolicy::OnChange);` / `const bool ok = typed.tryPersist(flova::PersistencePolicy::Deferred, 30000);` | `None` (default), `Persistent`/`Immediate` (save every update), `OnChange` (skip redundant saves), or `Deferred` (save after an interval starting at the first unsaved update; defaults to 1000 ms). Requires working storage. |
+| `flush()`                                              | `if (!relay.flush()) Serial.println("State not saved");`                                                                              | Try to save that stream's pending value immediately. True also means there was nothing pending. Not a Link flush.                                                                                                              |
 
 ```cpp
 flova::HistoryRetentionPolicy history;
@@ -191,13 +226,13 @@ Zero in a limit field leaves that limit unset. Keep calling `run()` even offline
 
 Both `write()` and `report()` return `flova::WriteResult { status, reason, message }`. `accepted()` is true for `Accepted` and `NoChange`. `Rejected` means a policy, input, or hardware handler refused the operation; `Failed` means it could not complete. Use a short, stable reason code in handlers and keep any returned strings alive; do not return pointers to local arrays.
 
-| Helper | Return from a handler when… | Example |
-| --- | --- | --- |
-| `flova::accept()` / `WriteResult::accept()` | The action was accepted. | `return flova::accept();` |
-| `flova::unchanged()` / `WriteResult::noChange()` | There was no hardware change to make. | `return flova::unchanged();` |
-| `flova::reject(reason[, message])` / `WriteResult::reject(...)` | The action was refused, for example by an interlock. | `return flova::reject("interlock", "Output is locked");` |
-| `WriteResult::failure(reason[, message])` | An operation could not be completed. | `return flova::WriteResult::failure("driver_unavailable");` |
-| `accepted()` | You need to branch on either success status. | `if (!result.accepted()) Serial.println(result.reason);` |
+| Helper                                                          | Return from a handler when…                          | Example                                                     |
+| --------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
+| `flova::accept()` / `WriteResult::accept()`                     | The action was accepted.                             | `return flova::accept();`                                   |
+| `flova::unchanged()` / `WriteResult::noChange()`                | There was no hardware change to make.                | `return flova::unchanged();`                                |
+| `flova::reject(reason[, message])` / `WriteResult::reject(...)` | The action was refused, for example by an interlock. | `return flova::reject("interlock", "Output is locked");`    |
+| `WriteResult::failure(reason[, message])`                       | An operation could not be completed.                 | `return flova::WriteResult::failure("driver_unavailable");` |
+| `accepted()`                                                    | You need to branch on either success status.         | `if (!result.accepted()) Serial.println(result.reason);`    |
 
 ### Text and color helpers
 
@@ -235,19 +270,19 @@ void loop() {
 
 ### Status getters
 
-| Method | Where | Example and meaning |
-| --- | --- | --- |
-| `connected()` | ESP facades, `FlovaClient`, Linux | `const bool linkUp = device.connected();` — current Link connection, not stream readiness. |
-| `ready()` | All device runtimes | `if (device.ready()) Serial.println("Runtime ready");` — runtime startup and datastream binding are complete and Link is connected. |
-| `networkConnected()` | Managed, universal (including BLE), custom BLE, `FlovaClient` | `const bool networkUp = device.networkConnected();` — the network adapter is connected. |
-| `tlsReady()` | Same as `networkConnected()` | `const bool clockReady = device.tlsReady();` — TLS clock bootstrap is ready; not a completed handshake. |
-| `runtimeReady()` | Same as `networkConnected()` | `const bool inRuntime = device.runtimeReady();` — Arduino lifecycle is in `Runtime`, even if Link is not ready. |
-| `lifecycle()` | ESP facades, `FlovaClient` | `if (device.lifecycle() == FlovaLifecycle::Failed) Serial.println(device.lastError());` — current setup or runtime phase. |
-| `provisioning()` | Same as `networkConnected()` | `const bool inSetup = device.provisioning();` — waiting in setup or processing a handoff. |
-| `lastError()` | ESP facades, `FlovaClient`, Linux | `Serial.println(device.lastError());` (Arduino) or `std::puts(device.lastError());` (Linux) — bounded diagnostic; consume or copy it before the next SDK call. |
-| `running()` | Linux | `while (device.running()) { device.run(); usleep(10000); }` — startup completed; this is not an online check. |
-| `diagnostics()` | Portable, managed ESP, custom BLE, `FlovaClient` | `const auto counters = device.diagnostics();` — copy counters such as `storageFailures`, `queueOverflow` and `duplicateCommands`. |
-| `device()` | Managed, universal (including BLE), custom BLE, `FlovaClient` | `auto& core = device.device();` — borrowed portable runtime; do not start or poll it independently of the facade. |
+| Method               | Where                                                         | Example and meaning                                                                                                                                            |
+| -------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `connected()`        | ESP facades, `FlovaClient`, Linux                             | `const bool linkUp = device.connected();` — current Link connection, not stream readiness.                                                                     |
+| `ready()`            | All device runtimes                                           | `if (device.ready()) Serial.println("Runtime ready");` — runtime startup and datastream binding are complete and Link is connected.                            |
+| `networkConnected()` | Managed, universal (including BLE), custom BLE, `FlovaClient` | `const bool networkUp = device.networkConnected();` — the network adapter is connected.                                                                        |
+| `tlsReady()`         | Same as `networkConnected()`                                  | `const bool clockReady = device.tlsReady();` — TLS clock bootstrap is ready; not a completed handshake.                                                        |
+| `runtimeReady()`     | Same as `networkConnected()`                                  | `const bool inRuntime = device.runtimeReady();` — Arduino lifecycle is in `Runtime`, even if Link is not ready.                                                |
+| `lifecycle()`        | ESP facades, `FlovaClient`                                    | `if (device.lifecycle() == FlovaLifecycle::Failed) Serial.println(device.lastError());` — current setup or runtime phase.                                      |
+| `provisioning()`     | Same as `networkConnected()`                                  | `const bool inSetup = device.provisioning();` — waiting in setup or processing a handoff.                                                                      |
+| `lastError()`        | ESP facades, `FlovaClient`, Linux                             | `Serial.println(device.lastError());` (Arduino) or `std::puts(device.lastError());` (Linux) — bounded diagnostic; consume or copy it before the next SDK call. |
+| `running()`          | Linux                                                         | `while (device.running()) { device.run(); usleep(10000); }` — startup completed; this is not an online check.                                                  |
+| `diagnostics()`      | Portable, managed ESP, custom BLE, `FlovaClient`              | `const auto counters = device.diagnostics();` — copy counters such as `storageFailures`, `queueOverflow` and `duplicateCommands`.                              |
+| `device()`           | Managed, universal (including BLE), custom BLE, `FlovaClient` | `auto& core = device.device();` — borrowed portable runtime; do not start or poll it independently of the facade.                                              |
 
 ### `status()` and `setStatusListener()`
 
@@ -266,29 +301,29 @@ device.setStatusListener([](void*, const FlovaStatusEvent& event) {
 
 ## Provisioning and Wi-Fi
 
-| Method | Where | Example and behavior |
-| --- | --- | --- |
-| `provision(handoff)` | Managed ESP and `FlovaClient` | `const auto result = client.provision(flova::ProvisioningHandoff(linkUrl, token));` — submits a trusted, bounded handoff during setup. `Accepted` means the handoff was accepted for processing; `Invalid` means invalid input or phase; `StorageFailed` means the handoff could not be saved. Keep polling `run()`. |
-| `startProvisioning()` | Managed ESP and `FlovaClient` | `if (!device.startProvisioning()) Serial.println(device.lastError());` — disconnects, removes Flova session/configuration records, and enters setup or requests recovery. Use only on an authorized maintenance action. |
-| `factoryReset()` | Managed ESP, SoftAP universal ESP, `FlovaClient` | `if (resetConfirmed && !device.factoryReset()) Serial.println("Reset failed");` — stops networking, asks the network adapter to clear credentials, puts hardware in fail-safe, clears Flova storage, and requests a restart. Managed Wi-Fi credentials can be erased; unrelated application storage is not part of this operation. |
-| `startWifiSetup()` | Managed ESP | `if (!device.startWifiSetup()) Serial.println("Wi-Fi setup unavailable");` — request network replacement without deleting the Flova identity. False means setup cannot start now; true is not Wi-Fi success. |
-| `wifiSetupActive()` | Managed ESP | `if (device.wifiSetupActive()) Serial.println("Wi-Fi setup in progress");` — includes the stage before the portal opens. |
-| `wifiSetupError()` | Managed ESP | `Serial.println(device.wifiSetupError());` — read the last setup error or facade diagnostic. |
-| `cancelWifiSetup()` | Managed ESP | `if (device.wifiSetupActive() && cancelRequested) device.cancelWifiSetup();` — request cancellation; false if it cannot be canceled now. |
-| `beginNetworkSetup()`, `networkSetupReady()`, `networkSetupActive()`, `endNetworkSetup()` | Explicit `FlovaClient` | `if (client.beginNetworkSetup()) replacing = true;` — request quiescence; keep polling. `if (client.networkSetupActive() && client.networkSetupReady()) serviceSetup();` — run your application-owned replacement flow once drained. Call `client.endNetworkSetup();` when finished or canceled. |
+| Method                                                                                    | Where                                            | Example and behavior                                                                                                                                                                                                                                                                                                               |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `provision(handoff)`                                                                      | Managed ESP and `FlovaClient`                    | `const auto result = client.provision(flova::ProvisioningHandoff(linkUrl, token));` — submits a trusted, bounded handoff during setup. `Accepted` means the handoff was accepted for processing; `Invalid` means invalid input or phase; `StorageFailed` means the handoff could not be saved. Keep polling `run()`.               |
+| `startProvisioning()`                                                                     | Managed ESP and `FlovaClient`                    | `if (!device.startProvisioning()) Serial.println(device.lastError());` — disconnects, removes Flova session/configuration records, and enters setup or requests recovery. Use only on an authorized maintenance action.                                                                                                            |
+| `factoryReset()`                                                                          | Managed ESP, SoftAP universal ESP, `FlovaClient` | `if (resetConfirmed && !device.factoryReset()) Serial.println("Reset failed");` — stops networking, asks the network adapter to clear credentials, puts hardware in fail-safe, clears Flova storage, and requests a restart. Managed Wi-Fi credentials can be erased; unrelated application storage is not part of this operation. |
+| `startWifiSetup()`                                                                        | Managed ESP                                      | `if (!device.startWifiSetup()) Serial.println("Wi-Fi setup unavailable");` — request network replacement without deleting the Flova identity. False means setup cannot start now; true is not Wi-Fi success.                                                                                                                       |
+| `wifiSetupActive()`                                                                       | Managed ESP                                      | `if (device.wifiSetupActive()) Serial.println("Wi-Fi setup in progress");` — includes the stage before the portal opens.                                                                                                                                                                                                           |
+| `wifiSetupError()`                                                                        | Managed ESP                                      | `Serial.println(device.wifiSetupError());` — read the last setup error or facade diagnostic.                                                                                                                                                                                                                                       |
+| `cancelWifiSetup()`                                                                       | Managed ESP                                      | `if (device.wifiSetupActive() && cancelRequested) device.cancelWifiSetup();` — request cancellation; false if it cannot be canceled now.                                                                                                                                                                                           |
+| `beginNetworkSetup()`, `networkSetupReady()`, `networkSetupActive()`, `endNetworkSetup()` | Explicit `FlovaClient`                           | `if (client.beginNetworkSetup()) replacing = true;` — request quiescence; keep polling. `if (client.networkSetupActive() && client.networkSetupReady()) serviceSetup();` — run your application-owned replacement flow once drained. Call `client.endNetworkSetup();` when finished or canceled.                                   |
 
 See [Provisioning and identity](../provisioning/) for handoff validation and the Wi-Fi replacement flow.
 
 ## Firmware, restart, and power
 
-| Method | Where | Example and behavior |
-| --- | --- | --- |
-| `setFirmwareTarget(target)` | Managed ESP, custom BLE, `FlovaClient` | `if (!device.setFirmwareTarget("relay_esp32")) return;` — set the reported target before `begin()`; false for an invalid target or lifecycle. |
-| `enableOta([enabled])` / `setOtaEnabled(enabled)` | Managed ESP and custom BLE / `FlovaClient` | `device.enableOta(false);` or `client.setOtaEnabled(false);` — opt out of device OTA. Calling `enableOta()` enables it; it does not make an incompatible boot layout usable. |
-| `setOtaProfile(strategy, bootLayoutVersion[, rollbackCapable])` | Managed ESP, custom BLE, `FlovaClient` | `device.setOtaProfile(FlovaOtaStrategy::Ab, "esp32-ab", true);` — announce capability only if the actual image uses that layout and supports rollback. |
-| `setRestartHandler(handler[, context])` | Managed ESP, custom BLE, `FlovaClient` | `device.setRestartHandler(markRestart, &pendingRestart);` — replace the callback with an application-owned restart policy. See below. |
-| `restartRequired()`, `restartReason()` | Managed ESP, custom BLE, `FlovaClient` | `if (device.restartRequired()) { const auto reason = device.restartReason(); /* record reason */ }` — detect a required or scheduled restart and why it was requested. |
-| `prepareForPowerDown()` | Managed, universal (including BLE), custom BLE, `FlovaClient` | `if (sleepRequested && device.prepareForPowerDown() == FlovaPowerDownStatus::Ready) enterSleep();` — poll from the board loop with `run()`. `Busy` cannot start yet, `Draining` is in progress, and `Failed` means drain or persistence failed. Only `Ready` allows the application to proceed; it does not power the board off. |
+| Method                                                          | Where                                                         | Example and behavior                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setFirmwareTarget(target)`                                     | Managed ESP, custom BLE, `FlovaClient`                        | `if (!device.setFirmwareTarget("relay_esp32")) return;` — set the reported target before `begin()`; false for an invalid target or lifecycle.                                                                                                                                                                                    |
+| `enableOta([enabled])` / `setOtaEnabled(enabled)`               | Managed ESP and custom BLE / `FlovaClient`                    | `device.enableOta(false);` or `client.setOtaEnabled(false);` — opt out of device OTA. Calling `enableOta()` enables it; it does not make an incompatible boot layout usable.                                                                                                                                                     |
+| `setOtaProfile(strategy, bootLayoutVersion[, rollbackCapable])` | Managed ESP, custom BLE, `FlovaClient`                        | `device.setOtaProfile(FlovaOtaStrategy::Ab, "esp32-ab", true);` — announce capability only if the actual image uses that layout and supports rollback.                                                                                                                                                                           |
+| `setRestartHandler(handler[, context])`                         | Managed ESP, custom BLE, `FlovaClient`                        | `device.setRestartHandler(markRestart, &pendingRestart);` — replace the callback with an application-owned restart policy. See below.                                                                                                                                                                                            |
+| `restartRequired()`, `restartReason()`                          | Managed ESP, custom BLE, `FlovaClient`                        | `if (device.restartRequired()) { const auto reason = device.restartReason(); /* record reason */ }` — detect a required or scheduled restart and why it was requested.                                                                                                                                                           |
+| `prepareForPowerDown()`                                         | Managed, universal (including BLE), custom BLE, `FlovaClient` | `if (sleepRequested && device.prepareForPowerDown() == FlovaPowerDownStatus::Ready) enterSleep();` — poll from the board loop with `run()`. `Busy` cannot start yet, `Draining` is in progress, and `Failed` means drain or persistence failed. Only `Ready` allows the application to proceed; it does not power the board off. |
 
 ```cpp
 bool pendingRestart = false;
@@ -306,42 +341,42 @@ See [Firmware lifecycle](../lifecycle/) for update and shutdown checks, includin
 
 `flova_linux::OtaUpdater(root, activePath)` from `<FlovaLinux.h>` operates on files. Keep both paths on the same filesystem. The supervisor verifies the artifact source, controls restarts, and runs health checks; the updater does not replace a running process.
 
-| Method | Example | Contract |
-| --- | --- | --- |
-| Constructor | `flova_linux::OtaUpdater updater("/var/lib/flova/ota", "/var/lib/flova/bin/device");` | Set the staging directory and active executable path. |
+| Method                                                      | Example                                                                                                   | Contract                                                                                                                    |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Constructor                                                 | `flova_linux::OtaUpdater updater("/var/lib/flova/ota", "/var/lib/flova/bin/device");`                     | Set the staging directory and active executable path.                                                                       |
 | `stage(sourcePath, version, expectedBytes, expectedSha256)` | `if (updater.stage(downloadPath, version, bytes, sha256) != flova_linux::OtaStageResult::Staged) return;` | Validate the version and offer, verify size and SHA-256 against trusted metadata, and stage the file. Does not activate it. |
-| `activate(version)` | `if (!updater.activate(version)) return;` | Promote the staged file and retain the replaced active image. The supervisor must start the candidate and verify it. |
-| `confirm(version)` | `if (healthy && !updater.confirm(version)) logConfirmationFailure();` | Record the version after external health checks. The method does not perform those checks. |
-| `rollback()` | `if (!healthy && updater.rollback()) restartService();` | Restore the retained image; the supervisor restarts it. Handle a failed rollback explicitly. |
+| `activate(version)`                                         | `if (!updater.activate(version)) return;`                                                                 | Promote the staged file and retain the replaced active image. The supervisor must start the candidate and verify it.        |
+| `confirm(version)`                                          | `if (healthy && !updater.confirm(version)) logConfirmationFailure();`                                     | Record the version after external health checks. The method does not perform those checks.                                  |
+| `rollback()`                                                | `if (!healthy && updater.rollback()) restartService();`                                                   | Restore the retained image; the supervisor restarts it. Handle a failed rollback explicitly.                                |
 
 ## Portable runtime and adapter APIs
 
 `core` below is a `flova::Device`. Use typed handles in ordinary application code. An adapter that already has a bound ID can use the ID-based API without creating another handle.
 
-| Method | Example | Behavior |
-| --- | --- | --- |
-| `datastreamCount()` | `const auto slots = core.datastreamCount();` | Count allocated stream slots, not the number of bound cloud streams. |
-| `storageInfo([refresh])` | `const auto info = core.storageInfo(true);` | Read backend facts such as available bytes and persistence; `true` may perform expensive accounting. It does not enable storage-backed features. |
-| `flushPersistence()` | `if (!core.flushPersistence()) return;` | Flush all dirty per-stream persistence and report whether all saves succeeded. |
-| `allowCloudSchedulingForOutputs(enabled)` | `if (!core.allowCloudSchedulingForOutputs(true)) return;` | Opt mapped digital/PWM outputs into cloud scheduling before startup. |
-| `scheduling(id)` | `const auto schedule = core.scheduling(id);` | Read the stream's scheduling declaration; unknown IDs return `Disabled`. |
-| `originateMessageId()` | `const auto messageId = core.originateMessageId();` | Allocate an outbound ID from this runtime's sequence, initialized from the Link nonce. |
-| `commandResultsPending()` / `commandResultPending(id)` | `const bool pending = core.commandResultsPending();` / `const bool awaitingAck = core.commandResultPending(commandId);` | Check for retained command results still awaiting delivery, globally or by command ID. The per-command check may read storage and conservatively returns true on read failure. |
-| `write(id, value[, origin])` / `report(id, value[, origin])` | `const auto command = core.write(id, flova::Value::from(true));` / `const auto sample = core.report(id, flova::Value::from(false), flova::Origin::PhysicalInput);` | Same command/observation distinction as typed handles. An unknown ID fails. `Value::from` builds the tagged value; `flova::validValue(value)` checks representability, not stream policy. |
-| `setWriteHandler(id, callback, context)` / `clearWriteHandler(...)` | `if (!core.setWriteHandler(id, applyValue, context)) return;` / `const bool cleared = core.clearWriteHandler(id, applyValue, context);` | Set an ID-based `WriteResult(void*, const Value&)` callback. Clearing requires the same callback and context; use `tryOnWrite` when you have a typed handle instead. |
-| `setFactoryResetHandler(handler, context)` | `core.setFactoryResetHandler(resetFromCommand, context);` | Register the board's `WriteResult(void*, const char*)` callback for authorized reset commands, receiving the command ID. |
-| `validateConfigurationUnit(unit)` / `applyConfigurationUnit(unit)` | `if (core.validateConfigurationUnit(unit)) { const bool applied = core.applyConfigurationUnit(unit); /* handle failure */ }` | Adapter boundary for one schema-decoded, validated unit. Use the SDK's configuration lifecycle for whole images; this is not a transaction. |
-| `detachLink()` | `core.detachLink();` | Stop application polling first, then unregister receiver and binding callbacks before releasing a borrowed Link. The destructor also detaches. |
+| Method                                                              | Example                                                                                                                                                            | Behavior                                                                                                                                                                                  |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `datastreamCount()`                                                 | `const auto slots = core.datastreamCount();`                                                                                                                       | Count allocated stream slots, not the number of bound cloud streams.                                                                                                                      |
+| `storageInfo([refresh])`                                            | `const auto info = core.storageInfo(true);`                                                                                                                        | Read backend facts such as available bytes and persistence; `true` may perform expensive accounting. It does not enable storage-backed features.                                          |
+| `flushPersistence()`                                                | `if (!core.flushPersistence()) return;`                                                                                                                            | Flush all dirty per-stream persistence and report whether all saves succeeded.                                                                                                            |
+| `allowCloudSchedulingForOutputs(enabled)`                           | `if (!core.allowCloudSchedulingForOutputs(true)) return;`                                                                                                          | Opt mapped digital/PWM outputs into cloud scheduling before startup.                                                                                                                      |
+| `scheduling(id)`                                                    | `const auto schedule = core.scheduling(id);`                                                                                                                       | Read the stream's scheduling declaration; unknown IDs return `Disabled`.                                                                                                                  |
+| `originateMessageId()`                                              | `const auto messageId = core.originateMessageId();`                                                                                                                | Allocate an outbound ID from this runtime's sequence, initialized from the Link nonce.                                                                                                    |
+| `commandResultsPending()` / `commandResultPending(id)`              | `const bool pending = core.commandResultsPending();` / `const bool awaitingAck = core.commandResultPending(commandId);`                                            | Check for retained command results still awaiting delivery, globally or by command ID. The per-command check may read storage and conservatively returns true on read failure.            |
+| `write(id, value[, origin])` / `report(id, value[, origin])`        | `const auto command = core.write(id, flova::Value::from(true));` / `const auto sample = core.report(id, flova::Value::from(false), flova::Origin::PhysicalInput);` | Same command/observation distinction as typed handles. An unknown ID fails. `Value::from` builds the tagged value; `flova::validValue(value)` checks representability, not stream policy. |
+| `setWriteHandler(id, callback, context)` / `clearWriteHandler(...)` | `if (!core.setWriteHandler(id, applyValue, context)) return;` / `const bool cleared = core.clearWriteHandler(id, applyValue, context);`                            | Set an ID-based `WriteResult(void*, const Value&)` callback. Clearing requires the same callback and context; use `tryOnWrite` when you have a typed handle instead.                      |
+| `setFactoryResetHandler(handler, context)`                          | `core.setFactoryResetHandler(resetFromCommand, context);`                                                                                                          | Register the board's `WriteResult(void*, const char*)` callback for authorized reset commands, receiving the command ID.                                                                  |
+| `validateConfigurationUnit(unit)` / `applyConfigurationUnit(unit)`  | `if (core.validateConfigurationUnit(unit)) { const bool applied = core.applyConfigurationUnit(unit); /* handle failure */ }`                                       | Adapter boundary for one schema-decoded, validated unit. Use the SDK's configuration lifecycle for whole images; this is not a transaction.                                               |
+| `detachLink()`                                                      | `core.detachLink();`                                                                                                                                               | Stop application polling first, then unregister receiver and binding callbacks before releasing a borrowed Link. The destructor also detaches.                                            |
 
 Managed ESP also offers `report(key, value)` (returns only local acceptance). Its key helpers and their Linux subset are useful for code that implements the stream wrapper contract; prefer typed handles for application code:
 
-| Key method | Example | Equivalent |
-| --- | --- | --- |
-| `report(key, value)` | `const bool ok = device.report("temperature", 23.4);` | `device.flovaReport("temperature", 23.4).accepted()` (managed ESP only). |
-| `flovaDatastream<T>`, `flovaWrite`, `flovaReport` | `auto stream = device.flovaDatastream<bool>("relay");` / `auto write = device.flovaWrite("relay", true);` / `auto report = device.flovaReport("relay", false);` | Typed handle lookup, write, and report. `flovaReport` accepts an optional origin. |
-| `flovaHasValue<T>`, `flovaValue<T>` | `if (device.flovaHasValue<bool>("relay")) Serial.println(device.flovaValue<bool>("relay"));` | Check presence and read the cached value by key. |
-| `flovaOnWrite` | `const bool ok = device.flovaOnWrite("relay", flova::ValueType::Boolean, binding);` | Register a typed `FlovaDatastreamBinding<T>`; typical sketches call `relay.tryOnWrite(setRelay)` instead. |
-| `flovaMode<T>`, `flovaOffline<T>`, `flovaRetention<T>`, `flovaPersist<T>` | `device.flovaMode<double>("temperature", flova::Mode::Sample);` / `device.flovaOffline<double>("temperature", flova::OfflinePolicy::StoreHistory);` / `device.flovaRetention<double>("temperature", history);` / `device.flovaPersist<double>("temperature", flova::PersistencePolicy::Deferred, 30000);` | Return the respective typed `try*` result (managed ESP only). |
+| Key method                                                                | Example                                                                                                                                                                                                                                                                                                   | Equivalent                                                                                                |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `report(key, value)`                                                      | `const bool ok = device.report("temperature", 23.4);`                                                                                                                                                                                                                                                     | `device.flovaReport("temperature", 23.4).accepted()` (managed ESP only).                                  |
+| `flovaDatastream<T>`, `flovaWrite`, `flovaReport`                         | `auto stream = device.flovaDatastream<bool>("relay");` / `auto write = device.flovaWrite("relay", true);` / `auto report = device.flovaReport("relay", false);`                                                                                                                                           | Typed handle lookup, write, and report. `flovaReport` accepts an optional origin.                         |
+| `flovaHasValue<T>`, `flovaValue<T>`                                       | `if (device.flovaHasValue<bool>("relay")) Serial.println(device.flovaValue<bool>("relay"));`                                                                                                                                                                                                              | Check presence and read the cached value by key.                                                          |
+| `flovaOnWrite`                                                            | `const bool ok = device.flovaOnWrite("relay", flova::ValueType::Boolean, binding);`                                                                                                                                                                                                                       | Register a typed `FlovaDatastreamBinding<T>`; typical sketches call `relay.tryOnWrite(setRelay)` instead. |
+| `flovaMode<T>`, `flovaOffline<T>`, `flovaRetention<T>`, `flovaPersist<T>` | `device.flovaMode<double>("temperature", flova::Mode::Sample);` / `device.flovaOffline<double>("temperature", flova::OfflinePolicy::StoreHistory);` / `device.flovaRetention<double>("temperature", history);` / `device.flovaPersist<double>("temperature", flova::PersistencePolicy::Deferred, 30000);` | Return the respective typed `try*` result (managed ESP only).                                             |
 
 ```cpp
 FlovaDatastreamBinding<bool> binding;

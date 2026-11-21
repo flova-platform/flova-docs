@@ -3,5 +3,20 @@
   "description": "Build devices with Flova SDK.",
   "icon": "Terminal",
   "root": true,
-  "pages": ["overview", "quickstart", "first-sketch", "install", "ide", "datastreams", "scheduling", "provisioning", "configuration", "transports", "lifecycle", "advanced", "reference"]
+  "pages": [
+    "overview",
+    "quickstart",
+    "first-sketch",
+    "log-event",
+    "install",
+    "ide",
+    "datastreams",
+    "scheduling",
+    "provisioning",
+    "configuration",
+    "transports",
+    "lifecycle",
+    "advanced",
+    "reference"
+  ]
 }
