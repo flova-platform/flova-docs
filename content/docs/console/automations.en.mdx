@@ -1,33 +1,42 @@
 ---
 title: "Automations and alerts"
-description: "Build rules that react to channel changes, check values, write channels, and send alerts."
+description: "Build Workspace and Device automations that react to stream updates, receive and send webhooks, and create alerts."
 ---
 
-Each automation belongs to a device template. It starts with a trigger, can test a value, and then runs one or more actions. Edit it from the template's **Automations** page.
+An automation starts with a trigger and runs one or more actions. Add a condition if the actions should run only when a value matches.
+
+| Scope     | Where to edit                                                                                                                                       | How to activate                                                                  |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Workspace | Open [Workspace automations](https://console.flova.ir/automations). Pick specific devices when connecting streams or watching device status.        | Save the draft and select **Deploy**. Use **Pause** to stop the live automation. |
+| Device    | Open a [Device Type](https://console.flova.ir/templates) and select **Automations**. The rule uses the streams of each device running that version. | Save the graph and publish the Device Type version.                              |
 
 ## Build an automation
 
-1. Open [Console](https://console.flova.ir/templates), select a template, and open **Automations**.
-2. Add a trigger and choose the channel or schedule that starts the rule.
+1. Open the automation editor for the scope you want.
+2. Add a trigger, such as a stream update or a schedule.
 3. Add a condition when the action should run only for a particular value.
 4. Add an action such as a channel write, webhook request, or notification.
 5. Connect the nodes in the order they should run.
-6. Save the graph, then publish the template version.
+6. Deploy the Workspace automation or publish the Device Type version.
 
 The editor has these node types:
 
-| Node | Purpose |
-| --- | --- |
-| Datastream update | Starts when a channel changes. Choose any change, rising, or falling. |
-| Schedule | Starts once, daily, or weekly at a selected time. |
-| Channel check | Compares a channel with a value. |
-| Channel write | Writes a value or toggles a writable channel. |
-| Webhook request | Sends an HTTP request to a configured URL. |
-| Notification | Creates an alert with a title and message. |
+| Node                           | Purpose                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------ |
+| Stream update                  | Starts when a datastream updates. Choose any change, rising, or falling. |
+| Schedule                       | Starts once, daily, or weekly at a selected time.                        |
+| Device status (Workspace)      | Starts when a selected device goes online or offline.                    |
+| Webhook trigger (Workspace)    | Starts when an external service posts to the trigger URL.                |
+| Condition                      | Compares a channel with a value.                                         |
+| Combine conditions (Workspace) | Joins two or more conditions with AND or OR.                             |
+| Wait (Workspace)               | Waits before the next step.                                              |
+| Set value                      | Writes a value or toggles a writable channel.                            |
+| Send webhook                   | Sends a request to a public HTTPS endpoint.                              |
+| Create warning                 | Creates a warning with a title and message.                              |
 
 ## Use a channel trigger
 
-Select **Datastream update**, choose a channel, and choose the trigger mode:
+Select **Stream update**, choose a channel, and choose the trigger mode:
 
 - **Any change** runs for every accepted update.
 - **When activated** runs when a Boolean value becomes true.
@@ -37,19 +46,57 @@ A channel trigger fits events such as a door opening or a temperature report cha
 
 ## Check a value
 
-Add **Channel check** after the trigger. Choose a channel, an operator, and a comparison value. Supported comparisons include equal, not equal, greater than, greater than or equal, less than, less than or equal, and changed to. Connect the condition's output to the action that should run when it passes.
+Add **Condition** after the trigger. Choose a channel, an operator, and a comparison value. Supported comparisons include equal, not equal, greater than, greater than or equal, less than, less than or equal, and changed to. Connect the condition's output to the action that should run when it passes.
 
 Match the condition to the channel type. A numeric comparison cannot evaluate text or a structured object as a number. A Boolean condition should use `true` or `false`.
 
 ## Write to a channel or send an alert
 
-For **Channel write**, choose a writable channel and either set a value or toggle the current value. The published channel definition must allow writes. A read-only channel makes the automation invalid.
+For **Set value**, choose a writable channel and either set a value or toggle the current value. The published channel definition must allow writes. A read-only channel makes the automation invalid.
 
-For **Notification**, enter a title and message. Console shows the notification in its notification center. A **Webhook request** sends an HTTP request to the URL in the node, so check that the endpoint is available and that its authentication requirements are met before enabling the rule.
+For **Create warning**, enter a title and message. Console shows the warning in its notification center.
+
+## Receive a webhook
+
+In a Workspace automation, add **Webhook trigger**, connect it to an action, and deploy. Copy the trigger URL from the node. The URL includes a secret token, so share it only with services that should be able to start the automation.
+
+Send a `POST` with `Content-Type: application/json` for JSON, or `Content-Type: text/plain` for UTF-8 text. The body can also be empty. Opening the URL in a browser sends a `GET` and won't start a run.
+
+```bash
+curl -i --request POST "$WEBHOOK_TRIGGER_URL" \
+  --header 'Content-Type: application/json' \
+  --data '{"event":"door.closed","closed":true,"battery":87}'
+```
+
+Flova replies `200 OK` with `{"accepted":true}` when it accepts the trigger. That response doesn't confirm that a later action or outbound request succeeded. A paused or unknown trigger URL returns `404 Not Found`.
+
+## Send a webhook with trigger data
+
+In **Send webhook**, enter the receiver's public HTTPS URL, choose `POST`, `PUT`, `PATCH`, or `DELETE`, and set **Body type** to **Forward trigger data**. Add any headers the receiver requires. The request uses `Content-Type: application/json`. `GET` can't forward a body.
+
+| Trigger                             | What the receiver gets                                                                                                                                                                                                                                                                       |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stream update (Workspace or Device) | The value that started the run, with no device or stream metadata added. For example, a Boolean update sends `false`, a numeric update sends `0`, and a text value sends `"closed"` (including the quotes). A filter or supported Wait step doesn't replace that value with a later reading. |
+| Webhook trigger (Workspace only)    | The incoming JSON value, or the plain text encoded as a JSON string. For example, a `text/plain` body of `door closed` arrives as `"door closed"`. Flova doesn't include incoming query parameters or headers. An empty JSON body forwards `{}`; an empty `text/plain` body forwards `""`.   |
+| Schedule or Device status           | No data to forward. Use a non-forwarding body setting instead.                                                                                                                                                                                                                               |
+
+For the example above, connect **Webhook trigger → Send webhook**, set the destination to `https://receiver.example/hooks/door`, and choose `POST`. The receiver gets:
+
+```http
+POST /hooks/door HTTP/1.1
+Host: receiver.example
+Content-Type: application/json
+
+{"event":"door.closed","closed":true,"battery":87}
+```
+
+Both scopes can also send custom JSON, plain text, or no body. With **JSON** selected and the body left blank, Flova sends an event summary instead of raw trigger data. If the receiver expects a particular content type for a custom plain-text body, set the `Content-Type` header on the action. `GET` requests have no body.
+
+Older Device webhook nodes that didn't forward trigger data keep sending a bodyless `POST` until you select **Use request settings** or edit a request setting, then publish the Device Type version. Review the method, headers, and body before publishing.
 
 ## Versioning and validation
 
-Automation changes are stored with the template version. Saving the graph updates the editable version; it does not activate the new rule until you publish that version.
+Device automation changes are stored with the Device Type version. Saving edits does not change the published rule. Workspace automations keep their own draft and deployed versions; saving edits does not replace the live graph until you select **Deploy**.
 
 Before publication, Console validates that:
 
