@@ -31,6 +31,7 @@ The editor has these node types:
 | Condition                      | Compares a channel with a value.                                         |
 | Combine conditions (Workspace) | Joins two or more conditions with AND or OR.                             |
 | Wait (Workspace)               | Waits before the next step.                                              |
+| Transform data                 | Maps trigger fields, builds a JSON object, or calculates a new value.    |
 | Set value                      | Writes a value or toggles a writable channel.                            |
 | Send webhook                   | Sends a request to a public HTTPS endpoint.                              |
 | Create warning                 | Creates a warning with a title and message.                              |
@@ -51,9 +52,26 @@ Add **Condition** after the trigger. Choose a channel, an operator, and a compar
 
 Match the condition to the channel type. A numeric comparison cannot evaluate text or a structured object as a number. A Boolean condition should use `true` or `false`.
 
+## Transform trigger data
+
+Add **Transform data** after **Stream update** in either editor, or after **Webhook trigger** in a Workspace automation. Put conditions and supported waits before the transform. You can chain transforms or connect one transform to multiple actions. Each transform has one input and does not change the original trigger data.
+
+For example, to forward a reading from `{"sensor_id":"A1","temp_c":20,"debug":true}`:
+
+1. Connect **Webhook trigger → Transform data → Send webhook**.
+2. In **Transform data**, select **Build JSON object**. Open **Test with sample data** and paste the sample into **Example input (JSON)**. Then use the searchable **Start with** picker to choose `sensor_id` and `temp_c`. Rename the outputs to `device` and `temp_f`. For `temp_f`, add **Multiply by** `1.8` and then **Add** `32`.
+3. Select **Preview output**. The output is `{"device":"A1","temp_f":68}`; `debug` is not included. Preview does not send a request or write to a device.
+4. In **Send webhook**, select **Transformed JSON** as the body type. Deploy the Workspace automation.
+
+To write a calculated temperature instead, use **Stream update → Transform data → Set value**. Choose **Single value**, start with **Entire input**, and add the same calculations. Set the write action to **Transformed value** and pick a writable numeric channel. Publish the Device Type version for a Device Type automation. An on/off stream sends a single Boolean, so choose **Entire input** to use it directly without a calculation.
+
+The picker also detects fields from a connected stream schema, an upstream transform, or a recent request received by a deployed webhook trigger. After sending a new webhook request, select **Refresh detected fields**. Detection keeps field paths and types, not payload values. If a field is not listed, paste an example or open **Manual path**. Manual paths use JSON Pointer, for example `/reading/temp_c` or `/readings/0`.
+
+Calculations run in order. Use **Convert to number** before doing math on numeric text. A missing path, invalid number, or division by zero fails that branch without running its downstream actions. Look in Workspace run history or the Device Type **Logs** for the failed node and reason.
+
 ## Write to a channel or send an alert
 
-For **Set value**, choose a writable channel and either set a value or toggle the current value. The published channel definition must allow writes. A read-only channel makes the automation invalid.
+For **Set value**, choose a writable channel and use a fixed value, a transformed value, or a toggle if the channel supports it. A transformed value must match the published channel type and limits.
 
 For **Create warning**, enter a title and message. Console shows the warning in its notification center.
 To start with firmware instead of a datastream, connect **Device event** directly to **Create warning**. See [Turn a device event into a warning](../../sdk/event-alerts/).
